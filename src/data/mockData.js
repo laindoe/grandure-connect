@@ -1,0 +1,254 @@
+export const BRANDS = [
+  {
+    id: '1',
+    name: 'homieOstasis',
+    tagline: 'energy playground',
+    bannerColor: ['#5B9BD5', '#3A7BC8'],
+    logoStyle: 'text',
+    stats: [
+      { platform: 'instagram', count: '125K' },
+      { platform: 'threads', count: '273M' },
+      { platform: 'youtube', count: '752K' },
+    ],
+    currentPhase: {
+      name: 'Intro to the Playground',
+      next: 'Set the Tone',
+      progress: 35,
+      postsCompleted: 4,
+      totalPosts: 12,
+      eosDate: 'Jul 15, 2026',
+    },
+    overview: {
+      mission: 'Create a vibrant community where wellness meets play — helping people regulate their nervous system through joy, creativity, and authentic connection.',
+      positioning: 'The anti-hustle wellness brand that makes energy management fun and accessible.',
+      audience: 'Burnout-aware millennials and Gen Z who want holistic health without the rigidity.',
+      contentPillars: ['Energy Education', 'Nervous System Regulation', 'Playful Wellness', 'Community Stories'],
+      brandVoice: 'Warm, playful, knowledgeable without being preachy. Like your cool friend who also happens to be a healer.',
+      keywords: ['energy', 'regulation', 'nervous system', 'play', 'wellness', 'community', 'healing'],
+      offers: ['Online Course: Energy 101', '1:1 Coaching', 'Community Membership'],
+    },
+    platformStrategy: {
+      instagram: {
+        objective: 'Build brand awareness and community engagement',
+        themes: ['Behind the scenes', 'Educational carousels', 'Community spotlights'],
+        formats: ['Reels', 'Carousels', 'Stories'],
+        goals: ['Reach 150K followers', 'Avg 5% engagement rate'],
+      },
+      threads: {
+        objective: 'Thought leadership and real-time conversation',
+        themes: ['Hot takes on wellness', 'Community questions', 'Daily energy check-ins'],
+        formats: ['Text posts', 'Quote threads', 'Polls'],
+        goals: ['Grow to 300M impressions', 'Daily posting consistency'],
+      },
+      youtube: {
+        objective: 'Deep-dive educational content for long-term discovery',
+        themes: ['Explainer videos', 'Guided practices', 'Interviews'],
+        formats: ['Long-form', 'Shorts', 'Live streams'],
+        goals: ['Hit 1M subscribers', '100K views per video average'],
+      },
+    },
+    campaigns: [
+      { id: 'c1', name: 'Intro to the Playground', status: 'active', phase: 'Awareness', startDate: 'Jun 1, 2026', endDate: 'Jul 15, 2026' },
+      { id: 'c2', name: 'Set the Tone', status: 'upcoming', phase: 'Engagement', startDate: 'Jul 16, 2026', endDate: 'Aug 30, 2026' },
+      { id: 'c3', name: 'Healing Homies', status: 'planned', phase: 'Conversion', startDate: 'Sep 1, 2026', endDate: 'Oct 15, 2026' },
+    ],
+    season: {
+      name: 'Summer 2026',
+      goal: 'Launch the energy playground concept and build a core community of 10K engaged members',
+      pillars: ['Brand Awareness', 'Community Building', 'Course Pre-launch'],
+      roadmap: ['Intro to the Playground', 'Healing Homies', 'FunEmployed'],
+    },
+    board: {
+      ideas: [
+        { id: 'b1', title: 'Why your energy crashes at 3pm', platform: 'instagram', format: 'Reel' },
+        { id: 'b2', title: 'Nervous system 101 thread', platform: 'threads', format: 'Thread' },
+      ],
+      drafting: [
+        { id: 'b3', title: 'Morning regulation routine', platform: 'youtube', format: 'Long-form' },
+      ],
+      ready: [
+        { id: 'b4', title: 'Energy playground intro reel', platform: 'instagram', format: 'Reel' },
+      ],
+      posted: [
+        { id: 'b5', title: 'Welcome to the playground', platform: 'instagram', format: 'Carousel' },
+        { id: 'b6', title: 'What is homieOstasis?', platform: 'youtube', format: 'Long-form' },
+      ],
+    },
+    inspiration: [
+      { id: 'i1', type: 'note', content: 'Aesthetic: soft blues, playful typography, organic shapes' },
+      { id: 'i2', type: 'link', content: 'https://example.com/ref1', label: 'Color palette reference' },
+      { id: 'i3', type: 'note', content: 'Tone: knowledgeable but never clinical. Think: wise best friend.' },
+    ],
+    ideas: [
+      { id: 'id1', title: '5 signs your nervous system is dysregulated', platform: 'instagram', format: 'Carousel', campaign: 'Intro to the Playground' },
+      { id: 'id2', title: 'The playground explained in 60 seconds', platform: 'instagram', format: 'Reel', campaign: 'Intro to the Playground' },
+      { id: 'id3', title: 'Community Q&A: your energy questions answered', platform: 'youtube', format: 'Live', campaign: 'Set the Tone' },
+    ],
+  },
+  {
+    id: '2',
+    name: 'Heart Direction',
+    tagline: '',
+    bannerColor: ['#1a1a1a', '#2a2a2a'],
+    logoStyle: 'script',
+    stats: [
+      { platform: 'instagram', count: '325K' },
+      { platform: 'threads', count: '15K' },
+    ],
+    currentPhase: {
+      name: 'Content Blueprint',
+      next: 'Visual Cycle',
+      progress: 60,
+      postsCompleted: 8,
+      totalPosts: 14,
+      eosDate: 'Jun 30, 2026',
+    },
+    overview: {
+      mission: 'Guide heart-centered entrepreneurs to build businesses aligned with their values and authentic voice.',
+      positioning: 'The intersection of strategy and soul for purpose-driven creators.',
+      audience: 'Female entrepreneurs 28-45 who want business growth without burnout.',
+      contentPillars: ['Business Strategy', 'Mindset', 'Content Creation', 'Community'],
+      brandVoice: 'Empowering, strategic, grounded. Like a business mentor who speaks from the heart.',
+      keywords: ['heart-centered', 'purpose', 'alignment', 'strategy', 'authentic'],
+      offers: ['Mastermind Program', 'Brand Strategy Sessions', 'Content Templates'],
+    },
+    platformStrategy: {
+      instagram: {
+        objective: 'Position as the go-to brand strategist for conscious creators',
+        themes: ['Strategy breakdowns', 'Client stories', 'Mindset shifts'],
+        formats: ['Carousels', 'Reels', 'Stories'],
+        goals: ['Reach 400K followers', '7% engagement rate'],
+      },
+      threads: {
+        objective: 'Build intimate community through direct conversation',
+        themes: ['Daily business reflections', 'Strategy tips', 'Community wins'],
+        formats: ['Text posts', 'Threads'],
+        goals: ['Grow to 50K', 'Daily engagement'],
+      },
+    },
+    campaigns: [
+      { id: 'c1', name: 'Content Blueprint', status: 'active', phase: 'Awareness', startDate: 'May 15, 2026', endDate: 'Jun 30, 2026' },
+      { id: 'c2', name: 'Visual Cycle', status: 'upcoming', phase: 'Engagement', startDate: 'Jul 1, 2026', endDate: 'Aug 15, 2026' },
+    ],
+    season: {
+      name: 'Summer 2026',
+      goal: 'Launch the signature mastermind and fill 10 spots',
+      pillars: ['Authority Building', 'Community Deepening', 'Offer Launch'],
+      roadmap: ['Content Blueprint', 'Visual Cycle', 'Mastermind Launch'],
+    },
+    board: {
+      ideas: [
+        { id: 'b1', title: 'Why most brand strategies fail', platform: 'instagram', format: 'Carousel' },
+      ],
+      drafting: [
+        { id: 'b2', title: 'The content blueprint framework', platform: 'instagram', format: 'Carousel' },
+        { id: 'b3', title: 'Heart vs hustle: finding your business rhythm', platform: 'threads', format: 'Thread' },
+      ],
+      ready: [
+        { id: 'b4', title: 'Meet the blueprint method', platform: 'instagram', format: 'Reel' },
+        { id: 'b5', title: 'Client spotlight: 6 months of heart direction', platform: 'instagram', format: 'Carousel' },
+      ],
+      posted: [
+        { id: 'b6', title: 'The blueprint begins', platform: 'instagram', format: 'Reel' },
+        { id: 'b7', title: 'Why I created Heart Direction', platform: 'instagram', format: 'Carousel' },
+        { id: 'b8', title: 'Strategy session behind the scenes', platform: 'instagram', format: 'Stories' },
+      ],
+    },
+    inspiration: [
+      { id: 'i1', type: 'note', content: 'Color palette: deep reds, warm golds, cream whites' },
+      { id: 'i2', type: 'note', content: 'Typography: script logo with clean sans-serif body' },
+    ],
+    ideas: [
+      { id: 'id1', title: '3 signs you need a content blueprint', platform: 'instagram', format: 'Reel', campaign: 'Content Blueprint' },
+      { id: 'id2', title: 'What heart-centered strategy actually means', platform: 'threads', format: 'Thread', campaign: 'Content Blueprint' },
+    ],
+  },
+  {
+    id: '3',
+    name: 'Lain Doe',
+    tagline: '',
+    bannerColor: ['#2952CC', '#1a3a99'],
+    logoStyle: 'graffiti',
+    stats: [
+      { platform: 'instagram', count: '2M' },
+      { platform: 'threads', count: '75K' },
+      { platform: 'youtube', count: '100K' },
+    ],
+    currentPhase: {
+      name: 'Scaling Impact',
+      next: 'Community Touchpoint',
+      progress: 80,
+      postsCompleted: 16,
+      totalPosts: 20,
+      eosDate: 'Jun 15, 2026',
+    },
+    overview: {
+      mission: 'Amplify underrepresented voices and prove that authentic self-expression is the most powerful form of marketing.',
+      positioning: 'The culture architect who builds brands that move people.',
+      audience: 'Creative entrepreneurs and culture-curious Gen Z and millennials.',
+      contentPillars: ['Creative Direction', 'Culture & Identity', 'Business of Art', 'Community Power'],
+      brandVoice: 'Bold, direct, culturally fluent. No code-switching, no watering down.',
+      keywords: ['culture', 'identity', 'creative', 'authentic', 'community', 'impact'],
+      offers: ['Creative Direction', 'Brand Consulting', 'Community Program'],
+    },
+    platformStrategy: {
+      instagram: {
+        objective: 'Maintain cultural authority and community leadership at scale',
+        themes: ['Behind the brand', 'Culture commentary', 'Community spotlights'],
+        formats: ['Reels', 'Carousels', 'Stories', 'Lives'],
+        goals: ['Maintain 2M+ engagement', 'Launch community program'],
+      },
+      threads: {
+        objective: 'Real-time cultural conversation and thought leadership',
+        themes: ['Hot takes', 'Industry commentary', 'Community dialogue'],
+        formats: ['Text posts', 'Quote threads'],
+        goals: ['Reach 100K', 'Drive community sign-ups'],
+      },
+      youtube: {
+        objective: 'Long-form content for deeper brand relationship',
+        themes: ['Creative process', 'Industry analysis', 'Community stories'],
+        formats: ['Mini-docs', 'Vlogs', 'Interviews'],
+        goals: ['200K subscribers', 'Brand deal opportunities'],
+      },
+    },
+    campaigns: [
+      { id: 'c1', name: 'Scaling Impact', status: 'active', phase: 'Conversion', startDate: 'May 1, 2026', endDate: 'Jun 15, 2026' },
+      { id: 'c2', name: 'Community Touchpoint', status: 'upcoming', phase: 'Engagement', startDate: 'Jun 16, 2026', endDate: 'Jul 31, 2026' },
+    ],
+    season: {
+      name: 'Summer 2026',
+      goal: 'Launch the Lain Doe community program and onboard 500 founding members',
+      pillars: ['Impact Scaling', 'Community Launch', 'Brand Partnerships'],
+      roadmap: ['Scaling Impact', 'Community Touchpoint', 'Founding Member Launch'],
+    },
+    board: {
+      ideas: [
+        { id: 'b1', title: 'What scaling actually looks like', platform: 'instagram', format: 'Reel' },
+        { id: 'b2', title: 'The community program: inside look', platform: 'youtube', format: 'Mini-doc' },
+      ],
+      drafting: [
+        { id: 'b3', title: 'Why I turned down that brand deal', platform: 'threads', format: 'Thread' },
+      ],
+      ready: [
+        { id: 'b4', title: 'Scaling impact: the framework', platform: 'instagram', format: 'Carousel' },
+        { id: 'b5', title: '2M and what it actually means', platform: 'youtube', format: 'Vlog' },
+        { id: 'b6', title: 'Community over algorithm', platform: 'instagram', format: 'Reel' },
+      ],
+      posted: [
+        { id: 'b7', title: 'The scaling begins', platform: 'instagram', format: 'Reel' },
+        { id: 'b8', title: 'Culture check: June 2026', platform: 'threads', format: 'Thread' },
+        { id: 'b9', title: 'Behind the 2M', platform: 'instagram', format: 'Carousel' },
+        { id: 'b10', title: 'What community means to me', platform: 'youtube', format: 'Long-form' },
+      ],
+    },
+    inspiration: [
+      { id: 'i1', type: 'note', content: 'Aesthetic: bold graffiti art, urban textures, vibrant colors' },
+      { id: 'i2', type: 'note', content: 'Color: deep blues, electric greens, hot pinks, bright yellows' },
+      { id: 'i3', type: 'note', content: 'Energy: unapologetic, celebratory, community-first' },
+    ],
+    ideas: [
+      { id: 'id1', title: 'The real cost of going viral', platform: 'youtube', format: 'Long-form', campaign: 'Scaling Impact' },
+      { id: 'id2', title: '10 things I wish I knew at 100K', platform: 'instagram', format: 'Carousel', campaign: 'Scaling Impact' },
+    ],
+  },
+];
