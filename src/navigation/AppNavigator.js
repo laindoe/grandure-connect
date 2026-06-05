@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View } from 'react-native';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -13,7 +13,7 @@ import IdeaVaultScreen from '../screens/IdeaVaultScreen';
 import InspirationScreen from '../screens/InspirationScreen';
 import IdeaCaptureBar from '../components/IdeaCaptureBar';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
   return (
@@ -22,8 +22,9 @@ export default function AppNavigator() {
         <Stack.Navigator
           screenOptions={{
             headerShown: false,
-            cardStyle: { backgroundColor: '#000' },
+            contentStyle: { backgroundColor: '#000' },
             gestureEnabled: true,
+            animation: 'slide_from_right',
           }}
         >
           <Stack.Screen name="Home" component={HomeScreen} />
