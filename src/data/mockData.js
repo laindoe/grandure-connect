@@ -3,8 +3,7 @@ export const BRANDS = [
     id: '1',
     name: 'homieOstasis',
     tagline: 'energy playground',
-    bannerColor: ['#5B9BD5', '#3A7BC8'],
-    logoStyle: 'text',
+    bannerGradient: 'linear-gradient(135deg, #5B9BD5, #3A7BC8)',
     stats: [
       { platform: 'instagram', count: '125K' },
       { platform: 'threads', count: '273M' },
@@ -28,24 +27,9 @@ export const BRANDS = [
       offers: ['Online Course: Energy 101', '1:1 Coaching', 'Community Membership'],
     },
     platformStrategy: {
-      instagram: {
-        objective: 'Build brand awareness and community engagement',
-        themes: ['Behind the scenes', 'Educational carousels', 'Community spotlights'],
-        formats: ['Reels', 'Carousels', 'Stories'],
-        goals: ['Reach 150K followers', 'Avg 5% engagement rate'],
-      },
-      threads: {
-        objective: 'Thought leadership and real-time conversation',
-        themes: ['Hot takes on wellness', 'Community questions', 'Daily energy check-ins'],
-        formats: ['Text posts', 'Quote threads', 'Polls'],
-        goals: ['Grow to 300M impressions', 'Daily posting consistency'],
-      },
-      youtube: {
-        objective: 'Deep-dive educational content for long-term discovery',
-        themes: ['Explainer videos', 'Guided practices', 'Interviews'],
-        formats: ['Long-form', 'Shorts', 'Live streams'],
-        goals: ['Hit 1M subscribers', '100K views per video average'],
-      },
+      instagram: { objective: 'Build brand awareness and community engagement', themes: ['Behind the scenes', 'Educational carousels', 'Community spotlights'], formats: ['Reels', 'Carousels', 'Stories'], goals: ['Reach 150K followers', 'Avg 5% engagement rate'] },
+      threads: { objective: 'Thought leadership and real-time conversation', themes: ['Hot takes on wellness', 'Community questions', 'Daily energy check-ins'], formats: ['Text posts', 'Quote threads', 'Polls'], goals: ['Grow to 300M impressions', 'Daily posting consistency'] },
+      youtube: { objective: 'Deep-dive educational content for long-term discovery', themes: ['Explainer videos', 'Guided practices', 'Interviews'], formats: ['Long-form', 'Shorts', 'Live streams'], goals: ['Hit 1M subscribers', '100K views per video average'] },
     },
     campaigns: [
       { id: 'c1', name: 'Intro to the Playground', status: 'active', phase: 'Awareness', startDate: 'Jun 1, 2026', endDate: 'Jul 15, 2026' },
@@ -59,24 +43,14 @@ export const BRANDS = [
       roadmap: ['Intro to the Playground', 'Healing Homies', 'FunEmployed'],
     },
     board: {
-      ideas: [
-        { id: 'b1', title: 'Why your energy crashes at 3pm', platform: 'instagram', format: 'Reel' },
-        { id: 'b2', title: 'Nervous system 101 thread', platform: 'threads', format: 'Thread' },
-      ],
-      drafting: [
-        { id: 'b3', title: 'Morning regulation routine', platform: 'youtube', format: 'Long-form' },
-      ],
-      ready: [
-        { id: 'b4', title: 'Energy playground intro reel', platform: 'instagram', format: 'Reel' },
-      ],
-      posted: [
-        { id: 'b5', title: 'Welcome to the playground', platform: 'instagram', format: 'Carousel' },
-        { id: 'b6', title: 'What is homieOstasis?', platform: 'youtube', format: 'Long-form' },
-      ],
+      ideas: [{ id: 'b1', title: 'Why your energy crashes at 3pm', platform: 'instagram', format: 'Reel' }, { id: 'b2', title: 'Nervous system 101 thread', platform: 'threads', format: 'Thread' }],
+      drafting: [{ id: 'b3', title: 'Morning regulation routine', platform: 'youtube', format: 'Long-form' }],
+      ready: [{ id: 'b4', title: 'Energy playground intro reel', platform: 'instagram', format: 'Reel' }],
+      posted: [{ id: 'b5', title: 'Welcome to the playground', platform: 'instagram', format: 'Carousel' }, { id: 'b6', title: 'What is homieOstasis?', platform: 'youtube', format: 'Long-form' }],
     },
     inspiration: [
       { id: 'i1', type: 'note', content: 'Aesthetic: soft blues, playful typography, organic shapes' },
-      { id: 'i2', type: 'link', content: 'https://example.com/ref1', label: 'Color palette reference' },
+      { id: 'i2', type: 'link', content: 'Color palette reference', url: '#' },
       { id: 'i3', type: 'note', content: 'Tone: knowledgeable but never clinical. Think: wise best friend.' },
     ],
     ideas: [
@@ -89,8 +63,7 @@ export const BRANDS = [
     id: '2',
     name: 'Heart Direction',
     tagline: '',
-    bannerColor: ['#1a1a1a', '#2a2a2a'],
-    logoStyle: 'script',
+    bannerGradient: 'linear-gradient(135deg, #1a1a1a, #2a2a2a)',
     stats: [
       { platform: 'instagram', count: '325K' },
       { platform: 'threads', count: '15K' },
@@ -113,18 +86,8 @@ export const BRANDS = [
       offers: ['Mastermind Program', 'Brand Strategy Sessions', 'Content Templates'],
     },
     platformStrategy: {
-      instagram: {
-        objective: 'Position as the go-to brand strategist for conscious creators',
-        themes: ['Strategy breakdowns', 'Client stories', 'Mindset shifts'],
-        formats: ['Carousels', 'Reels', 'Stories'],
-        goals: ['Reach 400K followers', '7% engagement rate'],
-      },
-      threads: {
-        objective: 'Build intimate community through direct conversation',
-        themes: ['Daily business reflections', 'Strategy tips', 'Community wins'],
-        formats: ['Text posts', 'Threads'],
-        goals: ['Grow to 50K', 'Daily engagement'],
-      },
+      instagram: { objective: 'Position as the go-to brand strategist for conscious creators', themes: ['Strategy breakdowns', 'Client stories', 'Mindset shifts'], formats: ['Carousels', 'Reels', 'Stories'], goals: ['Reach 400K followers', '7% engagement rate'] },
+      threads: { objective: 'Build intimate community through direct conversation', themes: ['Daily business reflections', 'Strategy tips', 'Community wins'], formats: ['Text posts', 'Threads'], goals: ['Grow to 50K', 'Daily engagement'] },
     },
     campaigns: [
       { id: 'c1', name: 'Content Blueprint', status: 'active', phase: 'Awareness', startDate: 'May 15, 2026', endDate: 'Jun 30, 2026' },
@@ -137,22 +100,10 @@ export const BRANDS = [
       roadmap: ['Content Blueprint', 'Visual Cycle', 'Mastermind Launch'],
     },
     board: {
-      ideas: [
-        { id: 'b1', title: 'Why most brand strategies fail', platform: 'instagram', format: 'Carousel' },
-      ],
-      drafting: [
-        { id: 'b2', title: 'The content blueprint framework', platform: 'instagram', format: 'Carousel' },
-        { id: 'b3', title: 'Heart vs hustle: finding your business rhythm', platform: 'threads', format: 'Thread' },
-      ],
-      ready: [
-        { id: 'b4', title: 'Meet the blueprint method', platform: 'instagram', format: 'Reel' },
-        { id: 'b5', title: 'Client spotlight: 6 months of heart direction', platform: 'instagram', format: 'Carousel' },
-      ],
-      posted: [
-        { id: 'b6', title: 'The blueprint begins', platform: 'instagram', format: 'Reel' },
-        { id: 'b7', title: 'Why I created Heart Direction', platform: 'instagram', format: 'Carousel' },
-        { id: 'b8', title: 'Strategy session behind the scenes', platform: 'instagram', format: 'Stories' },
-      ],
+      ideas: [{ id: 'b1', title: 'Why most brand strategies fail', platform: 'instagram', format: 'Carousel' }],
+      drafting: [{ id: 'b2', title: 'The content blueprint framework', platform: 'instagram', format: 'Carousel' }, { id: 'b3', title: 'Heart vs hustle', platform: 'threads', format: 'Thread' }],
+      ready: [{ id: 'b4', title: 'Meet the blueprint method', platform: 'instagram', format: 'Reel' }],
+      posted: [{ id: 'b5', title: 'The blueprint begins', platform: 'instagram', format: 'Reel' }, { id: 'b6', title: 'Why I created Heart Direction', platform: 'instagram', format: 'Carousel' }],
     },
     inspiration: [
       { id: 'i1', type: 'note', content: 'Color palette: deep reds, warm golds, cream whites' },
@@ -167,8 +118,7 @@ export const BRANDS = [
     id: '3',
     name: 'Lain Doe',
     tagline: '',
-    bannerColor: ['#2952CC', '#1a3a99'],
-    logoStyle: 'graffiti',
+    bannerGradient: 'linear-gradient(135deg, #2952CC, #1a3a99)',
     stats: [
       { platform: 'instagram', count: '2M' },
       { platform: 'threads', count: '75K' },
@@ -192,24 +142,9 @@ export const BRANDS = [
       offers: ['Creative Direction', 'Brand Consulting', 'Community Program'],
     },
     platformStrategy: {
-      instagram: {
-        objective: 'Maintain cultural authority and community leadership at scale',
-        themes: ['Behind the brand', 'Culture commentary', 'Community spotlights'],
-        formats: ['Reels', 'Carousels', 'Stories', 'Lives'],
-        goals: ['Maintain 2M+ engagement', 'Launch community program'],
-      },
-      threads: {
-        objective: 'Real-time cultural conversation and thought leadership',
-        themes: ['Hot takes', 'Industry commentary', 'Community dialogue'],
-        formats: ['Text posts', 'Quote threads'],
-        goals: ['Reach 100K', 'Drive community sign-ups'],
-      },
-      youtube: {
-        objective: 'Long-form content for deeper brand relationship',
-        themes: ['Creative process', 'Industry analysis', 'Community stories'],
-        formats: ['Mini-docs', 'Vlogs', 'Interviews'],
-        goals: ['200K subscribers', 'Brand deal opportunities'],
-      },
+      instagram: { objective: 'Maintain cultural authority and community leadership at scale', themes: ['Behind the brand', 'Culture commentary', 'Community spotlights'], formats: ['Reels', 'Carousels', 'Stories', 'Lives'], goals: ['Maintain 2M+ engagement', 'Launch community program'] },
+      threads: { objective: 'Real-time cultural conversation and thought leadership', themes: ['Hot takes', 'Industry commentary', 'Community dialogue'], formats: ['Text posts', 'Quote threads'], goals: ['Reach 100K', 'Drive community sign-ups'] },
+      youtube: { objective: 'Long-form content for deeper brand relationship', themes: ['Creative process', 'Industry analysis', 'Community stories'], formats: ['Mini-docs', 'Vlogs', 'Interviews'], goals: ['200K subscribers', 'Brand deal opportunities'] },
     },
     campaigns: [
       { id: 'c1', name: 'Scaling Impact', status: 'active', phase: 'Conversion', startDate: 'May 1, 2026', endDate: 'Jun 15, 2026' },
@@ -222,33 +157,18 @@ export const BRANDS = [
       roadmap: ['Scaling Impact', 'Community Touchpoint', 'Founding Member Launch'],
     },
     board: {
-      ideas: [
-        { id: 'b1', title: 'What scaling actually looks like', platform: 'instagram', format: 'Reel' },
-        { id: 'b2', title: 'The community program: inside look', platform: 'youtube', format: 'Mini-doc' },
-      ],
-      drafting: [
-        { id: 'b3', title: 'Why I turned down that brand deal', platform: 'threads', format: 'Thread' },
-      ],
-      ready: [
-        { id: 'b4', title: 'Scaling impact: the framework', platform: 'instagram', format: 'Carousel' },
-        { id: 'b5', title: '2M and what it actually means', platform: 'youtube', format: 'Vlog' },
-        { id: 'b6', title: 'Community over algorithm', platform: 'instagram', format: 'Reel' },
-      ],
-      posted: [
-        { id: 'b7', title: 'The scaling begins', platform: 'instagram', format: 'Reel' },
-        { id: 'b8', title: 'Culture check: June 2026', platform: 'threads', format: 'Thread' },
-        { id: 'b9', title: 'Behind the 2M', platform: 'instagram', format: 'Carousel' },
-        { id: 'b10', title: 'What community means to me', platform: 'youtube', format: 'Long-form' },
-      ],
+      ideas: [{ id: 'b1', title: 'What scaling actually looks like', platform: 'instagram', format: 'Reel' }],
+      drafting: [{ id: 'b2', title: 'Why I turned down that brand deal', platform: 'threads', format: 'Thread' }],
+      ready: [{ id: 'b3', title: 'Scaling impact: the framework', platform: 'instagram', format: 'Carousel' }, { id: 'b4', title: '2M and what it actually means', platform: 'youtube', format: 'Vlog' }],
+      posted: [{ id: 'b5', title: 'The scaling begins', platform: 'instagram', format: 'Reel' }, { id: 'b6', title: 'Culture check: June 2026', platform: 'threads', format: 'Thread' }, { id: 'b7', title: 'Behind the 2M', platform: 'instagram', format: 'Carousel' }],
     },
     inspiration: [
       { id: 'i1', type: 'note', content: 'Aesthetic: bold graffiti art, urban textures, vibrant colors' },
-      { id: 'i2', type: 'note', content: 'Color: deep blues, electric greens, hot pinks, bright yellows' },
-      { id: 'i3', type: 'note', content: 'Energy: unapologetic, celebratory, community-first' },
+      { id: 'i2', type: 'note', content: 'Energy: unapologetic, celebratory, community-first' },
     ],
     ideas: [
       { id: 'id1', title: 'The real cost of going viral', platform: 'youtube', format: 'Long-form', campaign: 'Scaling Impact' },
       { id: 'id2', title: '10 things I wish I knew at 100K', platform: 'instagram', format: 'Carousel', campaign: 'Scaling Impact' },
     ],
   },
-];
+]
