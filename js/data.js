@@ -1,9 +1,9 @@
-export const BRANDS = [
+const BRANDS = [
   {
     id: '1',
     name: 'homieOstasis',
     tagline: 'energy playground',
-    bannerGradient: 'linear-gradient(135deg, #5B9BD5, #3A7BC8)',
+    banner: 'linear-gradient(135deg, #5B9BD5, #3A7BC8)',
     stats: [
       { platform: 'instagram', count: '125K' },
       { platform: 'threads', count: '273M' },
@@ -50,7 +50,7 @@ export const BRANDS = [
     },
     inspiration: [
       { id: 'i1', type: 'note', content: 'Aesthetic: soft blues, playful typography, organic shapes' },
-      { id: 'i2', type: 'link', content: 'Color palette reference', url: '#' },
+      { id: 'i2', type: 'note', content: 'Color palette: sky blue, warm yellow, soft white' },
       { id: 'i3', type: 'note', content: 'Tone: knowledgeable but never clinical. Think: wise best friend.' },
     ],
     ideas: [
@@ -63,7 +63,7 @@ export const BRANDS = [
     id: '2',
     name: 'Heart Direction',
     tagline: '',
-    bannerGradient: 'linear-gradient(135deg, #1a1a1a, #2a2a2a)',
+    banner: 'linear-gradient(135deg, #1a1a1a, #2d2d2d)',
     stats: [
       { platform: 'instagram', count: '325K' },
       { platform: 'threads', count: '15K' },
@@ -118,7 +118,7 @@ export const BRANDS = [
     id: '3',
     name: 'Lain Doe',
     tagline: '',
-    bannerGradient: 'linear-gradient(135deg, #2952CC, #1a3a99)',
+    banner: 'linear-gradient(135deg, #2952CC, #1a3a99)',
     stats: [
       { platform: 'instagram', count: '2M' },
       { platform: 'threads', count: '75K' },
@@ -171,4 +171,4 @@ export const BRANDS = [
       { id: 'id2', title: '10 things I wish I knew at 100K', platform: 'instagram', format: 'Carousel', campaign: 'Scaling Impact' },
     ],
   },
-]
+];
