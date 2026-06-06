@@ -2,6 +2,24 @@
 
 const PLATFORM_ICONS = { instagram: '📸', threads: '🧵', youtube: '▶️', tiktok: '🎵', twitter: '𝕏' };
 
+/* ── localStorage persistence for user-added brands ── */
+const STORAGE_KEY = 'gc_custom_brands';
+
+function loadCustomBrands() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) JSON.parse(saved).forEach(b => BRANDS.push(b));
+  } catch (e) {}
+}
+
+function saveCustomBrands() {
+  const builtInIds = ['1', '2', '3'];
+  const custom = BRANDS.filter(b => !builtInIds.includes(b.id));
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(custom)); } catch (e) {}
+}
+
+loadCustomBrands();
+
 /* ── Router ── */
 function navigate(hash) { window.location.hash = hash; }
 
@@ -228,6 +246,7 @@ function bindAddBrand() {
       ideas: [],
     };
     BRANDS.push(newBrand);
+    saveCustomBrands();
     overlay.style.display = 'none';
     document.getElementById('app').innerHTML = pageHome();
     bindCapture(); bindNav(); bindAddBrand();
