@@ -47,6 +47,7 @@ function render() {
 
   bindCapture();
   bindNav();
+  bindAddBrand();
 }
 
 /* ── Bind all nav links ── */
@@ -56,6 +57,11 @@ function bindNav() {
       e.preventDefault();
       navigate(el.dataset.href);
     });
+  });
+
+  document.getElementById('openAddBrand')?.addEventListener('click', () => {
+    const overlay = document.getElementById('addBrandOverlay');
+    if (overlay) overlay.style.display = 'flex';
   });
 }
 
@@ -136,6 +142,98 @@ function bindCapture() {
 /* ═══════════════════════════════════════
    PAGE: HOME
 ═══════════════════════════════════════ */
+const BRAND_COLORS = [
+  { label: 'Ocean',   value: 'linear-gradient(135deg, #5B9BD5, #3A7BC8)' },
+  { label: 'Midnight', value: 'linear-gradient(135deg, #1a1a1a, #2d2d2d)' },
+  { label: 'Cobalt',  value: 'linear-gradient(135deg, #2952CC, #1a3a99)' },
+  { label: 'Forest',  value: 'linear-gradient(135deg, #1a4a2e, #2d7a4f)' },
+  { label: 'Ember',   value: 'linear-gradient(135deg, #7a2020, #cc4a1a)' },
+  { label: 'Plum',    value: 'linear-gradient(135deg, #4a1a7a, #7a2dcc)' },
+];
+
+function addBrandSheetHTML() {
+  return `
+    <div class="capture-overlay" id="addBrandOverlay" style="display:none">
+      <div class="capture-sheet">
+        <div class="capture-handle"></div>
+        <div class="capture-title">New Profile</div>
+
+        <div class="capture-section-label">BRAND NAME</div>
+        <input id="addBrandName" type="text" placeholder="e.g. Brand Name"
+          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
+                 border-radius:14px;padding:14px;color:#fff;font-size:15px;
+                 font-family:inherit;margin-bottom:16px;outline:none;">
+
+        <div class="capture-section-label">TAGLINE (optional)</div>
+        <input id="addBrandTagline" type="text" placeholder="A short description"
+          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
+                 border-radius:14px;padding:14px;color:#fff;font-size:15px;
+                 font-family:inherit;margin-bottom:16px;outline:none;">
+
+        <div class="capture-section-label">COLOR</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+          ${BRAND_COLORS.map((c, i) => `
+            <button class="add-brand-color ${i===0?'active':''}" data-color="${c.value}"
+              style="width:40px;height:40px;border-radius:12px;background:${c.value};
+                     border:2px solid ${i===0?'#fff':'transparent'};flex-shrink:0;">
+            </button>
+          `).join('')}
+        </div>
+
+        <div class="capture-actions">
+          <button class="capture-cancel" id="addBrandCancel">Cancel</button>
+          <button class="capture-save" id="addBrandSave">Add Profile</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bindAddBrand() {
+  const overlay = document.getElementById('addBrandOverlay');
+  if (!overlay) return;
+
+  let selectedColor = BRAND_COLORS[0].value;
+
+  document.getElementById('addBrandCancel')?.addEventListener('click', () => {
+    overlay.style.display = 'none';
+  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.style.display = 'none'; });
+
+  document.querySelectorAll('.add-brand-color').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.add-brand-color').forEach(b => b.style.border = '2px solid transparent');
+      btn.style.border = '2px solid #fff';
+      selectedColor = btn.dataset.color;
+    });
+  });
+
+  document.getElementById('addBrandSave')?.addEventListener('click', () => {
+    const name = document.getElementById('addBrandName')?.value.trim();
+    if (!name) { document.getElementById('addBrandName').focus(); return; }
+    const tagline = document.getElementById('addBrandTagline')?.value.trim();
+    const newBrand = {
+      id: String(Date.now()),
+      name,
+      tagline,
+      banner: selectedColor,
+      stats: [],
+      currentPhase: { name: 'Getting Started', next: 'TBD', progress: 0, postsCompleted: 0, totalPosts: 0, eosDate: '—' },
+      overview: { mission: '', positioning: '', audience: '', contentPillars: [], brandVoice: '', keywords: [], offers: [] },
+      platformStrategy: {},
+      campaigns: [],
+      season: { name: '', goal: '', pillars: [], roadmap: [] },
+      board: { ideas: [], drafting: [], ready: [], posted: [] },
+      inspiration: [],
+      ideas: [],
+    };
+    BRANDS.push(newBrand);
+    overlay.style.display = 'none';
+    document.getElementById('app').innerHTML = pageHome();
+    bindCapture(); bindNav(); bindAddBrand();
+  });
+}
+
 function pageHome() {
   const cards = BRANDS.map(brand => {
     const statsHTML = brand.stats.map((s, i) => `
@@ -153,7 +251,8 @@ function pageHome() {
           ${brand.tagline ? `<div class="brand-banner-tagline">${brand.tagline}</div>` : ''}
         </div>
         <div class="card-bottom">
-          <div class="stats-row">${statsHTML}</div>
+          <div class="stats-row">${statsHTML || '<span style="color:#444;font-size:12px">No platforms yet</span>'}</div>
+          ${brand.stats.length ? `
           <div class="phase-divider"></div>
           <div class="phase-section">
             <div>
@@ -162,7 +261,7 @@ function pageHome() {
               <div class="phase-next-small">Next: ${brand.currentPhase.next}</div>
             </div>
             <span style="color:#555;font-size:18px">›</span>
-          </div>
+          </div>` : ''}
         </div>
       </div>
     `;
@@ -175,22 +274,15 @@ function pageHome() {
         <div class="logo-wrap">
           <img src="img/grandure-connect.png" alt="Grandure Connect" class="logo-img">
         </div>
-        <div class="icon-btn" style="font-size:16px">👤</div>
+        <button class="icon-btn" id="openAddBrand" style="font-size:20px;font-weight:300">＋</button>
       </div>
       <div style="padding:0 16px 20px">
         <div class="section-label">PROFILES</div>
         ${cards}
-        <div class="add-card" style="margin-top:8px">
-          <div class="add-icon">＋</div>
-          <div style="flex:1">
-            <div class="add-card-title">Add New Profile</div>
-            <div class="add-card-sub">Start tracking a new brand or project.</div>
-          </div>
-          <span style="color:#444;font-size:18px">›</span>
-        </div>
       </div>
     </div>
     ${captureBarHTML('')}
+    ${addBrandSheetHTML()}
   `;
 }
 
