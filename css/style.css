@@ -50,8 +50,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 }
 
 .logo-wrap { text-align: center; }
-.logo-top { font-size: 20px; font-weight: 700; letter-spacing: 6px; }
-.logo-bottom { font-size: 12px; letter-spacing: 8px; margin-top: -2px; }
+.logo-img { height: 36px; width: auto; display: block; }
 
 /* ── Back header ── */
 .back-header {
