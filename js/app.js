@@ -175,17 +175,18 @@ function pageHome() {
         <div class="logo-wrap">
           <img src="img/grandure-connect.png" alt="Grandure Connect" class="logo-img">
         </div>
-        <div class="icon-btn">＋</div>
+        <div class="icon-btn" style="font-size:16px">👤</div>
       </div>
       <div style="padding:0 16px 20px">
-        <div class="section-label">YOUR BRANDS</div>
+        <div class="section-label">PROFILES</div>
         ${cards}
         <div class="add-card" style="margin-top:8px">
           <div class="add-icon">＋</div>
-          <div>
-            <div class="add-card-title">Add New Brand</div>
-            <div class="add-card-sub">Connect a new brand workspace</div>
+          <div style="flex:1">
+            <div class="add-card-title">Add New Profile</div>
+            <div class="add-card-sub">Start tracking a new brand or project.</div>
           </div>
+          <span style="color:#444;font-size:18px">›</span>
         </div>
       </div>
     </div>
