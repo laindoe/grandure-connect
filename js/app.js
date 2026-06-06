@@ -173,7 +173,7 @@ function pageHome() {
       <div class="top-header">
         <div class="icon-btn">☰</div>
         <div class="logo-wrap">
-          <img src="img/logo.png" alt="Grandure Connect" class="logo-img">
+          <img src="img/grandure-connect.png" alt="Grandure Connect" class="logo-img">
         </div>
         <div class="icon-btn">＋</div>
       </div>
