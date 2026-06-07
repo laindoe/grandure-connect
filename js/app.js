@@ -351,15 +351,6 @@ function pageBrandWorkspace(id) {
         </div>
         <div style="font-size:28px;font-weight:800">${brand.name}</div>
         ${brand.tagline ? `<div style="color:rgba(255,255,255,0.8);margin-top:4px">${brand.tagline}</div>` : ''}
-        <div class="workspace-banner-stats">
-          ${brand.stats.map((s,i) => `
-            ${i > 0 ? '<div style="width:1px;height:24px;background:rgba(255,255,255,0.2)"></div>' : ''}
-            <div class="stat">
-              <span class="stat-icon">${PLATFORM_ICONS[s.platform] || '●'}</span>
-              <span class="stat-count">${s.count}</span>
-            </div>
-          `).join('')}
-        </div>
       </div>
       <div style="padding:16px">
         ${sectionCards}
