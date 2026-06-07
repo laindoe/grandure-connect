@@ -300,7 +300,6 @@ function pageHome() {
         ${cards}
       </div>
     </div>
-    ${captureBarHTML('')}
     ${addBrandSheetHTML()}
   `;
 }
