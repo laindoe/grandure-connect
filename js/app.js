@@ -107,7 +107,6 @@ function render() {
   bindCapture();
   bindNav();
   bindAddBrand();
-  const { path, params } = parseHash();
   if (path === '/brand') bindEditBrand(params.id);
 }
 
