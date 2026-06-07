@@ -37,6 +37,30 @@ function saveCustomBrands() {
 
 loadCustomBrands();
 
+/* ── Brand overrides (edits to any brand, including built-ins) ── */
+const OVERRIDES_KEY = 'gc_brand_overrides';
+
+function loadBrandOverrides() {
+  try {
+    const saved = localStorage.getItem(OVERRIDES_KEY);
+    if (!saved) return;
+    const overrides = JSON.parse(saved);
+    BRANDS.forEach(b => { if (overrides[b.id]) Object.assign(b, overrides[b.id]); });
+  } catch (e) {}
+}
+
+function saveBrandOverride(id, patch) {
+  try {
+    const overrides = JSON.parse(localStorage.getItem(OVERRIDES_KEY) || '{}');
+    overrides[id] = { ...overrides[id], ...patch };
+    localStorage.setItem(OVERRIDES_KEY, JSON.stringify(overrides));
+  } catch (e) {}
+  const brand = BRANDS.find(b => b.id === id);
+  if (brand) Object.assign(brand, patch);
+}
+
+loadBrandOverrides();
+
 /* ── Router ── */
 function navigate(hash) { window.location.hash = hash; }
 
@@ -83,6 +107,8 @@ function render() {
   bindCapture();
   bindNav();
   bindAddBrand();
+  const { path, params } = parseHash();
+  if (path === '/brand') bindEditBrand(params.id);
 }
 
 /* ── Bind all nav links ── */
@@ -317,6 +343,112 @@ function pageHome() {
   `;
 }
 
+/* ── Edit Brand Sheet ── */
+function editBrandSheetHTML(brand) {
+  return `
+    <div class="capture-overlay" id="editBrandOverlay" style="display:none">
+      <div class="capture-sheet">
+        <div class="capture-handle"></div>
+        <div class="capture-title">Edit Profile</div>
+
+        <div class="capture-section-label">BRAND NAME</div>
+        <input id="editBrandName" type="text" value="${brand.name}"
+          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
+                 border-radius:14px;padding:14px;color:#fff;font-size:15px;
+                 font-family:inherit;margin-bottom:16px;outline:none;">
+
+        <div class="capture-section-label">TAGLINE</div>
+        <input id="editBrandTagline" type="text" value="${brand.tagline || ''}" placeholder="A short description"
+          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
+                 border-radius:14px;padding:14px;color:#fff;font-size:15px;
+                 font-family:inherit;margin-bottom:16px;outline:none;">
+
+        <div class="capture-section-label">CARD IMAGE</div>
+        <label style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);
+                      border:1px solid rgba(255,255,255,0.08);border-radius:14px;
+                      padding:14px;cursor:pointer;margin-bottom:12px">
+          <span style="font-size:22px">🖼️</span>
+          <div>
+            <div style="font-size:14px;font-weight:600">Upload Image</div>
+            <div style="color:#555;font-size:12px;margin-top:2px">JPG or PNG</div>
+          </div>
+          <input type="file" id="editBrandImage" accept="image/*" style="display:none">
+        </label>
+        <div id="editImagePreview" style="display:none;margin-bottom:12px">
+          <img id="editImageThumb" style="width:100%;height:100px;object-fit:cover;border-radius:12px;">
+        </div>
+
+        <div class="capture-section-label">OR PICK A COLOR</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+          ${BRAND_COLORS.map(c => `
+            <button class="edit-brand-color" data-color="${c.value}"
+              style="width:40px;height:40px;border-radius:12px;background:${c.value};
+                     border:2px solid transparent;flex-shrink:0;">
+            </button>
+          `).join('')}
+        </div>
+
+        <div class="capture-actions">
+          <button class="capture-cancel" id="editBrandCancel">Cancel</button>
+          <button class="capture-save" id="editBrandSave">Save</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function bindEditBrand(id) {
+  const overlay = document.getElementById('editBrandOverlay');
+  if (!overlay) return;
+
+  let pendingBanner = null;
+
+  document.getElementById('openEditBrand')?.addEventListener('click', () => {
+    overlay.style.display = 'flex';
+  });
+  document.getElementById('editBrandCancel')?.addEventListener('click', () => {
+    overlay.style.display = 'none';
+  });
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.style.display = 'none'; });
+
+  document.getElementById('editBrandImage')?.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      pendingBanner = ev.target.result;
+      document.getElementById('editImagePreview').style.display = 'block';
+      document.getElementById('editImageThumb').src = pendingBanner;
+      document.querySelectorAll('.edit-brand-color').forEach(b => b.style.border = '2px solid transparent');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.querySelectorAll('.edit-brand-color').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.edit-brand-color').forEach(b => b.style.border = '2px solid transparent');
+      btn.style.border = '2px solid #fff';
+      pendingBanner = btn.dataset.color;
+      document.getElementById('editImagePreview').style.display = 'none';
+      document.getElementById('editBrandImage').value = '';
+    });
+  });
+
+  document.getElementById('editBrandSave')?.addEventListener('click', () => {
+    const name = document.getElementById('editBrandName')?.value.trim();
+    const tagline = document.getElementById('editBrandTagline')?.value.trim();
+    const patch = {};
+    if (name) patch.name = name;
+    patch.tagline = tagline;
+    if (pendingBanner) patch.banner = pendingBanner;
+    saveBrandOverride(id, patch);
+    saveCustomBrands();
+    overlay.style.display = 'none';
+    document.getElementById('app').innerHTML = pageBrandWorkspace(id);
+    bindCapture(); bindNav(); bindAddBrand(); bindEditBrand(id);
+  });
+}
+
 /* ═══════════════════════════════════════
    PAGE: BRAND WORKSPACE
 ═══════════════════════════════════════ */
@@ -356,15 +488,19 @@ function pageBrandWorkspace(id) {
     </div>
   `).join('');
 
+  const bannerStyle = brand.banner.startsWith('data:') || brand.banner.startsWith('http')
+    ? `background:url('${brand.banner}') center/cover no-repeat`
+    : `background:${brand.banner}`;
+
   return `
     <div class="page">
-      <div class="workspace-banner" style="background:${brand.banner}">
+      <div class="workspace-banner" style="${bannerStyle}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <button class="gradient-back" data-href="#/">‹</button>
           <div style="text-align:center">
             <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.7)">WORKSPACE</div>
           </div>
-          <div style="width:36px"></div>
+          <button class="gradient-back" id="openEditBrand" style="font-size:16px">✏️</button>
         </div>
         <div style="font-size:28px;font-weight:800">${brand.name}</div>
         ${brand.tagline ? `<div style="color:rgba(255,255,255,0.8);margin-top:4px">${brand.tagline}</div>` : ''}
@@ -374,6 +510,7 @@ function pageBrandWorkspace(id) {
       </div>
     </div>
     ${captureBarHTML(id)}
+    ${editBrandSheetHTML(brand)}
   `;
 }
 
