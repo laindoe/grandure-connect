@@ -270,9 +270,6 @@ function pageHome() {
           ${brand.tagline ? `<div class="brand-banner-tagline">${brand.tagline}</div>` : ''}
         </div>
         <div class="card-bottom">
-          <div class="stats-row">${statsHTML || '<span style="color:#444;font-size:12px">No platforms yet</span>'}</div>
-          ${brand.stats.length ? `
-          <div class="phase-divider"></div>
           <div class="phase-section">
             <div>
               <div class="phase-label">CURRENT PHASE</div>
@@ -280,7 +277,7 @@ function pageHome() {
               <div class="phase-next-small">Next: ${brand.currentPhase.next}</div>
             </div>
             <span style="color:#555;font-size:18px">›</span>
-          </div>` : ''}
+          </div>
         </div>
       </div>
     `;
