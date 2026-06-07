@@ -293,7 +293,6 @@ function pageHome() {
         <button class="icon-btn" id="openAddBrand" style="font-size:20px;font-weight:300">＋</button>
       </div>
       <div style="padding:0 16px 20px">
-        <div class="section-label">PROFILES</div>
         ${cards}
       </div>
     </div>
