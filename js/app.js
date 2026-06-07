@@ -2,6 +2,23 @@
 
 const PLATFORM_ICONS = { instagram: '📸', threads: '🧵', youtube: '▶️', tiktok: '🎵', twitter: '𝕏' };
 
+/* ── Auto-update poller ── */
+(function startUpdatePoller() {
+  let knownEtag = null;
+
+  async function check() {
+    try {
+      const res = await fetch('js/app.js?_=' + Date.now(), { cache: 'no-store', method: 'HEAD' });
+      const etag = res.headers.get('etag') || res.headers.get('last-modified');
+      if (!etag) return;
+      if (knownEtag === null) { knownEtag = etag; return; }
+      if (etag !== knownEtag) window.location.reload();
+    } catch (e) {}
+  }
+
+  setTimeout(() => { check(); setInterval(check, 20000); }, 5000);
+})();
+
 /* ── localStorage persistence for user-added brands ── */
 const STORAGE_KEY = 'gc_custom_brands';
 
