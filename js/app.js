@@ -1,6 +1,7 @@
 /* ── Grandure Connect SPA ── */
 
-const PLATFORM_ICONS = { instagram: '📸', threads: '🧵', youtube: '▶️', tiktok: '🎵', twitter: '𝕏' };
+const PLATFORM_LABELS = { instagram: 'Instagram', threads: 'Threads', youtube: 'YouTube', tiktok: 'TikTok', twitter: 'X' };
+const PLATFORM_SHORT  = { instagram: 'IG', threads: 'TH', youtube: 'YT', tiktok: 'TK', twitter: 'X' };
 
 /* ── Auto-update poller ── */
 (function startUpdatePoller() {
@@ -131,8 +132,8 @@ let captureState = { platform: '', format: '', brandId: '' };
 function captureBarHTML(brandId) {
   return `
     <div class="capture-bar">
-      <div class="capture-input" id="captureOpen">💡 Capture an idea…</div>
-      <button class="icon-btn" id="captureOpen2">✏️</button>
+      <div class="capture-input" id="captureOpen">Capture an idea…</div>
+      <button class="icon-btn" id="captureOpen2" style="font-size:22px;font-weight:200">+</button>
     </div>
     <div class="capture-overlay" id="captureOverlay" style="display:none">
       <div class="capture-sheet">
@@ -142,7 +143,7 @@ function captureBarHTML(brandId) {
         <div class="capture-section-label">PLATFORM</div>
         <div class="capture-chips" id="capturePlatformChips">
           ${['instagram','threads','youtube','tiktok'].map(p =>
-            `<button class="capture-chip" data-platform="${p}">${PLATFORM_ICONS[p] || ''} ${p}</button>`
+            `<button class="capture-chip" data-platform="${p}">${PLATFORM_LABELS[p]}</button>`
           ).join('')}
         </div>
         <div class="capture-section-label">FORMAT</div>
@@ -203,12 +204,12 @@ function bindCapture() {
    PAGE: HOME
 ═══════════════════════════════════════ */
 const BRAND_COLORS = [
-  { label: 'Ocean',   value: 'linear-gradient(135deg, #5B9BD5, #3A7BC8)' },
+  { label: 'Ocean',    value: 'linear-gradient(135deg, #5B9BD5, #3A7BC8)' },
   { label: 'Midnight', value: 'linear-gradient(135deg, #1a1a1a, #2d2d2d)' },
-  { label: 'Cobalt',  value: 'linear-gradient(135deg, #2952CC, #1a3a99)' },
-  { label: 'Forest',  value: 'linear-gradient(135deg, #1a4a2e, #2d7a4f)' },
-  { label: 'Ember',   value: 'linear-gradient(135deg, #7a2020, #cc4a1a)' },
-  { label: 'Plum',    value: 'linear-gradient(135deg, #4a1a7a, #7a2dcc)' },
+  { label: 'Cobalt',   value: 'linear-gradient(135deg, #2952CC, #1a3a99)' },
+  { label: 'Forest',   value: 'linear-gradient(135deg, #1a4a2e, #2d7a4f)' },
+  { label: 'Ember',    value: 'linear-gradient(135deg, #7a2020, #cc4a1a)' },
+  { label: 'Plum',     value: 'linear-gradient(135deg, #4a1a7a, #7a2dcc)' },
 ];
 
 function addBrandSheetHTML() {
@@ -296,43 +297,37 @@ function bindAddBrand() {
 }
 
 function pageHome() {
-  const cards = BRANDS.map(brand => {
-    const statsHTML = brand.stats.map((s, i) => `
-      ${i > 0 ? '<div class="stat-divider"></div>' : ''}
-      <div class="stat">
-        <span class="stat-icon">${PLATFORM_ICONS[s.platform] || '●'}</span>
-        <span class="stat-count">${s.count}</span>
-      </div>
-    `).join('');
+  const bannerStyle = b => b.banner.startsWith('data:') || b.banner.startsWith('http')
+    ? `background:url('${b.banner}') center/cover no-repeat`
+    : `background:${b.banner}`;
 
-    return `
-      <div class="brand-card" data-href="#/brand?id=${brand.id}">
-        <div class="brand-banner" style="background:${brand.banner}">
-          <div class="brand-banner-name">${brand.name}</div>
-          ${brand.tagline ? `<div class="brand-banner-tagline">${brand.tagline}</div>` : ''}
-        </div>
-        <div class="card-bottom">
-          <div class="phase-section">
-            <div>
-              <div class="phase-label">CURRENT PHASE</div>
-              <div class="phase-name-small">${brand.currentPhase.name}</div>
-              <div class="phase-next-small">Next: ${brand.currentPhase.next}</div>
-            </div>
-            <span style="color:#555;font-size:18px">›</span>
+  const cards = BRANDS.map(brand => `
+    <div class="brand-card" data-href="#/brand?id=${brand.id}">
+      <div class="brand-banner" style="${bannerStyle(brand)}">
+        <div class="brand-banner-name">${brand.name}</div>
+        ${brand.tagline ? `<div class="brand-banner-tagline">${brand.tagline}</div>` : ''}
+      </div>
+      <div class="card-bottom">
+        <div class="phase-section">
+          <div>
+            <div class="phase-label">CURRENT PHASE</div>
+            <div class="phase-name-small">${brand.currentPhase.name}</div>
+            <div class="phase-next-small">Next: ${brand.currentPhase.next}</div>
           </div>
+          <span style="color:#555;font-size:18px">›</span>
         </div>
       </div>
-    `;
-  }).join('');
+    </div>
+  `).join('');
 
   return `
     <div class="page" style="padding-bottom:24px">
       <div class="top-header">
-        <div class="icon-btn">☰</div>
+        <div class="icon-btn">&#9776;</div>
         <div class="logo-wrap">
           <img src="img/grandure-connect.png" alt="Grandure Connect" class="logo-img">
         </div>
-        <button class="icon-btn" id="openAddBrand" style="font-size:20px;font-weight:300">＋</button>
+        <button class="icon-btn" id="openAddBrand" style="font-size:22px;font-weight:200">+</button>
       </div>
       <div style="padding:0 16px 20px">
         ${cards}
@@ -366,7 +361,10 @@ function editBrandSheetHTML(brand) {
         <label style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);
                       border:1px solid rgba(255,255,255,0.08);border-radius:14px;
                       padding:14px;cursor:pointer;margin-bottom:12px">
-          <span style="font-size:22px">🖼️</span>
+          <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.08);
+                      display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">
+            &#8679;
+          </div>
           <div>
             <div style="font-size:14px;font-weight:600">Upload Image</div>
             <div style="color:#555;font-size:12px;margin-top:2px">JPG or PNG</div>
@@ -458,12 +456,12 @@ function pageBrandWorkspace(id) {
   const { currentPhase: cp } = brand;
 
   const sections = [
-    { key: 'phase',       icon: '🎯', label: 'CURRENT PHASE',     sub: cp.name,             href: `#/phase?id=${id}` },
-    { key: 'overview',    icon: '📋', label: 'BRAND OVERVIEW',    sub: 'Playbook & strategy', href: `#/overview?id=${id}` },
-    { key: 'platform',    icon: '📱', label: 'PLATFORM STRATEGY', sub: brand.stats.map(s=>s.platform).join(' · '), href: `#/platform?id=${id}` },
-    { key: 'season',      icon: '🌊', label: 'SEASON',            sub: brand.season.name,    href: `#/season?id=${id}` },
-    { key: 'vault',       icon: '💡', label: 'IDEA VAULT',        sub: `${brand.ideas.length} ideas`,  href: `#/vault?id=${id}` },
-    { key: 'inspiration', icon: '✨', label: 'INSPIRATION',       sub: `${brand.inspiration.length} saved`, href: `#/inspiration?id=${id}` },
+    { key: 'phase',       label: 'CURRENT PHASE',     sub: cp.name,                                    href: `#/phase?id=${id}` },
+    { key: 'overview',    label: 'BRAND OVERVIEW',    sub: 'Playbook & strategy',                      href: `#/overview?id=${id}` },
+    { key: 'platform',    label: 'PLATFORM STRATEGY', sub: brand.stats.map(s=>s.platform).join(' · '), href: `#/platform?id=${id}` },
+    { key: 'season',      label: 'SEASON',            sub: brand.season.name,                          href: `#/season?id=${id}` },
+    { key: 'vault',       label: 'IDEA VAULT',        sub: `${brand.ideas.length} ideas`,              href: `#/vault?id=${id}` },
+    { key: 'inspiration', label: 'INSPIRATION',       sub: `${brand.inspiration.length} saved`,        href: `#/inspiration?id=${id}` },
   ];
 
   const sectionCards = sections.map(s => `
@@ -472,18 +470,15 @@ function pageBrandWorkspace(id) {
         <div class="section-card-title">${s.label}</div>
         <div class="section-card-right"><span>${s.sub}</span><span style="font-size:16px">›</span></div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:28px">${s.icon}</span>
-        ${s.key === 'phase' ? `
-          <div style="flex:1">
-            <div class="progress-row" style="margin-bottom:6px">
-              <div class="progress-track"><div class="progress-fill" style="width:${cp.progress}%"></div></div>
-              <span class="progress-pct">${cp.progress}%</span>
-            </div>
-            <div class="body-text" style="font-size:12px">${cp.postsCompleted}/${cp.totalPosts} posts · Ends ${cp.eosDate}</div>
+      ${s.key === 'phase' ? `
+        <div style="margin-top:4px">
+          <div class="progress-row" style="margin-bottom:6px">
+            <div class="progress-track"><div class="progress-fill" style="width:${cp.progress}%"></div></div>
+            <span class="progress-pct">${cp.progress}%</span>
           </div>
-        ` : `<span class="body-text" style="font-size:13px">${s.sub}</span>`}
-      </div>
+          <div class="body-text" style="font-size:12px">${cp.postsCompleted}/${cp.totalPosts} posts · Ends ${cp.eosDate}</div>
+        </div>
+      ` : `<div class="body-text" style="font-size:13px">${s.sub}</div>`}
     </div>
   `).join('');
 
@@ -496,10 +491,11 @@ function pageBrandWorkspace(id) {
       <div class="workspace-banner" style="${bannerStyle}">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <button class="gradient-back" data-href="#/">‹</button>
-          <div style="text-align:center">
-            <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.7)">WORKSPACE</div>
-          </div>
-          <button class="gradient-back" id="openEditBrand" style="font-size:16px">✏️</button>
+          <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.7)">WORKSPACE</div>
+          <button class="gradient-back" id="openEditBrand"
+            style="font-size:11px;letter-spacing:1px;font-weight:600;width:auto;padding:0 12px;border-radius:20px">
+            EDIT
+          </button>
         </div>
         <div style="font-size:28px;font-weight:800">${brand.name}</div>
         ${brand.tagline ? `<div style="color:rgba(255,255,255,0.8);margin-top:4px">${brand.tagline}</div>` : ''}
@@ -551,19 +547,17 @@ function pageCurrentPhase(id, tab) {
 
     if (activeTab === 'board') {
       const cols = [
-        { key: 'ideas',    label: 'Ideas',    color: '#444', emoji: '💡' },
-        { key: 'drafting', label: 'Drafting', color: '#5B9BD5', emoji: '✏️' },
-        { key: 'ready',    label: 'Ready',    color: '#4CAF50', emoji: '✅' },
-        { key: 'posted',   label: 'Posted',   color: '#888', emoji: '🚀' },
+        { key: 'ideas',    label: 'Ideas',    color: '#555' },
+        { key: 'drafting', label: 'Drafting', color: '#5B9BD5' },
+        { key: 'ready',    label: 'Ready',    color: '#4CAF50' },
+        { key: 'posted',   label: 'Posted',   color: '#888' },
       ];
       return `<div class="tab-content">${cols.map(col => {
         const items = (brand.board[col.key] || []);
         return `
           <div class="board-col">
             <div class="board-col-header">
-              <div class="board-dot-wrap" style="background:${col.color}22">
-                <span>${col.emoji}</span>
-              </div>
+              <div style="width:8px;height:8px;border-radius:50%;background:${col.color};flex-shrink:0"></div>
               <span style="font-weight:700;font-size:14px">${col.label}</span>
               <div class="board-count">${items.length}</div>
             </div>
@@ -571,7 +565,7 @@ function pageCurrentPhase(id, tab) {
               <div class="board-card">
                 <div class="board-card-title">${item.title}</div>
                 <div class="chips">
-                  <span class="chip">${PLATFORM_ICONS[item.platform] || ''} ${item.platform}</span>
+                  <span class="chip">${PLATFORM_SHORT[item.platform] || item.platform}</span>
                   <span class="chip">${item.format}</span>
                 </div>
               </div>
@@ -589,8 +583,7 @@ function pageCurrentPhase(id, tab) {
             ${days.map((d,i) => `<button class="day-btn ${i===0?'active':''}">${d}</button>`).join('')}
           </div>
           <div class="calendar-empty">
-            <span style="font-size:40px">📅</span>
-            <span style="color:#555;font-size:14px">No posts scheduled for this day</span>
+            <span style="color:#333;font-size:13px">No posts scheduled for this day</span>
           </div>
         </div>
       `;
@@ -635,11 +628,10 @@ function pageOverview(id) {
   if (!brand) return pageHome();
   const { overview: o } = brand;
 
-  const playSection = (icon, title, content) => `
+  const playSection = (title, content) => `
     <div class="playbook-section">
       <div class="playbook-section-header">
-        <span style="font-size:20px">${icon}</span>
-        <span style="font-size:10px;letter-spacing:2px;color:#666;font-weight:600">${title}</span>
+        <span style="font-size:10px;letter-spacing:2px;color:#555;font-weight:600">${title}</span>
       </div>
       <div class="playbook-section-body">${content}</div>
     </div>
@@ -654,8 +646,8 @@ function pageOverview(id) {
 
   const keywordsHTML = `<div class="tags">${o.keywords.map(k=>`<span class="tag">${k}</span>`).join('')}</div>`;
   const offersHTML = o.offers.map(off => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e1e1e">
-      <span style="font-size:16px">→</span>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <span style="color:#555;font-size:16px">&#8594;</span>
       <span class="body-text">${off}</span>
     </div>
   `).join('');
@@ -671,13 +663,13 @@ function pageOverview(id) {
         <div style="width:36px"></div>
       </div>
       <div style="padding:16px">
-        ${playSection('🎯','MISSION', `<p class="body-text">${o.mission}</p>`)}
-        ${playSection('📌','POSITIONING', `<p class="body-text">${o.positioning}</p>`)}
-        ${playSection('👥','AUDIENCE', `<p class="body-text">${o.audience}</p>`)}
-        ${playSection('🗣️','BRAND VOICE', `<p class="body-text">${o.brandVoice}</p>`)}
-        ${playSection('🏛️','CONTENT PILLARS', pillarsHTML)}
-        ${playSection('🔑','KEYWORDS', keywordsHTML)}
-        ${playSection('💼','OFFERS', offersHTML)}
+        ${playSection('MISSION',          `<p class="body-text">${o.mission}</p>`)}
+        ${playSection('POSITIONING',      `<p class="body-text">${o.positioning}</p>`)}
+        ${playSection('AUDIENCE',         `<p class="body-text">${o.audience}</p>`)}
+        ${playSection('BRAND VOICE',      `<p class="body-text">${o.brandVoice}</p>`)}
+        ${playSection('CONTENT PILLARS',  pillarsHTML)}
+        ${playSection('KEYWORDS',         keywordsHTML)}
+        ${playSection('OFFERS',           offersHTML)}
       </div>
     </div>
     ${captureBarHTML(id)}
@@ -694,14 +686,23 @@ function pagePlatformStrategy(id, activePlatform) {
   const active = activePlatform || platforms[0];
   const strat = brand.platformStrategy[active];
 
-  const themesHTML = strat.themes.map(t => `<span class="tag">${t}</span>`).join('');
+  const themesHTML  = strat.themes.map(t => `<span class="tag">${t}</span>`).join('');
   const formatsHTML = strat.formats.map(f => `<span class="tag">${f}</span>`).join('');
-  const goalsHTML = strat.goals.map(g => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1e1e1e">
-      <span style="color:#4CAF50;font-size:14px">✓</span>
+  const goalsHTML   = strat.goals.map(g => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <span style="color:#4CAF50;font-size:14px">&#10003;</span>
       <span class="body-text">${g}</span>
     </div>
   `).join('');
+
+  const stratSection = (title, content) => `
+    <div class="playbook-section">
+      <div class="playbook-section-header">
+        <span style="font-size:10px;letter-spacing:2px;color:#555;font-weight:600">${title}</span>
+      </div>
+      <div class="playbook-section-body">${content}</div>
+    </div>
+  `;
 
   return `
     <div class="page">
@@ -716,39 +717,15 @@ function pagePlatformStrategy(id, activePlatform) {
       <div class="platform-tabs">
         ${platforms.map(p => `
           <button class="platform-tab ${p===active?'active':''}" onclick="switchPlatform('${id}','${p}')">
-            ${PLATFORM_ICONS[p] || ''} ${p}
+            ${PLATFORM_LABELS[p] || p}
           </button>
         `).join('')}
       </div>
       <div style="padding:16px">
-        <div class="playbook-section">
-          <div class="playbook-section-header">
-            <span style="font-size:20px">🎯</span>
-            <span style="font-size:10px;letter-spacing:2px;color:#666;font-weight:600">OBJECTIVE</span>
-          </div>
-          <div class="playbook-section-body"><p class="body-text">${strat.objective}</p></div>
-        </div>
-        <div class="playbook-section">
-          <div class="playbook-section-header">
-            <span style="font-size:20px">🎨</span>
-            <span style="font-size:10px;letter-spacing:2px;color:#666;font-weight:600">CONTENT THEMES</span>
-          </div>
-          <div class="playbook-section-body"><div class="tags">${themesHTML}</div></div>
-        </div>
-        <div class="playbook-section">
-          <div class="playbook-section-header">
-            <span style="font-size:20px">📐</span>
-            <span style="font-size:10px;letter-spacing:2px;color:#666;font-weight:600">FORMATS</span>
-          </div>
-          <div class="playbook-section-body"><div class="tags">${formatsHTML}</div></div>
-        </div>
-        <div class="playbook-section">
-          <div class="playbook-section-header">
-            <span style="font-size:20px">🏆</span>
-            <span style="font-size:10px;letter-spacing:2px;color:#666;font-weight:600">GOALS</span>
-          </div>
-          <div class="playbook-section-body">${goalsHTML}</div>
-        </div>
+        ${stratSection('OBJECTIVE',      `<p class="body-text">${strat.objective}</p>`)}
+        ${stratSection('CONTENT THEMES', `<div class="tags">${themesHTML}</div>`)}
+        ${stratSection('FORMATS',        `<div class="tags">${formatsHTML}</div>`)}
+        ${stratSection('GOALS',          goalsHTML)}
       </div>
     </div>
     ${captureBarHTML(id)}
@@ -779,7 +756,6 @@ function pageSeason(id) {
 
   const roadmapHTML = season.roadmap.map((r, i) => {
     const isActive = r === activeCamp;
-    const isDone = campaigns.find(c => c.name === r)?.status === 'posted';
     const isLast = i === season.roadmap.length - 1;
     return `
       <div class="roadmap-item">
@@ -809,8 +785,7 @@ function pageSeason(id) {
       <div style="padding:16px">
         <div class="playbook-section">
           <div class="playbook-section-header">
-            <span style="font-size:20px">🎯</span>
-            <span style="font-size:10px;letter-spacing:2px;color:#666;font-weight:600">SEASON GOAL</span>
+            <span style="font-size:10px;letter-spacing:2px;color:#555;font-weight:600">SEASON GOAL</span>
           </div>
           <div class="playbook-section-body"><p class="body-text">${season.goal}</p></div>
         </div>
@@ -832,10 +807,10 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
   if (!brand) return pageHome();
 
   const platforms = [...new Set(brand.ideas.map(i => i.platform))];
-  const formats = [...new Set(brand.ideas.map(i => i.format))];
+  const formats   = [...new Set(brand.ideas.map(i => i.format))];
 
   const fp = filterPlatform || 'all';
-  const ff = filterFormat || 'all';
+  const ff = filterFormat   || 'all';
 
   const filtered = brand.ideas.filter(i =>
     (fp === 'all' || i.platform === fp) &&
@@ -845,11 +820,11 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
   const ideasHTML = filtered.length ? filtered.map(idea => `
     <div class="idea-card">
       <div class="idea-card-meta">
-        <span class="chip">${PLATFORM_ICONS[idea.platform] || ''} ${idea.platform}</span>
+        <span class="chip">${PLATFORM_SHORT[idea.platform] || idea.platform}</span>
         <span class="chip">${idea.format}</span>
       </div>
       <div class="idea-title">${idea.title}</div>
-      ${idea.campaign ? `<div class="idea-campaign">📌 ${idea.campaign}</div>` : ''}
+      ${idea.campaign ? `<div class="idea-campaign">${idea.campaign}</div>` : ''}
     </div>
   `).join('') : '<div class="empty-card" style="margin-top:20px">No ideas match this filter</div>';
 
@@ -864,14 +839,14 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
         <div style="width:36px"></div>
       </div>
       <div class="filter-section">
-        <div style="color:#666;font-size:10px;letter-spacing:2px">PLATFORM</div>
+        <div style="color:#555;font-size:10px;letter-spacing:2px">PLATFORM</div>
         <div class="filter-chips">
           <button class="filter-chip ${fp==='all'?'active':''}" onclick="vaultFilter('${id}','all','${ff}')">All</button>
           ${platforms.map(p => `
-            <button class="filter-chip ${fp===p?'active':''}" onclick="vaultFilter('${id}','${p}','${ff}')">${PLATFORM_ICONS[p] || ''} ${p}</button>
+            <button class="filter-chip ${fp===p?'active':''}" onclick="vaultFilter('${id}','${p}','${ff}')">${PLATFORM_SHORT[p] || p}</button>
           `).join('')}
         </div>
-        <div style="color:#666;font-size:10px;letter-spacing:2px;margin-top:10px">FORMAT</div>
+        <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">FORMAT</div>
         <div class="filter-chips">
           <button class="filter-chip ${ff==='all'?'active':''}" onclick="vaultFilter('${id}','${fp}','all')">All</button>
           ${formats.map(f => `
@@ -899,9 +874,6 @@ function pageInspiration(id) {
 
   const itemsHTML = brand.inspiration.map(item => `
     <div class="inspiration-card">
-      <div class="inspiration-icon" style="background:#1e1e1e">
-        ${item.type === 'note' ? '📝' : item.type === 'image' ? '🖼️' : '🔗'}
-      </div>
       <div class="inspiration-type">${item.type.toUpperCase()}</div>
       <div class="inspiration-content">${item.content}</div>
     </div>
@@ -920,7 +892,7 @@ function pageInspiration(id) {
       <div class="inspiration-grid">
         ${itemsHTML}
         <div class="inspiration-add">
-          <span style="font-size:28px">＋</span>
+          <span style="font-size:24px;font-weight:200">+</span>
           <span style="font-size:12px">Add inspiration</span>
         </div>
       </div>
