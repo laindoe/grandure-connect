@@ -126,15 +126,36 @@ function bindNav() {
   });
 }
 
-/* ── Idea Capture Bar + Modal ── */
+/* ── Bottom Nav ── */
+function bottomNavHTML() {
+  return `
+    <nav class="bottom-nav">
+      <button class="nav-btn" id="navHome">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1v-9.5z"/>
+          <path d="M9 21v-9h6v9"/>
+        </svg>
+      </button>
+      <button class="nav-btn nav-btn-center" id="navCapture">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13 2L4 13h7l-1 9 10-12h-7z"/>
+        </svg>
+      </button>
+      <button class="nav-btn" id="navSettings">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      </button>
+    </nav>
+  `;
+}
+
+/* ── Idea Capture Modal ── */
 let captureState = { platform: '', format: '', brandId: '' };
 
-function captureBarHTML(brandId) {
+function captureModalHTML() {
   return `
-    <div class="capture-bar">
-      <div class="capture-input" id="captureOpen">Capture an idea…</div>
-      <button class="icon-btn" id="captureOpen2" style="font-size:22px;font-weight:200">+</button>
-    </div>
     <div class="capture-overlay" id="captureOverlay" style="display:none">
       <div class="capture-sheet">
         <div class="capture-handle"></div>
@@ -161,6 +182,10 @@ function captureBarHTML(brandId) {
   `;
 }
 
+function pageChrome() {
+  return captureModalHTML() + bottomNavHTML();
+}
+
 function bindCapture() {
   const overlay = document.getElementById('captureOverlay');
   if (!overlay) return;
@@ -168,9 +193,11 @@ function bindCapture() {
   const open = () => { overlay.style.display = 'flex'; };
   const close = () => { overlay.style.display = 'none'; };
 
-  document.getElementById('captureOpen')?.addEventListener('click', open);
-  document.getElementById('captureOpen2')?.addEventListener('click', open);
+  document.getElementById('navCapture')?.addEventListener('click', open);
   document.getElementById('captureCancel')?.addEventListener('click', close);
+
+  document.getElementById('navHome')?.addEventListener('click', () => navigate('/'));
+  document.getElementById('navSettings')?.addEventListener('click', () => navigate('/settings'));
 
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 
@@ -334,6 +361,7 @@ function pageHome() {
       </div>
     </div>
     ${addBrandSheetHTML()}
+    ${pageChrome()}
   `;
 }
 
@@ -499,7 +527,7 @@ function pageBrandWorkspace(id) {
         ${sectionCards}
       </div>
     </div>
-    ${captureBarHTML(id)}
+    ${pageChrome()}
     ${editBrandSheetHTML(brand)}
   `;
 }
@@ -606,7 +634,7 @@ function pageCurrentPhase(id, tab) {
       </div>
       ${tabContent()}
     </div>
-    ${captureBarHTML(id)}
+    ${pageChrome()}
   `;
 }
 
@@ -667,7 +695,7 @@ function pageOverview(id) {
         ${playSection('OFFERS',           offersHTML)}
       </div>
     </div>
-    ${captureBarHTML(id)}
+    ${pageChrome()}
   `;
 }
 
@@ -723,7 +751,7 @@ function pagePlatformStrategy(id, activePlatform) {
         ${stratSection('GOALS',          goalsHTML)}
       </div>
     </div>
-    ${captureBarHTML(id)}
+    ${pageChrome()}
   `;
 }
 
@@ -790,7 +818,7 @@ function pageSeason(id) {
         ${roadmapHTML}
       </div>
     </div>
-    ${captureBarHTML(id)}
+    ${pageChrome()}
   `;
 }
 
@@ -851,7 +879,7 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
       </div>
       <div style="padding:16px">${ideasHTML}</div>
     </div>
-    ${captureBarHTML(id)}
+    ${pageChrome()}
   `;
 }
 
@@ -892,6 +920,6 @@ function pageInspiration(id) {
         </div>
       </div>
     </div>
-    ${captureBarHTML(id)}
+    ${pageChrome()}
   `;
 }

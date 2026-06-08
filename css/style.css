@@ -21,7 +21,7 @@ html, body {
 .page {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 80px;
+  padding-bottom: 90px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -452,25 +452,33 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
   color: #444;
 }
 
-/* ── Idea Capture Bar ── */
-.capture-bar {
-  position: sticky; bottom: 0;
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 16px 28px;
-  background: rgba(10,10,10,0.8);
+/* ── Bottom Nav ── */
+.bottom-nav {
+  position: fixed; bottom: 0;
+  left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 12px 32px 32px;
+  background: rgba(10,10,10,0.88);
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
   border-top: 1px solid rgba(255,255,255,0.07);
-  z-index: 10;
+  z-index: 50;
 }
-.capture-input {
-  flex: 1;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 20px;
-  padding: 10px 14px; color: #555; font-size: 14px;
-  font-family: inherit; cursor: pointer; text-align: left;
+.nav-btn {
+  display: flex; align-items: center; justify-content: center;
+  padding: 8px 24px;
+  color: #555;
+  transition: color 0.15s;
 }
+.nav-btn:active { color: #fff; }
+.nav-btn-center {
+  width: 52px; height: 52px; padding: 0;
+  border-radius: 50%;
+  background: #fff; color: #000;
+  flex-shrink: 0;
+}
+.nav-btn-center:active { background: #ddd; }
 
 /* ── Capture Modal ── */
 .capture-overlay {
