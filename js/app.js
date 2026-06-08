@@ -709,7 +709,7 @@ function pageBrandWorkspace(id) {
           </div>
           <div class="body-text" style="font-size:12px">${cp.postsCompleted}/${cp.totalPosts} posts · Ends ${cp.eosDate}</div>
         </div>
-      ` : `<div class="body-text" style="font-size:13px">${s.sub}</div>`}
+      ` : ''}
     </div>
   `).join('');
 
