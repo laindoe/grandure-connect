@@ -106,6 +106,9 @@ function render() {
     app.innerHTML = pageHome();
   }
 
+  const page = app.querySelector('.page');
+  if (page) page.scrollTop = 0;
+
   bindCapture();
   bindNav();
   bindAddBrand();
