@@ -840,7 +840,9 @@ function pageBrandWorkspace(id) {
           EDIT
         </button>
       </div>
-      <div class="brand-banner" style="${brand.banner.startsWith('data:')||brand.banner.startsWith('http') ? `background:url('${brand.banner}') center/cover no-repeat` : `background:${brand.banner}`};border-radius:0"></div>
+      <div style="padding:0 16px 4px">
+        <div class="brand-banner" style="${brand.banner.startsWith('data:')||brand.banner.startsWith('http') ? `background:url('${brand.banner}') center/cover no-repeat` : `background:${brand.banner}`};border-radius:20px"></div>
+      </div>
       <div style="padding:16px">
         ${sectionCards}
       </div>
