@@ -361,7 +361,6 @@ function pageHome() {
       </div>
     </div>
     ${addBrandSheetHTML()}
-    ${pageChrome()}
   `;
 }
 
