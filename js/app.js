@@ -482,23 +482,18 @@ function pageBrandWorkspace(id) {
     </div>
   `).join('');
 
-  const bannerStyle = brand.banner.startsWith('data:') || brand.banner.startsWith('http')
-    ? `background:url('${brand.banner}') center/cover no-repeat`
-    : `background:${brand.banner}`;
-
   return `
     <div class="page">
-      <div class="workspace-banner" style="${bannerStyle}">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <button class="gradient-back" data-href="#/">‹</button>
-          <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.7)">WORKSPACE</div>
-          <button class="gradient-back" id="openEditBrand"
-            style="font-size:11px;letter-spacing:1px;font-weight:600;width:auto;padding:0 12px;border-radius:20px">
-            EDIT
-          </button>
+      <div class="back-header">
+        <button class="back-btn" data-href="#/">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-title">${brand.name}</div>
+          ${brand.tagline ? `<div class="back-header-label">${brand.tagline}</div>` : ''}
         </div>
-        <div style="font-size:28px;font-weight:800">${brand.name}</div>
-        ${brand.tagline ? `<div style="color:rgba(255,255,255,0.8);margin-top:4px">${brand.tagline}</div>` : ''}
+        <button class="back-btn" id="openEditBrand"
+          style="font-size:11px;letter-spacing:1px;font-weight:600;width:auto;padding:0 14px;border-radius:20px">
+          EDIT
+        </button>
       </div>
       <div style="padding:16px">
         ${sectionCards}
