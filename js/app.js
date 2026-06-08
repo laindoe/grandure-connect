@@ -112,7 +112,7 @@ function render() {
   bindCapture();
   bindNav();
   bindAddBrand();
-  if (path === '/brand') { bindEditBrand(params.id); bindDropdowns(); }
+  if (path === '/brand') { bindEditBrand(params.id); bindDropdowns(params.id); }
 }
 
 /* ── Bind all nav links ── */
@@ -131,7 +131,7 @@ function bindNav() {
 }
 
 /* ── Dropdown section cards ── */
-function bindDropdowns() {
+function bindDropdowns(brandId) {
   document.querySelectorAll('.dd-card').forEach(card => {
     card.querySelector('.dd-toggle').addEventListener('click', () => {
       const body = card.querySelector('.dd-body');
@@ -139,7 +139,40 @@ function bindDropdowns() {
       const open = body.style.display === 'none';
       body.style.display = open ? 'block' : 'none';
       chevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+      if (open && card.dataset.dd === 'inspiration') bindInspirationGallery(brandId);
     });
+  });
+}
+
+function bindInspirationGallery(brandId) {
+  const addBtn = document.getElementById('addInspBtn');
+  const fileInput = document.getElementById('inspFileInput');
+  if (!addBtn || !fileInput || addBtn._bound) return;
+  addBtn._bound = true;
+
+  addBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', e => {
+    Array.from(e.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const brand = getBrand(brandId);
+        if (!brand) return;
+        const item = { id: 'i' + Date.now(), type: 'image', src: ev.target.result };
+        brand.inspiration.push(item);
+        saveBrandOverride(brandId, { inspiration: [...brand.inspiration] });
+        const grid = document.getElementById('inspGrid');
+        const addCell = document.getElementById('addInspBtn');
+        if (grid && addCell) {
+          const cell = document.createElement('div');
+          cell.className = 'insp-cell';
+          cell.innerHTML = `<img src="${ev.target.result}" loading="lazy">`;
+          grid.insertBefore(cell, addCell);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    fileInput.value = '';
   });
 }
 
@@ -740,9 +773,20 @@ function pageBrandWorkspace(id) {
         : '<div class="body-text">No ideas yet.</div>';
     }
     if (key === 'inspiration') {
-      return brand.inspiration.length
-        ? brand.inspiration.map(i => `<div class="dd-row"><div class="phase-label" style="margin-bottom:3px">${i.type.toUpperCase()}</div><div class="body-text">${i.content}</div></div>`).join('')
-        : '<div class="body-text">No inspiration saved yet.</div>';
+      const cells = brand.inspiration.map(i =>
+        i.src
+          ? `<div class="insp-cell"><img src="${i.src}" loading="lazy"></div>`
+          : `<div class="insp-cell insp-text-cell"><div>${i.content}</div></div>`
+      ).join('');
+      return `
+        <div class="insp-grid" id="inspGrid">
+          ${cells}
+          <div class="insp-cell insp-add-cell" id="addInspBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+        </div>
+        <input type="file" id="inspFileInput" accept="image/*" multiple style="display:none">
+      `;
     }
     return '';
   }
