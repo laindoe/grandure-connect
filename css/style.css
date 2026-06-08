@@ -21,7 +21,7 @@ html, body {
 .page {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 90px;
+  padding-bottom: 110px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -454,31 +454,50 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 
 /* ── Bottom Nav ── */
 .bottom-nav {
-  position: fixed; bottom: 0;
+  position: fixed;
+  bottom: 28px;
   left: 50%; transform: translateX(-50%);
-  width: 100%; max-width: 430px;
-  display: flex; align-items: center; justify-content: space-around;
-  padding: 12px 32px 32px;
-  background: rgba(10,10,10,0.88);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border-top: 1px solid rgba(255,255,255,0.07);
+  display: flex; align-items: center;
+  padding: 8px 22px;
+  gap: 4px;
+  background: rgba(18,18,18,0.82);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50px;
+  box-shadow:
+    0 12px 40px rgba(0,0,0,0.65),
+    0 1px 0 rgba(255,255,255,0.07) inset;
   z-index: 50;
 }
 .nav-btn {
   display: flex; align-items: center; justify-content: center;
-  padding: 8px 24px;
+  width: 52px; height: 44px;
   color: #555;
-  transition: color 0.15s;
+  border-radius: 22px;
+  transition: color 0.2s;
 }
 .nav-btn:active { color: #fff; }
 .nav-btn-center {
-  width: 52px; height: 52px; padding: 0;
+  width: 56px; height: 56px; padding: 0;
   border-radius: 50%;
-  background: #fff; color: #000;
+  background: radial-gradient(ellipse at 45% 35%, rgba(70,70,70,0.7), rgba(14,14,14,0.95));
+  border: 1px solid rgba(255,255,255,0.16);
+  color: #fff;
+  margin: -10px 6px;
   flex-shrink: 0;
+  box-shadow:
+    0 0 28px rgba(255,255,255,0.07),
+    0 0 8px rgba(255,255,255,0.04),
+    0 6px 20px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.18);
 }
-.nav-btn-center:active { background: #ddd; }
+.nav-btn-center:active {
+  box-shadow:
+    0 0 36px rgba(255,255,255,0.14),
+    0 6px 20px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.22);
+}
 
 /* ── Capture Modal ── */
 .capture-overlay {
