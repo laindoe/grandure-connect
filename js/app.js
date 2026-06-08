@@ -87,6 +87,7 @@ function render() {
 
   if (path === '/' || path === '') {
     app.innerHTML = pageHome();
+    bindSwipeCards();
   } else if (path === '/brand') {
     app.innerHTML = pageBrandWorkspace(params.id);
   } else if (path === '/phase') {
@@ -319,7 +320,7 @@ function bindAddBrand() {
     saveCustomBrands();
     overlay.style.display = 'none';
     document.getElementById('app').innerHTML = pageHome();
-    bindCapture(); bindNav(); bindAddBrand();
+    bindSwipeCards(); bindCapture(); bindNav(); bindAddBrand();
   });
 }
 
@@ -329,16 +330,30 @@ function pageHome() {
     : `background:${b.banner}`;
 
   const cards = BRANDS.map(brand => `
-    <div class="brand-card" data-href="#/brand?id=${brand.id}">
-      <div class="brand-banner" style="${bannerStyle(brand)}"></div>
-      <div class="card-bottom">
-        <div class="phase-section">
-          <div>
-            <div class="phase-label">CURRENT PHASE</div>
-            <div class="phase-name-small">${brand.currentPhase.name}</div>
-            <div class="phase-next-small">Next: ${brand.currentPhase.next}</div>
+    <div class="swipe-wrap" data-brand-id="${brand.id}">
+      <div class="swipe-row">
+        <div class="brand-card" data-href="#/brand?id=${brand.id}">
+          <div class="brand-banner" style="${bannerStyle(brand)}"></div>
+          <div class="card-bottom">
+            <div class="phase-section">
+              <div>
+                <div class="phase-label">CURRENT PHASE</div>
+                <div class="phase-name-small">${brand.currentPhase.name}</div>
+                <div class="phase-next-small">Next: ${brand.currentPhase.next}</div>
+              </div>
+              <span style="color:#555;font-size:18px">›</span>
+            </div>
           </div>
-          <span style="color:#555;font-size:18px">›</span>
+        </div>
+        <div class="card-actions">
+          <button class="card-action-btn card-action-edit">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button class="card-action-btn card-action-delete">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            Delete
+          </button>
         </div>
       </div>
     </div>
@@ -358,7 +373,229 @@ function pageHome() {
       </div>
     </div>
     ${addBrandSheetHTML()}
+    <div id="editPhotoMount"></div>
   `;
+}
+
+/* ── Edit Photo / Crop Sheet ── */
+function editPhotoCropSheetHTML() {
+  return `
+    <div class="capture-overlay" id="editPhotoOverlay" style="display:none">
+      <div class="capture-sheet" style="padding:0;overflow:hidden;border-radius:28px 28px 0 0">
+        <div style="padding:20px 24px 12px">
+          <div class="capture-handle"></div>
+          <div class="capture-title" style="margin-bottom:4px">Edit Photo</div>
+          <div style="color:#555;font-size:12px;letter-spacing:.5px">Drag to position · Pinch to zoom</div>
+        </div>
+        <div class="crop-window" id="cropWindow">
+          <img id="cropImg" style="position:absolute;touch-action:none;user-select:none;-webkit-user-select:none;pointer-events:none;display:none">
+          <div id="cropPlaceholder" class="crop-placeholder">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <span>Tap to choose photo</span>
+          </div>
+        </div>
+        <div style="padding:16px 24px 36px">
+          <input type="file" id="cropFileInput" accept="image/*" style="display:none">
+          <button id="cropPickBtn" class="capture-cancel" style="width:100%;margin-bottom:12px">Choose Photo</button>
+          <div class="capture-actions">
+            <button class="capture-cancel" id="editPhotoCancel">Cancel</button>
+            <button class="capture-save" id="editPhotoSave">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+let _cropState = { brandId: null, naturalW: 0, naturalH: 0, scale: 1, minScale: 1, offsetX: 0, offsetY: 0, cropW: 0, cropH: 0 };
+
+function _initCrop(cropW, cropH) {
+  const img = document.getElementById('cropImg');
+  _cropState.naturalW = img.naturalWidth;
+  _cropState.naturalH = img.naturalHeight;
+  _cropState.cropW = cropW;
+  _cropState.cropH = cropH;
+  const minScale = Math.max(cropW / img.naturalWidth, cropH / img.naturalHeight);
+  _cropState.minScale = minScale;
+  _cropState.scale = minScale;
+  _cropState.offsetX = 0;
+  _cropState.offsetY = 0;
+  _applyCrop();
+}
+
+function _clampCrop() {
+  const { naturalW, naturalH, scale, cropW, cropH } = _cropState;
+  const dw = naturalW * scale, dh = naturalH * scale;
+  const maxX = Math.max(0, (dw - cropW) / 2);
+  const maxY = Math.max(0, (dh - cropH) / 2);
+  _cropState.offsetX = Math.max(-maxX, Math.min(maxX, _cropState.offsetX));
+  _cropState.offsetY = Math.max(-maxY, Math.min(maxY, _cropState.offsetY));
+}
+
+function _applyCrop() {
+  const img = document.getElementById('cropImg');
+  if (!img) return;
+  const { naturalW, naturalH, scale, offsetX, offsetY, cropW, cropH } = _cropState;
+  const dw = naturalW * scale, dh = naturalH * scale;
+  img.style.width  = dw + 'px';
+  img.style.height = dh + 'px';
+  img.style.left   = ((cropW - dw) / 2 + offsetX) + 'px';
+  img.style.top    = ((cropH - dh) / 2 + offsetY) + 'px';
+}
+
+function _exportCrop() {
+  const img = document.getElementById('cropImg');
+  if (!img || !img.src || img.style.display === 'none') return null;
+  const { naturalW, naturalH, scale, offsetX, offsetY, cropW, cropH } = _cropState;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const canvas = document.createElement('canvas');
+  canvas.width  = cropW * dpr;
+  canvas.height = cropH * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const dw = naturalW * scale, dh = naturalH * scale;
+  ctx.drawImage(img, (cropW - dw) / 2 + offsetX, (cropH - dh) / 2 + offsetY, dw, dh);
+  return canvas.toDataURL('image/jpeg', 0.88);
+}
+
+function openEditPhoto(brandId) {
+  const mount = document.getElementById('editPhotoMount');
+  if (!mount) return;
+  mount.innerHTML = editPhotoCropSheetHTML();
+
+  const overlay  = document.getElementById('editPhotoOverlay');
+  const cropWin  = document.getElementById('cropWindow');
+  const cropImg  = document.getElementById('cropImg');
+  const placeholder = document.getElementById('cropPlaceholder');
+  const fileInput = document.getElementById('cropFileInput');
+
+  overlay.style.display = 'flex';
+  _cropState.brandId = brandId;
+
+  const brand = getBrand(brandId);
+  if (brand && (brand.banner.startsWith('data:') || brand.banner.startsWith('http'))) {
+    cropImg.src = brand.banner;
+    cropImg.style.display = 'block';
+    placeholder.style.display = 'none';
+    const setup = () => _initCrop(cropWin.offsetWidth, cropWin.offsetHeight);
+    cropImg.complete ? setup() : (cropImg.onload = setup);
+  }
+
+  const loadFile = file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      cropImg.src = ev.target.result;
+      cropImg.style.display = 'block';
+      placeholder.style.display = 'none';
+      cropImg.onload = () => _initCrop(cropWin.offsetWidth, cropWin.offsetHeight);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  document.getElementById('cropPickBtn').addEventListener('click', () => fileInput.click());
+  placeholder.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+
+  document.getElementById('editPhotoCancel').addEventListener('click', () => { overlay.style.display = 'none'; });
+
+  document.getElementById('editPhotoSave').addEventListener('click', () => {
+    const dataUrl = _exportCrop();
+    if (dataUrl) {
+      saveBrandOverride(brandId, { banner: dataUrl });
+      document.getElementById('app').innerHTML = pageHome();
+      bindSwipeCards(); bindCapture(); bindNav(); bindAddBrand();
+    } else {
+      overlay.style.display = 'none';
+    }
+  });
+
+  // Touch pan + pinch
+  let lastTouches = null;
+  cropWin.addEventListener('touchstart', e => {
+    e.preventDefault();
+    lastTouches = Array.from(e.touches);
+  }, { passive: false });
+
+  cropWin.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = Array.from(e.touches);
+    if (t.length === 1 && lastTouches?.length >= 1) {
+      _cropState.offsetX += t[0].clientX - lastTouches[0].clientX;
+      _cropState.offsetY += t[0].clientY - lastTouches[0].clientY;
+    } else if (t.length === 2 && lastTouches?.length >= 2) {
+      const prev = Math.hypot(lastTouches[1].clientX - lastTouches[0].clientX, lastTouches[1].clientY - lastTouches[0].clientY);
+      const curr = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+      _cropState.scale = Math.max(_cropState.minScale, Math.min(8, _cropState.scale * (curr / prev)));
+    }
+    lastTouches = t;
+    _clampCrop();
+    _applyCrop();
+  }, { passive: false });
+
+  cropWin.addEventListener('touchend', e => { lastTouches = Array.from(e.touches); });
+}
+
+/* ── Swipe-to-reveal cards ── */
+function bindSwipeCards() {
+  const ACTION_W = 148;
+  document.querySelectorAll('.swipe-wrap').forEach(wrap => {
+    const row   = wrap.querySelector('.swipe-row');
+    const card  = wrap.querySelector('.brand-card');
+    const brandId = wrap.dataset.brandId;
+    card.style.minWidth = wrap.offsetWidth + 'px';
+
+    let startX = 0, startY = 0, curX = 0, isOpen = false, dragging = false;
+
+    row.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dragging = true;
+      row.style.transition = 'none';
+    }, { passive: true });
+
+    row.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (!isOpen && Math.abs(dy) > Math.abs(dx) + 4) { dragging = false; return; }
+      e.preventDefault();
+      curX = Math.max(-ACTION_W, Math.min(0, (isOpen ? -ACTION_W : 0) + dx));
+      row.style.transform = `translateX(${curX}px)`;
+    }, { passive: false });
+
+    row.addEventListener('touchend', () => {
+      if (!dragging) return;
+      dragging = false;
+      row.style.transition = 'transform 0.26s cubic-bezier(.25,.46,.45,.94)';
+      isOpen = curX < -ACTION_W * 0.35;
+      row.style.transform = isOpen ? `translateX(-${ACTION_W}px)` : 'translateX(0)';
+    });
+
+    card.addEventListener('click', e => {
+      if (isOpen) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        row.style.transition = 'transform 0.26s cubic-bezier(.25,.46,.45,.94)';
+        row.style.transform = 'translateX(0)';
+        isOpen = false;
+      }
+    });
+
+    wrap.querySelector('.card-action-edit').addEventListener('click', () => openEditPhoto(brandId));
+
+    wrap.querySelector('.card-action-delete').addEventListener('click', () => {
+      const idx = BRANDS.findIndex(b => b.id === brandId);
+      if (idx !== -1) BRANDS.splice(idx, 1);
+      saveCustomBrands();
+      try {
+        const ov = JSON.parse(localStorage.getItem(OVERRIDES_KEY) || '{}');
+        delete ov[brandId];
+        localStorage.setItem(OVERRIDES_KEY, JSON.stringify(ov));
+      } catch(e) {}
+      document.getElementById('app').innerHTML = pageHome();
+      bindSwipeCards(); bindCapture(); bindNav(); bindAddBrand();
+    });
+  });
 }
 
 /* ── Edit Brand Sheet ── */
