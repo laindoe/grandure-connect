@@ -149,10 +149,11 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 }
 .brand-banner-name { font-size: 32px; font-weight: 800; text-align: center; }
 .brand-banner-tagline { color: rgba(255,255,255,0.75); font-size: 15px; margin-top: 4px; }
+.card-bottom-name { color: #fff; font-size: 15px; font-weight: 700; }
 
 /* glass bottom strip on brand cards */
 .card-bottom {
-  display: flex; align-items: center;
+  display: flex; align-items: center; justify-content: space-between;
   padding: 14px 18px;
   background: rgba(0,0,0,0.55);
   backdrop-filter: blur(24px);

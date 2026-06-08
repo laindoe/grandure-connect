@@ -335,13 +335,10 @@ function pageHome() {
         <div class="brand-card" data-href="#/brand?id=${brand.id}">
           <div class="brand-banner" style="${bannerStyle(brand)}"></div>
           <div class="card-bottom">
-            <div class="phase-section">
-              <div>
-                <div class="phase-label">CURRENT PHASE</div>
-                <div class="phase-name-small">${brand.currentPhase.name}</div>
-                <div class="phase-next-small">Next: ${brand.currentPhase.next}</div>
-              </div>
-              <span style="color:#555;font-size:18px">›</span>
+            <div class="card-bottom-name">${brand.name}</div>
+            <div style="text-align:right">
+              <div class="phase-label">CURRENT PHASE</div>
+              <div class="phase-name-small">${brand.currentPhase.name}</div>
             </div>
           </div>
         </div>
