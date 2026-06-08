@@ -219,6 +219,12 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
   box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
 .section-card:active { transform: scale(0.985); }
+.dd-card { cursor: pointer; }
+.dd-card .section-card-header { margin-bottom: 0; }
+.dd-body .dd-row { margin-bottom: 14px; }
+.dd-body .dd-row:last-child { margin-bottom: 0; }
+.dd-idea { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.dd-idea:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
 .section-card-header {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 14px;

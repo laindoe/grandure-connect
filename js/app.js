@@ -109,7 +109,7 @@ function render() {
   bindCapture();
   bindNav();
   bindAddBrand();
-  if (path === '/brand') bindEditBrand(params.id);
+  if (path === '/brand') { bindEditBrand(params.id); bindDropdowns(); }
 }
 
 /* ── Bind all nav links ── */
@@ -124,6 +124,19 @@ function bindNav() {
   document.getElementById('openAddBrand')?.addEventListener('click', () => {
     const overlay = document.getElementById('addBrandOverlay');
     if (overlay) overlay.style.display = 'flex';
+  });
+}
+
+/* ── Dropdown section cards ── */
+function bindDropdowns() {
+  document.querySelectorAll('.dd-card').forEach(card => {
+    card.querySelector('.dd-toggle').addEventListener('click', () => {
+      const body = card.querySelector('.dd-body');
+      const chevron = card.querySelector('.dd-chevron');
+      const open = body.style.display === 'none';
+      body.style.display = open ? 'block' : 'none';
+      chevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+    });
   });
 }
 
@@ -657,32 +670,80 @@ function pageBrandWorkspace(id) {
 
   const { currentPhase: cp } = brand;
 
-  const sections = [
-    { key: 'phase',       label: 'CURRENT PHASE',     sub: cp.name,                                    href: `#/phase?id=${id}` },
-    { key: 'overview',    label: 'BRAND OVERVIEW',    sub: 'Playbook & strategy',                      href: `#/overview?id=${id}` },
-    { key: 'platform',    label: 'PLATFORM STRATEGY', sub: brand.stats.map(s=>s.platform).join(' · '), href: `#/platform?id=${id}` },
-    { key: 'season',      label: 'SEASON',            sub: brand.season.name,                          href: `#/season?id=${id}` },
-    { key: 'vault',       label: 'IDEA VAULT',        sub: `${brand.ideas.length} ideas`,              href: `#/vault?id=${id}` },
-    { key: 'inspiration', label: 'INSPIRATION',       sub: `${brand.inspiration.length} saved`,        href: `#/inspiration?id=${id}` },
-  ];
-
-  const sectionCards = sections.map(s => `
-    <div class="section-card" data-href="${s.href}">
-      <div class="section-card-header">
-        <div class="section-card-title">${s.label}</div>
-        <div class="section-card-right"><span>${s.sub}</span><span style="font-size:16px">›</span></div>
-      </div>
-      ${s.key === 'phase' ? `
-        <div style="margin-top:4px">
-          <div class="progress-row" style="margin-bottom:6px">
-            <div class="progress-track"><div class="progress-fill" style="width:${cp.progress}%"></div></div>
-            <span class="progress-pct">${cp.progress}%</span>
-          </div>
-          <div class="body-text" style="font-size:12px">${cp.postsCompleted}/${cp.totalPosts} posts · Ends ${cp.eosDate}</div>
+  function dropdownBody(key) {
+    const ov = brand.overview;
+    const se = brand.season;
+    if (key === 'overview') {
+      return `
+        ${ov.mission ? `<div class="dd-row"><div class="phase-label" style="margin-bottom:4px">MISSION</div><div class="body-text">${ov.mission}</div></div>` : ''}
+        ${ov.contentPillars.length ? `<div class="dd-row"><div class="phase-label" style="margin-bottom:6px">CONTENT PILLARS</div><div class="pills">${ov.contentPillars.map(p=>`<span class="pill">${p}</span>`).join('')}</div></div>` : ''}
+        ${ov.brandVoice ? `<div class="dd-row"><div class="phase-label" style="margin-bottom:4px">BRAND VOICE</div><div class="body-text">${ov.brandVoice}</div></div>` : ''}
+      `;
+    }
+    if (key === 'platform') {
+      return Object.entries(brand.platformStrategy).map(([p, d]) => `
+        <div class="dd-row">
+          <div class="phase-label" style="margin-bottom:4px">${PLATFORM_LABELS[p]||p}</div>
+          ${d.objective ? `<div class="body-text" style="margin-bottom:6px">${d.objective}</div>` : ''}
+          ${(d.formats||[]).length ? `<div class="pills">${d.formats.map(f=>`<span class="pill">${f}</span>`).join('')}</div>` : ''}
         </div>
-      ` : ''}
+      `).join('') || '<div class="body-text">No platforms set up yet.</div>';
+    }
+    if (key === 'season') {
+      return `
+        ${se.name ? `<div class="dd-row"><div class="phase-label" style="margin-bottom:4px">SEASON</div><div class="body-text">${se.name}</div></div>` : ''}
+        ${se.goal ? `<div class="dd-row"><div class="phase-label" style="margin-bottom:4px">GOAL</div><div class="body-text">${se.goal}</div></div>` : ''}
+        ${se.pillars.length ? `<div class="dd-row"><div class="phase-label" style="margin-bottom:6px">PILLARS</div><div class="pills">${se.pillars.map(p=>`<span class="pill">${p}</span>`).join('')}</div></div>` : ''}
+      `;
+    }
+    if (key === 'vault') {
+      return brand.ideas.length
+        ? brand.ideas.map(i => `<div class="dd-idea"><div style="font-size:13px;font-weight:600;color:#fff">${i.title}</div><div class="chips" style="margin-top:6px"><span class="chip">${PLATFORM_SHORT[i.platform]||i.platform}</span><span class="chip">${i.format}</span></div></div>`).join('')
+        : '<div class="body-text">No ideas yet.</div>';
+    }
+    if (key === 'inspiration') {
+      return brand.inspiration.length
+        ? brand.inspiration.map(i => `<div class="dd-row"><div class="phase-label" style="margin-bottom:3px">${i.type.toUpperCase()}</div><div class="body-text">${i.content}</div></div>`).join('')
+        : '<div class="body-text">No inspiration saved yet.</div>';
+    }
+    return '';
+  }
+
+  const phaseCard = `
+    <div class="section-card" data-href="#/phase?id=${id}">
+      <div class="section-card-header">
+        <div class="section-card-title">CURRENT PHASE</div>
+        <div class="section-card-right"><span>${cp.name}</span><span style="font-size:16px">›</span></div>
+      </div>
+      <div style="margin-top:4px">
+        <div class="progress-row" style="margin-bottom:6px">
+          <div class="progress-track"><div class="progress-fill" style="width:${cp.progress}%"></div></div>
+          <span class="progress-pct">${cp.progress}%</span>
+        </div>
+        <div class="body-text" style="font-size:12px">${cp.postsCompleted}/${cp.totalPosts} posts · Ends ${cp.eosDate}</div>
+      </div>
+    </div>
+  `;
+
+  const dropdownCards = [
+    { key: 'overview',    label: 'BRAND OVERVIEW'    },
+    { key: 'platform',    label: 'PLATFORM STRATEGY' },
+    { key: 'season',      label: 'SEASON'            },
+    { key: 'vault',       label: 'IDEA VAULT'        },
+    { key: 'inspiration', label: 'INSPIRATION'       },
+  ].map(s => `
+    <div class="section-card dd-card" data-dd="${s.key}" style="cursor:pointer">
+      <div class="section-card-header dd-toggle">
+        <div class="section-card-title">${s.label}</div>
+        <svg class="dd-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="dd-body" style="display:none;padding-top:12px">
+        ${dropdownBody(s.key)}
+      </div>
     </div>
   `).join('');
+
+  const sectionCards = phaseCard + dropdownCards;
 
   return `
     <div class="page">
