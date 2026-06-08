@@ -580,13 +580,7 @@ function editBrandSheetHTML(brand) {
         <input id="editBrandName" type="text" value="${brand.name}"
           style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
                  border-radius:14px;padding:14px;color:#fff;font-size:15px;
-                 font-family:inherit;margin-bottom:16px;outline:none;">
-
-        <div class="capture-section-label">TAGLINE</div>
-        <input id="editBrandTagline" type="text" value="${brand.tagline || ''}" placeholder="A short description"
-          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
-                 border-radius:14px;padding:14px;color:#fff;font-size:15px;
-                 font-family:inherit;margin-bottom:16px;outline:none;">
+                 font-family:inherit;margin-bottom:20px;outline:none;">
 
         <div class="capture-section-label">CARD IMAGE</div>
         <label style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);
@@ -604,16 +598,6 @@ function editBrandSheetHTML(brand) {
         </label>
         <div id="editImagePreview" style="display:none;margin-bottom:12px">
           <img id="editImageThumb" style="width:100%;height:100px;object-fit:cover;border-radius:12px;">
-        </div>
-
-        <div class="capture-section-label">OR PICK A COLOR</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-          ${BRAND_COLORS.map(c => `
-            <button class="edit-brand-color" data-color="${c.value}"
-              style="width:40px;height:40px;border-radius:12px;background:${c.value};
-                     border:2px solid transparent;flex-shrink:0;">
-            </button>
-          `).join('')}
         </div>
 
         <div class="capture-actions">
@@ -647,27 +631,14 @@ function bindEditBrand(id) {
       pendingBanner = ev.target.result;
       document.getElementById('editImagePreview').style.display = 'block';
       document.getElementById('editImageThumb').src = pendingBanner;
-      document.querySelectorAll('.edit-brand-color').forEach(b => b.style.border = '2px solid transparent');
     };
     reader.readAsDataURL(file);
   });
 
-  document.querySelectorAll('.edit-brand-color').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.edit-brand-color').forEach(b => b.style.border = '2px solid transparent');
-      btn.style.border = '2px solid #fff';
-      pendingBanner = btn.dataset.color;
-      document.getElementById('editImagePreview').style.display = 'none';
-      document.getElementById('editBrandImage').value = '';
-    });
-  });
-
   document.getElementById('editBrandSave')?.addEventListener('click', () => {
     const name = document.getElementById('editBrandName')?.value.trim();
-    const tagline = document.getElementById('editBrandTagline')?.value.trim();
     const patch = {};
     if (name) patch.name = name;
-    patch.tagline = tagline;
     if (pendingBanner) patch.banner = pendingBanner;
     saveBrandOverride(id, patch);
     saveCustomBrands();
