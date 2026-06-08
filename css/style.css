@@ -95,9 +95,10 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .brand-card:active { transform: scale(0.985); }
 
 .brand-banner {
+  padding: 36px 24px;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  height: 130px;
+  min-height: 160px;
 }
 .brand-banner-name { font-size: 32px; font-weight: 800; text-align: center; }
 .brand-banner-tagline { color: rgba(255,255,255,0.75); font-size: 15px; margin-top: 4px; }
