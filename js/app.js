@@ -330,10 +330,7 @@ function pageHome() {
 
   const cards = BRANDS.map(brand => `
     <div class="brand-card" data-href="#/brand?id=${brand.id}">
-      <div class="brand-banner" style="${bannerStyle(brand)}">
-        <div class="brand-banner-name">${brand.name}</div>
-        ${brand.tagline ? `<div class="brand-banner-tagline">${brand.tagline}</div>` : ''}
-      </div>
+      <div class="brand-banner" style="${bannerStyle(brand)}"></div>
       <div class="card-bottom">
         <div class="phase-section">
           <div>
