@@ -393,7 +393,7 @@ function editPhotoCropSheetHTML() {
         </div>
         <div style="padding:16px 24px 36px">
           <input type="file" id="cropFileInput" accept="image/*" style="display:none">
-          <button id="cropPickBtn" class="capture-cancel" style="width:100%;margin-bottom:12px">Choose Photo</button>
+          <button id="cropPickBtn" class="capture-cancel" style="width:100%;margin-bottom:12px">Change Image</button>
           <div class="capture-actions">
             <button class="capture-cancel" id="editPhotoCancel">Cancel</button>
             <button class="capture-save" id="editPhotoSave">Save</button>
