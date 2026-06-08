@@ -345,7 +345,7 @@ function pageHome() {
   `).join('');
 
   return `
-    <div class="page">
+    <div class="page" style="padding-bottom:24px">
       <div class="top-header">
         <div class="icon-btn">&#9776;</div>
         <div class="logo-wrap">
