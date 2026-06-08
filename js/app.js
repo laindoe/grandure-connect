@@ -251,23 +251,7 @@ function addBrandSheetHTML() {
         <input id="addBrandName" type="text" placeholder="e.g. Brand Name"
           style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
                  border-radius:14px;padding:14px;color:#fff;font-size:15px;
-                 font-family:inherit;margin-bottom:16px;outline:none;">
-
-        <div class="capture-section-label">TAGLINE (optional)</div>
-        <input id="addBrandTagline" type="text" placeholder="A short description"
-          style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
-                 border-radius:14px;padding:14px;color:#fff;font-size:15px;
-                 font-family:inherit;margin-bottom:16px;outline:none;">
-
-        <div class="capture-section-label">COLOR</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-          ${BRAND_COLORS.map((c, i) => `
-            <button class="add-brand-color ${i===0?'active':''}" data-color="${c.value}"
-              style="width:40px;height:40px;border-radius:12px;background:${c.value};
-                     border:2px solid ${i===0?'#fff':'transparent'};flex-shrink:0;">
-            </button>
-          `).join('')}
-        </div>
+                 font-family:inherit;margin-bottom:20px;outline:none;">
 
         <div class="capture-actions">
           <button class="capture-cancel" id="addBrandCancel">Cancel</button>
@@ -282,30 +266,19 @@ function bindAddBrand() {
   const overlay = document.getElementById('addBrandOverlay');
   if (!overlay) return;
 
-  let selectedColor = BRAND_COLORS[0].value;
-
   document.getElementById('addBrandCancel')?.addEventListener('click', () => {
     overlay.style.display = 'none';
   });
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.style.display = 'none'; });
 
-  document.querySelectorAll('.add-brand-color').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.add-brand-color').forEach(b => b.style.border = '2px solid transparent');
-      btn.style.border = '2px solid #fff';
-      selectedColor = btn.dataset.color;
-    });
-  });
-
   document.getElementById('addBrandSave')?.addEventListener('click', () => {
     const name = document.getElementById('addBrandName')?.value.trim();
     if (!name) { document.getElementById('addBrandName').focus(); return; }
-    const tagline = document.getElementById('addBrandTagline')?.value.trim();
     const newBrand = {
       id: String(Date.now()),
       name,
-      tagline,
-      banner: selectedColor,
+      tagline: '',
+      banner: BRAND_COLORS[0].value,
       stats: [],
       currentPhase: { name: 'Getting Started', next: 'TBD', progress: 0, postsCompleted: 0, totalPosts: 0, eosDate: '—' },
       overview: { mission: '', positioning: '', audience: '', contentPillars: [], brandVoice: '', keywords: [], offers: [] },
