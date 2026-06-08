@@ -674,10 +674,45 @@ function pageBrandWorkspace(id) {
     const ov = brand.overview;
     const se = brand.season;
     if (key === 'overview') {
+      const divider = `<div style="height:1px;background:rgba(255,255,255,0.07);margin:14px 0"></div>`;
+      const col2 = `<div style="width:1px;background:rgba(255,255,255,0.07);margin:0 14px;flex-shrink:0"></div>`;
       return `
-        ${ov.mission ? `<div class="dd-row"><div class="phase-label" style="margin-bottom:4px">MISSION</div><div class="body-text">${ov.mission}</div></div>` : ''}
-        ${ov.contentPillars.length ? `<div class="dd-row"><div class="phase-label" style="margin-bottom:6px">CONTENT PILLARS</div><div class="pills">${ov.contentPillars.map(p=>`<span class="pill">${p}</span>`).join('')}</div></div>` : ''}
-        ${ov.brandVoice ? `<div class="dd-row"><div class="phase-label" style="margin-bottom:4px">BRAND VOICE</div><div class="body-text">${ov.brandVoice}</div></div>` : ''}
+        <div style="display:flex;align-items:flex-start">
+          <div style="flex:1">
+            <div class="phase-label" style="margin-bottom:5px">MISSION</div>
+            <div class="body-text">${ov.mission || '—'}</div>
+          </div>
+          ${col2}
+          <div style="flex:1">
+            <div class="phase-label" style="margin-bottom:5px">POSITIONING</div>
+            <div class="body-text">${ov.positioning || '—'}</div>
+          </div>
+        </div>
+        ${divider}
+        <div style="display:flex;align-items:flex-start">
+          <div style="flex:1">
+            <div class="phase-label" style="margin-bottom:5px">AUDIENCE</div>
+            <div class="body-text">${ov.audience || '—'}</div>
+          </div>
+          ${col2}
+          <div style="flex:1">
+            <div class="phase-label" style="margin-bottom:5px">OFFERS</div>
+            ${ov.offers.length ? ov.offers.map(o=>`<div class="body-text">· ${o}</div>`).join('') : '<div class="body-text">—</div>'}
+          </div>
+        </div>
+        ${ov.contentPillars.length ? `
+          ${divider}
+          <div>
+            <div class="phase-label" style="margin-bottom:6px">CONTENT PILLARS</div>
+            <div style="color:#ccc;font-size:14px;line-height:1.6">${ov.contentPillars.join(' · ')}</div>
+          </div>
+        ` : ''}
+        <div style="display:flex;justify-content:flex-end;margin-top:16px">
+          <span data-href="#/overview?id=${id}" style="display:flex;align-items:center;gap:5px;color:#666;font-size:13px;cursor:pointer">
+            View More
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </span>
+        </div>
       `;
     }
     if (key === 'platform') {
