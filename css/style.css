@@ -1019,16 +1019,15 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-analytics { margin-bottom:12px; }
 .camp-analytics-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
 .camp-analytics-title { font-size:9px;font-weight:700;letter-spacing:1.4px;color:#3a3a3a; }
-.camp-analytics-live { font-size:9px;color:#2a8a4a;font-weight:700;letter-spacing:.4px; }
+.camp-analytics-more { font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);letter-spacing:.3px;background:none;border:none;padding:0;cursor:pointer; }
 .camp-analytics-row { display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none; }
 .camp-analytics-row::-webkit-scrollbar { display:none; }
-.camp-analytics-item { flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:10px 12px;min-width:58px; }
-.camp-analytics-badge { font-size:8px;font-weight:800;letter-spacing:.8px;color:#666;background:rgba(255,255,255,0.06);border-radius:6px;padding:2px 5px; }
+.camp-analytics-item { flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px 12px 10px;min-width:64px; }
+.camp-analytics-icon { color:rgba(255,255,255,0.75);display:flex;align-items:center;justify-content:center;line-height:0; }
 .camp-analytics-count { font-size:14px;font-weight:700;color:#fff; }
 .camp-analytics-delta { font-size:10px;font-weight:700; }
 .camp-analytics-delta.pos { color:#2a8a4a; }
 .camp-analytics-delta.neg { color:#a02020; }
-.camp-analytics-metric { font-size:8px;color:#444;text-align:center; }
 
 /* Notion-style doc fields */
 .notion-field { margin-bottom:16px; }
