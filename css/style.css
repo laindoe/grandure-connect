@@ -1006,11 +1006,11 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-hero-next { display:flex;flex-direction:column;gap:3px;margin-bottom:14px; }
 .camp-hero-next-label { font-size:8px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,0.35); }
 .camp-hero-next-val { font-size:14px;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-.camp-hero-prog-track { height:3px;border-radius:100px;background:rgba(255,255,255,0.15);overflow:hidden;margin-bottom:10px; }
-.camp-hero-prog-fill { height:100%;border-radius:100px;background:rgba(255,255,255,0.7);transition:width .4s; }
-.camp-hero-pct-row { display:flex;align-items:baseline;gap:10px;margin-bottom:16px; }
-.camp-hero-pct { font-size:44px;font-weight:800;color:#fff;line-height:1;letter-spacing:-1px; }
-.camp-hero-posts { font-size:11px;color:rgba(255,255,255,0.38); }
+.camp-hero-prog-wrap { display:flex;align-items:center;gap:10px;margin-bottom:5px; }
+.camp-hero-prog-track { flex:1;height:3px;border-radius:100px;background:rgba(255,255,255,0.15);overflow:hidden; }
+.camp-hero-prog-fill { height:100%;border-radius:100px;background:rgba(255,255,255,0.75);transition:width .4s; }
+.camp-hero-pct { font-size:13px;font-weight:700;color:#fff;flex-shrink:0; }
+.camp-hero-posts { font-size:11px;color:rgba(255,255,255,0.38);margin-bottom:14px; }
 /* In-card stage tracker with icons */
 .camp-hero-stages { display:flex;border-radius:100px;overflow:hidden;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.09);gap:2px; }
 .camp-hero-stages .camp-stage-seg { flex-direction:column;gap:3px;padding:9px 4px;height:auto;font-size:7px;letter-spacing:.6px; }

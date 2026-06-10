@@ -2224,13 +2224,13 @@ function pageCampaign(brandId, campId) {
           <div class="camp-hero-next-label">NEXT UP</div>
           <div class="camp-hero-next-val">${upcomingVal}</div>
         </div>
-        <div class="camp-hero-prog-track">
-          <div class="camp-hero-prog-fill" style="width:${pct}%"></div>
-        </div>
-        <div class="camp-hero-pct-row">
+        <div class="camp-hero-prog-wrap">
+          <div class="camp-hero-prog-track">
+            <div class="camp-hero-prog-fill" style="width:${pct}%"></div>
+          </div>
           <div class="camp-hero-pct">${pct}%</div>
-          <div class="camp-hero-posts">${postLabel}</div>
         </div>
+        <div class="camp-hero-posts">${postLabel}</div>
         <div class="camp-hero-stages" id="campStageTracker">
           ${stageTrackerHTML}
         </div>
