@@ -404,25 +404,39 @@ function pageHome() {
       ? (brand.board.ready[0]?.title || brand.board.drafting[0]?.title || '—')
       : `Starts ${campaign.startDate}`;
     return `
-      <div class="home-camp-card" data-href="#/brand?id=${brand.id}">
-        <div class="home-camp-banner" style="${bannerStyle(brand)}"></div>
-        <div class="home-camp-body">
-          <div class="home-camp-top">
-            <div class="home-camp-left">
-              <div class="home-camp-name">${campaign.name}</div>
-              <div class="home-camp-dates">${campaign.startDate} – ${campaign.endDate}</div>
-            </div>
-            <div class="home-camp-right">
-              <div class="home-camp-next-label">NEXT UP</div>
-              <div class="home-camp-next-val">${upcomingVal}</div>
+      <div class="swipe-wrap" data-camp-id="${campaign.id}" data-brand-id="${brand.id}">
+        <div class="swipe-row">
+          <div class="home-camp-card" data-href="#/brand?id=${brand.id}">
+            <div class="home-camp-banner" style="${bannerStyle(brand)}"></div>
+            <div class="home-camp-body">
+              <div class="home-camp-top">
+                <div class="home-camp-left">
+                  <div class="home-camp-name">${campaign.name}</div>
+                  <div class="home-camp-dates">${campaign.startDate} – ${campaign.endDate}</div>
+                </div>
+                <div class="home-camp-right">
+                  <div class="home-camp-next-label">NEXT UP</div>
+                  <div class="home-camp-next-val">${upcomingVal}</div>
+                </div>
+              </div>
+              <div class="home-camp-prog-track">
+                <div class="home-camp-prog-fill" style="width:${pct}%"></div>
+              </div>
+              <div class="home-camp-bottom">
+                <div class="home-camp-count">${postLabel}</div>
+                <div class="home-camp-pct">${pct}%</div>
+              </div>
             </div>
           </div>
-          <div class="home-camp-prog-track">
-            <div class="home-camp-prog-fill" style="width:${pct}%"></div>
-          </div>
-          <div class="home-camp-bottom">
-            <div class="home-camp-count">${postLabel}</div>
-            <div class="home-camp-pct">${pct}%</div>
+          <div class="card-actions">
+            <button class="card-action-btn card-action-edit">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+            <button class="card-action-btn card-action-delete">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+              Delete
+            </button>
           </div>
         </div>
       </div>
@@ -505,6 +519,72 @@ function bindHomeDock() {
   document.getElementById('menuAddContent')?.addEventListener('click', e => {
     e.stopPropagation();
     if (addMenu) addMenu.style.display = 'none';
+  });
+
+  bindCampSwipe();
+}
+
+function bindCampSwipe() {
+  const ACTION_W = 148;
+  document.querySelectorAll('#homeCampsView .swipe-wrap').forEach(wrap => {
+    const row     = wrap.querySelector('.swipe-row');
+    const card    = wrap.querySelector('.home-camp-card');
+    const campId  = wrap.dataset.campId;
+    const brandId = wrap.dataset.brandId;
+    const w = wrap.offsetWidth || (document.getElementById('app').offsetWidth - 32);
+    card.style.minWidth = w + 'px';
+
+    let startX = 0, startY = 0, curX = 0, isOpen = false, dragging = false;
+
+    row.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dragging = true;
+      row.style.transition = 'none';
+    }, { passive: true });
+
+    row.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (!isOpen && Math.abs(dy) > Math.abs(dx) + 4) { dragging = false; return; }
+      e.preventDefault();
+      curX = Math.max(-ACTION_W, Math.min(0, (isOpen ? -ACTION_W : 0) + dx));
+      row.style.transform = `translateX(${curX}px)`;
+    }, { passive: false });
+
+    row.addEventListener('touchend', () => {
+      if (!dragging) return;
+      dragging = false;
+      row.style.transition = 'transform 0.26s cubic-bezier(.25,.46,.45,.94)';
+      isOpen = curX < -ACTION_W * 0.35;
+      row.style.transform = isOpen ? `translateX(-${ACTION_W}px)` : 'translateX(0)';
+    });
+
+    card.addEventListener('click', e => {
+      if (isOpen) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        row.style.transition = 'transform 0.26s cubic-bezier(.25,.46,.45,.94)';
+        row.style.transform = 'translateX(0)';
+        isOpen = false;
+      }
+    });
+
+    wrap.querySelector('.card-action-edit').addEventListener('click', () => {
+      navigate(`/brand?id=${brandId}`);
+    });
+
+    wrap.querySelector('.card-action-delete').addEventListener('click', () => {
+      const brand = getBrand(brandId);
+      if (brand) {
+        const idx = brand.campaigns.findIndex(c => c.id === campId);
+        if (idx !== -1) brand.campaigns.splice(idx, 1);
+        saveBrandOverride(brandId, { campaigns: [...brand.campaigns] });
+      }
+      document.getElementById('app').innerHTML = pageHome();
+      bindHomeDock(); bindCapture(); bindNav(); bindAddBrand();
+    });
   });
 }
 
