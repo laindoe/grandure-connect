@@ -85,6 +85,11 @@ function render() {
   const { path, params } = parseHash();
   const app = document.getElementById('app');
 
+  // Remove campaign nav when leaving campaign context
+  if (path !== '/campaign' && path !== '/doc') {
+    document.getElementById('campaignBottomNav')?.remove();
+  }
+
   if (path === '/' || path === '') {
     app.innerHTML = pageHome();
     bindHomeDock();
@@ -2253,6 +2258,34 @@ function bindAisha(brand, campaign, brandId, campId) {
 /* ═══════════════════════════════════════
    CAMPAIGN PAGE: NAV HTML
 ═══════════════════════════════════════ */
+function injectCampaignNav(brandId, campId, activeTab, onAisha) {
+  document.getElementById('campaignBottomNav')?.remove();
+
+  const docSVG    = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>`;
+  const ideaSVG   = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 01-1 1H9a1 1 0 01-1-1v-2.26A7.003 7.003 0 0112 2z"/></svg>`;
+  const aishaSVG  = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>`;
+  const visualSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
+  const calSVG    = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'campaignBottomNav';
+  wrap.innerHTML = `
+    <nav class="bottom-nav">
+      <button class="nav-btn${activeTab === 'doc'    ? ' nav-active' : ''}" id="campNavDoc">${docSVG}</button>
+      <button class="nav-btn${activeTab === 'ideas'  ? ' nav-active' : ''}" id="campNavIdeas">${ideaSVG}</button>
+      <button class="nav-btn nav-btn-center" id="campNavAisha">${aishaSVG}</button>
+      <button class="nav-btn${activeTab === 'visual' ? ' nav-active' : ''}" id="campNavVisual">${visualSVG}</button>
+      <button class="nav-btn${activeTab === 'cal'    ? ' nav-active' : ''}" id="campNavCal">${calSVG}</button>
+    </nav>`;
+  document.body.appendChild(wrap);
+
+  document.getElementById('campNavDoc')?.addEventListener('click',    () => navigate(`#/campaign?brandId=${brandId}&id=${campId}`));
+  document.getElementById('campNavIdeas')?.addEventListener('click',  () => navigate(`#/vault?id=${brandId}&campId=${campId}`));
+  document.getElementById('campNavVisual')?.addEventListener('click', () => navigate(`#/brand?id=${brandId}`));
+  document.getElementById('campNavCal')?.addEventListener('click',    () => {}); // future: campaign calendar
+  document.getElementById('campNavAisha')?.addEventListener('click',  () => { if (onAisha) onAisha(); });
+}
+
 function campaignNavHTML(brandId, campId) {
   const docSVG    = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>`;
   const ideaSVG   = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 01-1 1H9a1 1 0 01-1-1v-2.26A7.003 7.003 0 0112 2z"/></svg>`;
@@ -2537,7 +2570,6 @@ function pageCampaign(brandId, campId) {
 
     ${captureModalHTML()}
     <div id="editPhotoMount"></div>
-    ${campaignNavHTML(brandId, campId)}
   `;
 }
 
@@ -2595,18 +2627,10 @@ function bindCampaignPage(brandId, campId) {
     openEditHeroPhoto(brandId, campId);
   });
 
-  // Nav tabs
-  document.getElementById('campNavDoc')?.addEventListener('click', () => {
-    document.querySelector('.page')?.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-  document.getElementById('campNavIdeas')?.addEventListener('click', () => navigate(`#/vault?id=${brandId}`));
-  document.getElementById('campNavVisual')?.addEventListener('click', () => navigate(`#/brand?id=${brandId}`));
-  document.getElementById('campNavCal')?.addEventListener('click', () => {}); // future
+  // Campaign nav (body-level so position:fixed works correctly on iOS)
+  injectCampaignNav(brandId, campId, 'doc', () => { aishaEl.style.display = 'flex'; });
 
-  // Aisha sheet open/close
-  document.getElementById('campNavAisha')?.addEventListener('click', () => {
-    aishaEl.style.display = 'flex';
-  });
+  // Aisha sheet close via backdrop
   document.getElementById('aishaSheetBg')?.addEventListener('click', () => {
     aishaEl.style.display = 'none';
   });
@@ -2888,7 +2912,7 @@ function pageDoc(brandId, campId, docType) {
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     </div>
-    ${pageChrome()}`;
+    ${captureModalHTML()}`;
 }
 
 /* ═══════════════════════════════════════
@@ -3028,6 +3052,9 @@ function bindDoc(brandId, campId, docType) {
 
   bindBlockEvents();
   document.getElementById('docAddBtn')?.addEventListener('click', () => showPicker(blocks[blocks.length - 1]?.id || null));
+
+  // Same campaign nav as the campaign page (Aisha opens campaign page on doc page)
+  injectCampaignNav(brandId, campId, 'doc', () => navigate(`#/campaign?brandId=${brandId}&id=${campId}`));
 }
 
 /* ── Global settings button delegation (runs once on load) ── */
