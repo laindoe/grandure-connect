@@ -2127,11 +2127,17 @@ function pageCampaign(brandId, campId) {
     campaign.status === 'active' ? 2 : campaign.status === 'upcoming' ? 1 : 0
   );
   const stages = ['Ideation', 'Planning Phase', 'Production', 'Distribution'];
-  const stageTrackerHTML = stages.map((label, i) => {
+  const STAGE_META = [
+    { label: 'Ideation',   icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.4-1.2 4.5-3 5.7V17H9v-2.3A7 7 0 0112 2z"/></svg>` },
+    { label: 'Planning',   icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>` },
+    { label: 'Production', icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>` },
+    { label: 'Publish',    icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>` },
+  ];
+  const stageTrackerHTML = stages.map((_, i) => {
     let cls = 'camp-stage-seg';
     if (i < stageIndex) cls += ' completed';
     else if (i === stageIndex) cls += ' current';
-    return `<div class="${cls}" data-stage="${i}">${label}</div>`;
+    return `<div class="${cls}" data-stage="${i}">${STAGE_META[i].icon}<span>${STAGE_META[i].label}</span></div>`;
   }).join('');
 
   // Progress data
@@ -2212,7 +2218,6 @@ function pageCampaign(brandId, campId) {
       <div class="camp-hero-card" id="campHeroCard" style="${heroImgStyle}">
         <div class="camp-hero-top">
           <div class="camp-hero-dates">${campaign.startDate} – ${campaign.endDate}</div>
-          <div class="camp-hero-posts">${postLabel}</div>
         </div>
         <div class="camp-hero-name">${campaign.name}</div>
         <div class="camp-hero-next">
@@ -2222,7 +2227,13 @@ function pageCampaign(brandId, campId) {
         <div class="camp-hero-prog-track">
           <div class="camp-hero-prog-fill" style="width:${pct}%"></div>
         </div>
-        <div class="camp-hero-pct">${pct}%</div>
+        <div class="camp-hero-pct-row">
+          <div class="camp-hero-pct">${pct}%</div>
+          <div class="camp-hero-posts">${postLabel}</div>
+        </div>
+        <div class="camp-hero-stages" id="campStageTracker">
+          ${stageTrackerHTML}
+        </div>
       </div>
 
       <!-- More options sheet -->
@@ -2243,11 +2254,6 @@ function pageCampaign(brandId, campId) {
             <button class="camp-analytics-more" id="campAnalyticsMore">View More ›</button>
           </div>
           <div class="camp-analytics-row">${analyticsItemsHTML}</div>
-        </div>
-
-        <!-- Stage tracker -->
-        <div class="camp-stage-tracker" id="campStageTracker">
-          ${stageTrackerHTML}
         </div>
 
         <!-- CAMPAIGN OVERVIEW (Notion doc) -->
