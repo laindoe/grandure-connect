@@ -2820,8 +2820,10 @@ function getDefaultOvBlocks(campaign) {
   const blocks = [{ id: uid(), type: 'h1', text: campaign.name || 'Campaign Overview' }];
   [['ov_objective','Objective'],['ov_audience','Target Audience'],['ov_message','Core Message'],
    ['ov_platforms','Platforms'],['ov_cta','Call to Action'],['ov_timeline','Timeline'],['ov_notes','Notes']
-  ].forEach(([k,l]) => { if (campaign[k]) { blocks.push({ id:uid(), type:'h2', text:l }); blocks.push({ id:uid(), type:'text', text:campaign[k] }); } });
-  if (blocks.length === 1) blocks.push({ id: uid(), type: 'text', text: '' });
+  ].forEach(([k,l]) => {
+    blocks.push({ id: uid(), type: 'h2', text: l });
+    blocks.push({ id: uid(), type: 'text', text: campaign[k] || '' });
+  });
   return blocks;
 }
 
@@ -2830,8 +2832,10 @@ function getDefaultCpBlocks(campaign) {
   const blocks = [{ id: uid(), type: 'h1', text: 'Content Plan' }];
   [['cp_formats','Content Formats'],['cp_cadence','Posting Cadence'],['cp_pillars','Content Pillars'],
    ['cp_mix','Content Mix'],['cp_repurposing','Repurposing Strategy'],['cp_notes','Notes']
-  ].forEach(([k,l]) => { if (campaign[k]) { blocks.push({ id:uid(), type:'h2', text:l }); blocks.push({ id:uid(), type:'text', text:campaign[k] }); } });
-  if (blocks.length === 1) blocks.push({ id: uid(), type: 'text', text: '' });
+  ].forEach(([k,l]) => {
+    blocks.push({ id: uid(), type: 'h2', text: l });
+    blocks.push({ id: uid(), type: 'text', text: campaign[k] || '' });
+  });
   return blocks;
 }
 
