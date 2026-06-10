@@ -858,3 +858,82 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 
 /* ── Active dock button ── */
 .nav-btn.nav-active { color: #fff; }
+
+/* ── Campaign card brand header ── */
+.home-camp-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px 8px;
+}
+.home-camp-brand-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.home-camp-brand-header-name {
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Campaign filter bar ── */
+.camp-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px 16px;
+}
+.camp-filter-label {
+  color: #444;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.camp-filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 7px 12px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.camp-filter-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: rgba(18,18,18,0.97);
+  backdrop-filter: blur(40px) saturate(1.4);
+  -webkit-backdrop-filter: blur(40px) saturate(1.4);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  overflow: hidden;
+  min-width: 150px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  z-index: 200;
+}
+.camp-filter-opt {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  text-align: left;
+  color: #bbb;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.camp-filter-opt:last-child { border-bottom: none; }
+.camp-filter-opt.active { color: #fff; font-weight: 700; }
+.camp-filter-opt:active { background: rgba(255,255,255,0.08); }

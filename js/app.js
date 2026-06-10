@@ -203,6 +203,7 @@ function bottomNavHTML() {
 
 /* ── Home view state ── */
 let _homeView = 'campaigns';
+let _campFilter = 'date';
 
 /* ── Idea Capture Modal ── */
 let captureState = { platform: '', format: '', brandId: '' };
@@ -393,10 +394,20 @@ function pageHome() {
   BRANDS.forEach(brand => {
     (brand.campaigns || []).forEach(c => allCampaigns.push({ campaign: c, brand }));
   });
-  const campCards = allCampaigns.length ? allCampaigns.map(({ campaign, brand }) => {
+
+  const getPct = ({ campaign, brand }) => {
+    const isCurrent = campaign.status === 'active' && campaign.name === brand.currentPhase.name;
+    return campaign.progress != null ? campaign.progress : (isCurrent ? brand.currentPhase.progress : 0);
+  };
+  const sorted = [...allCampaigns];
+  if (_campFilter === 'brand') sorted.sort((a, b) => a.brand.name.localeCompare(b.brand.name));
+  if (_campFilter === 'pct')   sorted.sort((a, b) => getPct(b) - getPct(a));
+
+  const filterLabel = { date: 'Date', brand: 'Brand', pct: '% Complete' }[_campFilter];
+
+  const campCards = sorted.length ? sorted.map(({ campaign, brand }) => {
     const isCurrentPhase = campaign.status === 'active' && campaign.name === brand.currentPhase.name;
-    const pct = campaign.progress != null ? campaign.progress
-      : (isCurrentPhase ? brand.currentPhase.progress : 0);
+    const pct = getPct({ campaign, brand });
     const postsCompleted = isCurrentPhase ? brand.currentPhase.postsCompleted : 0;
     const totalPosts     = isCurrentPhase ? brand.currentPhase.totalPosts : 0;
     const postLabel = totalPosts > 0 ? `${postsCompleted} / ${totalPosts} posts` : '0 posts';
@@ -407,20 +418,18 @@ function pageHome() {
     const campBannerStyle = cb
       ? (cb.startsWith('data:') || cb.startsWith('http') ? `background:url('${cb}') center/cover no-repeat` : `background:${cb}`)
       : bannerStyle(brand);
-    const dotBg = brand.banner.startsWith('data:') || brand.banner.startsWith('http')
-      ? 'background:rgba(255,255,255,0.5)'
+    const iconBg = brand.banner.startsWith('data:') || brand.banner.startsWith('http')
+      ? 'background:rgba(255,255,255,0.15)'
       : `background:${brand.banner}`;
     return `
+      <div class="home-camp-brand-header">
+        <div class="home-camp-brand-icon" style="${iconBg}">${brand.name[0].toUpperCase()}</div>
+        <span class="home-camp-brand-header-name">${brand.name}</span>
+      </div>
       <div class="swipe-wrap" data-camp-id="${campaign.id}" data-brand-id="${brand.id}">
         <div class="swipe-row">
           <div class="home-camp-card" data-href="#/brand?id=${brand.id}">
-            <div style="position:relative">
-              <div class="home-camp-banner" style="${campBannerStyle}"></div>
-              <div class="home-camp-brand-tag">
-                <div class="home-camp-brand-dot" style="${dotBg}"></div>
-                <span class="home-camp-brand-name">${brand.name}</span>
-              </div>
-            </div>
+            <div class="home-camp-banner" style="${campBannerStyle}"></div>
             <div class="home-camp-body">
               <div class="home-camp-top">
                 <div class="home-camp-left">
@@ -456,6 +465,24 @@ function pageHome() {
     `;
   }).join('') : `<div style="color:#333;font-size:13px;padding:20px 0;text-align:center">No campaigns yet</div>`;
 
+  const campViewHTML = `
+    <div class="camp-filter-bar">
+      <span class="camp-filter-label">Sort by</span>
+      <div style="position:relative">
+        <button class="camp-filter-toggle" id="campFilterBtn">
+          ${filterLabel}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="camp-filter-menu" id="campFilterMenu" style="display:none">
+          <button class="camp-filter-opt${_campFilter === 'date' ? ' active' : ''}" data-cf="date">Date</button>
+          <button class="camp-filter-opt${_campFilter === 'brand' ? ' active' : ''}" data-cf="brand">Brand</button>
+          <button class="camp-filter-opt${_campFilter === 'pct' ? ' active' : ''}" data-cf="pct">% Complete</button>
+        </div>
+      </div>
+    </div>
+    ${campCards}
+  `;
+
   return `
     <div class="page" style="padding-bottom:110px">
       <div class="top-header">
@@ -475,7 +502,7 @@ function pageHome() {
         </div>
       </div>
       <div class="home-brand-grid" id="homeBrandsView">${brandGrid}</div>
-      <div class="home-camp-list" id="homeCampsView" style="display:none">${campCards}</div>
+      <div class="home-camp-list" id="homeCampsView" style="display:none">${campViewHTML}</div>
     </div>
     ${captureModalHTML()}
     ${addBrandSheetHTML()}
@@ -532,6 +559,21 @@ function bindHomeDock() {
   document.getElementById('menuAddContent')?.addEventListener('click', e => {
     e.stopPropagation();
     if (addMenu) addMenu.style.display = 'none';
+  });
+
+  document.getElementById('campFilterBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    const menu = document.getElementById('campFilterMenu');
+    if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.querySelectorAll('[data-cf]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      _campFilter = btn.dataset.cf;
+      document.getElementById('app').innerHTML = pageHome();
+      bindHomeDock(); bindCapture(); bindNav(); bindAddBrand();
+    });
   });
 
   bindCampSwipe();
