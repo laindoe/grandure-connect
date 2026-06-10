@@ -997,23 +997,26 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 
 /* Campaign hero card */
 /* Campaign hero card — full-width banner */
-.camp-hero-card { position:relative;min-height:280px;padding:20px 18px 20px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;background:#111 no-repeat center/cover;margin:0; }
-.camp-hero-card::before { content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.72) 100%);z-index:0; }
+.camp-hero-card { position:relative;min-height:280px;padding:20px 18px 22px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;background:#111 no-repeat center/cover;margin:0;gap:0; }
+.camp-hero-card::before { content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.75) 100%);z-index:0; }
 .camp-hero-card > * { position:relative;z-index:1; }
-.camp-hero-edit-btn { position:absolute;top:14px;right:14px;z-index:2;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0; }
 .camp-hero-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
-.camp-hero-stage-pill { background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:4px 12px;font-size:9px;font-weight:700;letter-spacing:1.2px;color:#fff; }
 .camp-hero-dates { font-size:11px;color:rgba(255,255,255,0.45); }
-.camp-hero-name { font-size:24px;font-weight:700;color:#fff;margin-bottom:18px;line-height:1.2; }
-.camp-hero-prog-track { height:3px;border-radius:100px;background:rgba(255,255,255,0.15);overflow:hidden;margin-bottom:14px; }
-.camp-hero-prog-fill { height:100%;border-radius:100px;background:rgba(255,255,255,0.7);transition:width .4s; }
-.camp-hero-foot { display:flex;align-items:flex-end;justify-content:space-between; }
-.camp-hero-next { display:flex;flex-direction:column;gap:3px; }
-.camp-hero-next-label { font-size:8px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,0.35); }
-.camp-hero-next-val { font-size:13px;color:rgba(255,255,255,0.85);max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-.camp-hero-right { display:flex;flex-direction:column;align-items:flex-end;gap:2px; }
 .camp-hero-posts { font-size:11px;color:rgba(255,255,255,0.4); }
-.camp-hero-pct { font-size:20px;font-weight:700;color:#fff; }
+.camp-hero-name { font-size:24px;font-weight:700;color:#fff;margin-bottom:14px;line-height:1.2; }
+.camp-hero-next { display:flex;flex-direction:column;gap:3px;margin-bottom:14px; }
+.camp-hero-next-label { font-size:8px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,0.35); }
+.camp-hero-next-val { font-size:14px;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.camp-hero-prog-track { height:3px;border-radius:100px;background:rgba(255,255,255,0.15);overflow:hidden;margin-bottom:10px; }
+.camp-hero-prog-fill { height:100%;border-radius:100px;background:rgba(255,255,255,0.7);transition:width .4s; }
+.camp-hero-pct { font-size:42px;font-weight:800;color:#fff;line-height:1;letter-spacing:-1px; }
+
+/* More options sheet */
+.camp-more-sheet { position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;justify-content:flex-end; }
+.camp-more-sheet-bg { position:absolute;inset:0;background:rgba(0,0,0,0.55); }
+.camp-more-sheet-panel { position:relative;background:#141414;border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0); }
+.camp-more-sheet-bar { width:40px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:12px auto 8px; }
+.camp-more-item { display:block;width:100%;padding:16px 20px;text-align:left;color:#fff;font-size:15px;background:none;border:none;border-top:1px solid rgba(255,255,255,0.05); }
 
 /* Analytics bar */
 .camp-analytics { margin-bottom:12px; }

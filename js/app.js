@@ -2194,7 +2194,6 @@ function pageCampaign(brandId, campId) {
   const pillarsHTML = (ov.contentPillars || []).map(p => `<span class="notion-pillar">${p}</span>`).join('');
 
   const heroImgStyle = campaign.heroImage ? `background-image:url(${campaign.heroImage})` : '';
-  const cameraIconSVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
 
   return `
     <div class="page" style="padding-bottom:110px">
@@ -2213,22 +2212,26 @@ function pageCampaign(brandId, campId) {
       <div class="camp-hero-card" id="campHeroCard" style="${heroImgStyle}">
         <div class="camp-hero-top">
           <div class="camp-hero-dates">${campaign.startDate} – ${campaign.endDate}</div>
+          <div class="camp-hero-posts">${postLabel}</div>
         </div>
         <div class="camp-hero-name">${campaign.name}</div>
+        <div class="camp-hero-next">
+          <div class="camp-hero-next-label">NEXT UP</div>
+          <div class="camp-hero-next-val">${upcomingVal}</div>
+        </div>
         <div class="camp-hero-prog-track">
           <div class="camp-hero-prog-fill" style="width:${pct}%"></div>
         </div>
-        <div class="camp-hero-foot">
-          <div class="camp-hero-next">
-            <div class="camp-hero-next-label">NEXT UP</div>
-            <div class="camp-hero-next-val">${upcomingVal}</div>
-          </div>
-          <div class="camp-hero-right">
-            <div class="camp-hero-posts">${postLabel}</div>
-            <div class="camp-hero-pct">${pct}%</div>
-          </div>
+        <div class="camp-hero-pct">${pct}%</div>
+      </div>
+
+      <!-- More options sheet -->
+      <div class="camp-more-sheet" id="campMoreSheet" style="display:none">
+        <div class="camp-more-sheet-bg" id="campMoreSheetBg"></div>
+        <div class="camp-more-sheet-panel">
+          <div class="camp-more-sheet-bar"></div>
+          <button class="camp-more-item" id="campMoreChangeCover">Change Cover Photo</button>
         </div>
-        <button class="camp-hero-edit-btn" id="campHeroEditBtn">${cameraIconSVG}</button>
       </div>
 
       <div style="padding:0 16px;padding-top:14px">
@@ -2374,8 +2377,18 @@ function bindCampaignPage(brandId, campId) {
 
   const getVal = id => document.getElementById(id)?.value || '';
 
-  // Hero card background image edit
-  document.getElementById('campHeroEditBtn')?.addEventListener('click', () => openEditHeroPhoto(brandId, campId));
+  // More options (···) sheet
+  const campMoreSheet = document.getElementById('campMoreSheet');
+  document.getElementById('campMoreBtn')?.addEventListener('click', () => {
+    if (campMoreSheet) campMoreSheet.style.display = 'flex';
+  });
+  document.getElementById('campMoreSheetBg')?.addEventListener('click', () => {
+    if (campMoreSheet) campMoreSheet.style.display = 'none';
+  });
+  document.getElementById('campMoreChangeCover')?.addEventListener('click', () => {
+    if (campMoreSheet) campMoreSheet.style.display = 'none';
+    openEditHeroPhoto(brandId, campId);
+  });
 
   // Nav tabs
   document.getElementById('campNavDoc')?.addEventListener('click', () => {
