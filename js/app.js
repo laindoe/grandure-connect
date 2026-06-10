@@ -102,6 +102,8 @@ function render() {
     app.innerHTML = pageIdeaVault(params.id);
   } else if (path === '/inspiration') {
     app.innerHTML = pageInspiration(params.id);
+  } else if (path === '/campaign') {
+    app.innerHTML = pageCampaign(params.brandId, params.id);
   } else {
     app.innerHTML = pageHome();
   }
@@ -113,6 +115,7 @@ function render() {
   bindNav();
   bindAddBrand();
   if (path === '/brand') { bindEditBrand(params.id); bindDropdowns(params.id); }
+  if (path === '/campaign') { bindCampaignPage(params.brandId, params.id); }
 }
 
 /* ── Bind all nav links ── */
@@ -433,7 +436,7 @@ function pageHome() {
       </div>
       <div class="swipe-wrap" data-camp-id="${campaign.id}" data-brand-id="${brand.id}">
         <div class="swipe-row">
-          <div class="home-camp-card" data-href="#/brand?id=${brand.id}">
+          <div class="home-camp-card" data-href="#/campaign?brandId=${brand.id}&id=${campaign.id}">
             <div class="home-camp-banner" style="${campBannerStyle}"></div>
             <div class="home-camp-body">
               <div class="home-camp-top">
@@ -1729,6 +1732,390 @@ window.vaultFilter = function(id, platform, format) {
   document.getElementById('app').innerHTML = pageIdeaVault(id, platform, format);
   bindCapture(); bindNav();
 };
+
+/* ═══════════════════════════════════════
+   CAMPAIGN PAGE: AI GENERATORS
+═══════════════════════════════════════ */
+function generateCampaignStrategyText(brand, campaign) {
+  const ov = brand.overview || {};
+  const mission = ov.mission || 'Build an authentic brand presence.';
+  const audience = ov.audience || 'A core engaged audience.';
+  const pillars = (ov.contentPillars || []).join(', ') || 'content pillars';
+  const voice = ov.brandVoice || 'Authentic and engaging.';
+  const campName = campaign.name || 'this campaign';
+  const startDate = campaign.startDate || 'TBD';
+  const endDate = campaign.endDate || 'TBD';
+
+  return `Campaign: ${campName}\nTimeline: ${startDate} – ${endDate}\n\nObjective\nDrive meaningful engagement aligned with ${brand.name}'s mission: "${mission.slice(0, 80)}${mission.length > 80 ? '…' : ''}"\n\nTarget Audience\n${audience}\n\nContent Pillars Focus\n${pillars}\n\nTone & Voice\n${voice}\n\nPhase Strategy\n1. Awareness — establish campaign narrative across platforms\n2. Engagement — interactive content that deepens connection\n3. Conversion — clear calls-to-action that reflect brand values\n\nSuccess Metrics\n· Reach & impressions growth vs. baseline\n· Engagement rate above brand average\n· Community responses & saves`;
+}
+
+function generateContentPlanText(brand, campaign) {
+  const ov = brand.overview || {};
+  const pillars = ov.contentPillars || [];
+  const campName = campaign.name || 'Campaign';
+  const pillarLines = pillars.length
+    ? pillars.map((p, i) => `Week ${i + 1}: ${p} — 2–3 posts anchored in this pillar`).join('\n')
+    : 'Week 1: Brand story\nWeek 2: Value content\nWeek 3: Community spotlight\nWeek 4: Call to action';
+
+  const platforms = Object.keys(brand.platformStrategy || {});
+  const platformLine = platforms.length
+    ? platforms.map(p => `· ${(p.charAt(0).toUpperCase() + p.slice(1))}: adapted format for platform strengths`).join('\n')
+    : '· Instagram, Threads, YouTube';
+
+  return `Content Plan — ${campName}\n\nWeekly Cadence\n${pillarLines}\n\nPlatform Distribution\n${platformLine}\n\nContent Mix\n· 40% Educational / value-driven\n· 30% Storytelling / behind the scenes\n· 20% Community engagement\n· 10% Promotional / offer-forward\n\nRepurposing Strategy\nLong-form → short clips → quote cards → thread breakdowns`;
+}
+
+function generateAIResponse(brand, campaign, question) {
+  const q = (question || '').toLowerCase();
+  if (q.includes('content') || q.includes('plan') || q.includes('post') || q.includes('what to') || q.includes('schedule')) {
+    return generateContentPlanText(brand, campaign);
+  }
+  if (q.includes('strateg') || q.includes('goal') || q.includes('objective') || q.includes('campaign')) {
+    return generateCampaignStrategyText(brand, campaign);
+  }
+  if (q.includes('audience') || q.includes('who') || q.includes('target')) {
+    const ov = brand.overview || {};
+    return `Target Audience for ${campaign.name}\n\n${ov.audience || 'Your core audience.'}\n\nEngage them through:\n· Relatable storytelling\n· Content that solves real problems\n· Community-first language`;
+  }
+  if (q.includes('voice') || q.includes('tone') || q.includes('how to write') || q.includes('sound')) {
+    const ov = brand.overview || {};
+    return `Brand Voice — ${brand.name}\n\n${ov.brandVoice || 'Authentic and engaging.'}\n\nApply this to ${campaign.name} by:\n· Leading with the community, not the offer\n· Using language your audience already uses\n· Staying consistent across platforms`;
+  }
+  // fallback
+  return generateCampaignStrategyText(brand, campaign);
+}
+
+/* ═══════════════════════════════════════
+   CAMPAIGN PAGE: NAV HTML
+═══════════════════════════════════════ */
+function campaignNavHTML(brandId, campId) {
+  return `
+    <nav class="bottom-nav">
+      <button class="nav-btn" id="campNavHome" data-href="#/">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1v-9.5z"/>
+          <path d="M9 21v-9h6v9"/>
+        </svg>
+      </button>
+      <button class="nav-btn" id="campNavVault" data-href="#/vault?id=${brandId}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 8v4l2 2"/>
+        </svg>
+      </button>
+      <button class="nav-btn nav-btn-center" id="campNavCapture">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13 2L4 13h7l-1 9 10-12h-7z"/>
+        </svg>
+      </button>
+      <button class="nav-btn" id="campNavVisual" data-href="#/brand?id=${brandId}">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+      </button>
+      <button class="nav-btn" id="campNavCal">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </button>
+    </nav>
+  `;
+}
+
+/* ═══════════════════════════════════════
+   PAGE: CAMPAIGN DETAIL
+═══════════════════════════════════════ */
+function pageCampaign(brandId, campId) {
+  const brand = getBrand(brandId);
+  if (!brand) return pageHome();
+  const campaign = (brand.campaigns || []).find(c => c.id === campId);
+  if (!campaign) return pageHome();
+
+  // Stage index: default from campaign.stage; if not set, derive from status
+  let stageIndex = campaign.stage != null ? campaign.stage : (
+    campaign.status === 'active' ? 2 :
+    campaign.status === 'upcoming' ? 1 : 0
+  );
+
+  const stages = ['Ideation', 'Planning Phase', 'Production', 'Distribution'];
+
+  // Stage tracker HTML: step | line | step | line | step | line | step
+  const stageTrackerHTML = stages.map((label, i) => {
+    const isDot = true;
+    const isActive = i <= stageIndex;
+    const dotHTML = `
+      <div class="camp-stage-step">
+        <div class="camp-stage-dot${isActive ? ' active' : ''}" data-stage="${i}"></div>
+        <div class="camp-stage-label${isActive ? ' active' : ''}">${label}</div>
+      </div>
+    `;
+    const lineHTML = i < stages.length - 1
+      ? `<div class="camp-stage-line${isActive && i < stageIndex ? ' active' : ''}"></div>`
+      : '';
+    return dotHTML + lineHTML;
+  }).join('');
+
+  // AI response text
+  const aiResponseText = campaign.strategy || 'Tap "Generate" to get a tailored strategy for this campaign.';
+
+  // Brand icon
+  const iconContent = brand.icon
+    ? `<img src="${brand.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    : brand.name[0].toUpperCase();
+  const iconBg = brand.icon ? 'background:rgba(255,255,255,0.07)'
+    : (brand.banner && (brand.banner.startsWith('data:') || brand.banner.startsWith('http'))
+      ? 'background:rgba(255,255,255,0.15)'
+      : `background:${brand.banner}`);
+
+  // Content plan
+  const contentPlanText = campaign.contentPlan || '';
+
+  // Brand overview data
+  const ov = brand.overview || {};
+  const pillarsHTML = (ov.contentPillars || []).map(p => `<span style="display:inline-block;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 10px;font-size:11px;color:#aaa;margin:3px 3px 3px 0">${p}</span>`).join('');
+
+  return `
+    <div class="page" style="padding-bottom:110px">
+
+      <!-- Back header -->
+      <div class="back-header">
+        <button class="back-btn" data-href="#/">‹</button>
+        <div style="display:flex;align-items:center;gap:10px;flex:1;justify-content:center">
+          <div class="camp-header-icon" style="${iconBg}">${iconContent}</div>
+          <span class="camp-header-brand">${brand.name}</span>
+        </div>
+        <button class="back-btn" id="campMoreBtn" style="font-size:18px;font-weight:400;letter-spacing:1px">···</button>
+      </div>
+
+      <div style="padding:0 16px">
+
+        <!-- Stage tracker -->
+        <div class="camp-stage-tracker" id="campStageTracker">
+          ${stageTrackerHTML}
+        </div>
+
+        <!-- AI Agent block -->
+        <div class="ai-agent-block">
+          <div class="ai-agent-header">
+            <div class="ai-agent-avatar">✦</div>
+            <div class="ai-agent-info">
+              <div class="ai-agent-name">Campaign AI <span class="ai-sparkle">✦</span></div>
+              <div class="ai-agent-role">Strategy · Content · Planning</div>
+            </div>
+            <button class="ai-gen-btn" id="aiGenerateBtn">Generate</button>
+          </div>
+          <div class="ai-response" id="aiResponse">${aiResponseText}</div>
+          <div class="ai-input-row">
+            <input class="ai-input" id="aiInput" type="text" placeholder="Ask about this campaign…">
+            <button class="ai-send" id="aiSendBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- CAMPAIGN dropdown -->
+        <div class="section-card dd-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
+          <div class="section-card-header" id="campInfoToggle" style="display:flex;align-items:center;gap:8px">
+            <div class="section-card-title" style="flex:1">CAMPAIGN</div>
+            <button class="ai-gen-btn" id="campAiBtn" style="font-size:10px">AI</button>
+            <svg class="dd-chevron" id="campInfoChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div style="margin-top:4px">
+            <div class="body-text">${campaign.name}</div>
+            <div class="body-text" style="font-size:12px;color:#555;margin-top:2px">${campaign.startDate} – ${campaign.endDate}</div>
+          </div>
+          <div class="dd-body" id="campInfoBody" style="display:none;padding-top:14px">
+            <div class="camp-field-label">NAME</div>
+            <input class="camp-field-input" id="campEditName" value="${campaign.name}" style="margin-bottom:12px">
+            <div class="camp-field-label">START DATE</div>
+            <input class="camp-field-input" id="campEditStart" value="${campaign.startDate}" style="margin-bottom:12px">
+            <div class="camp-field-label">END DATE</div>
+            <input class="camp-field-input" id="campEditEnd" value="${campaign.endDate}" style="margin-bottom:12px">
+            <div class="camp-field-label">STATUS</div>
+            <input class="camp-field-input" id="campEditStatus" value="${campaign.status}" style="margin-bottom:16px">
+            <button class="camp-save-btn" id="campInfoSave">Save</button>
+          </div>
+        </div>
+
+        <!-- CONTENT PLAN dropdown -->
+        <div class="section-card dd-card" id="campPlanCard" style="cursor:pointer;margin-bottom:10px">
+          <div class="section-card-header" id="campPlanToggle" style="display:flex;align-items:center;gap:8px">
+            <div class="section-card-title" style="flex:1">CONTENT PLAN</div>
+            <button class="ai-gen-btn" id="planAiBtn" style="font-size:10px">AI</button>
+            <svg class="dd-chevron" id="campPlanChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="dd-body" id="campPlanBody" style="display:none;padding-top:14px">
+            <textarea class="camp-field-input" id="campPlanText" rows="8" style="resize:vertical;margin-bottom:16px">${contentPlanText}</textarea>
+            <button class="camp-save-btn" id="campPlanSave">Save</button>
+          </div>
+        </div>
+
+        <!-- BRAND SNAPSHOT dropdown -->
+        <div class="section-card dd-card" id="campSnapCard" style="cursor:pointer;margin-bottom:10px">
+          <div class="section-card-header" id="campSnapToggle" style="display:flex;align-items:center;gap:8px">
+            <div class="section-card-title" style="flex:1">BRAND SNAPSHOT</div>
+            <svg class="dd-chevron" id="campSnapChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="dd-body" id="campSnapBody" style="display:none;padding-top:14px">
+            ${ov.mission ? `<div class="camp-field-label">MISSION</div><div class="body-text" style="margin-bottom:12px">${ov.mission}</div>` : ''}
+            ${ov.audience ? `<div class="camp-field-label">AUDIENCE</div><div class="body-text" style="margin-bottom:12px">${ov.audience}</div>` : ''}
+            ${(ov.contentPillars || []).length ? `<div class="camp-field-label">CONTENT PILLARS</div><div style="margin-bottom:12px">${pillarsHTML}</div>` : ''}
+            ${ov.brandVoice ? `<div class="camp-field-label">BRAND VOICE</div><div class="body-text">${ov.brandVoice}</div>` : ''}
+          </div>
+        </div>
+
+      </div>
+    </div>
+    ${captureModalHTML()}
+    ${campaignNavHTML(brandId, campId)}
+  `;
+}
+
+/* ═══════════════════════════════════════
+   CAMPAIGN PAGE: BIND
+═══════════════════════════════════════ */
+function bindCampaignPage(brandId, campId) {
+  const brand = getBrand(brandId);
+  if (!brand) return;
+  const campaign = (brand.campaigns || []).find(c => c.id === campId);
+  if (!campaign) return;
+
+  // Nav buttons
+  document.getElementById('campNavHome')?.addEventListener('click', () => navigate('#/'));
+  document.getElementById('campNavVault')?.addEventListener('click', () => navigate(`#/vault?id=${brandId}`));
+  document.getElementById('campNavVisual')?.addEventListener('click', () => navigate(`#/brand?id=${brandId}`));
+  document.getElementById('campNavCal')?.addEventListener('click', () => {}); // no-op
+  document.getElementById('campNavCapture')?.addEventListener('click', () => {
+    const overlay = document.getElementById('captureOverlay');
+    if (overlay) overlay.style.display = 'flex';
+  });
+
+  // Stage tracker
+  document.querySelectorAll('#campStageTracker .camp-stage-dot').forEach(dot => {
+    dot.addEventListener('click', () => {
+      const newStage = parseInt(dot.dataset.stage, 10);
+      const updatedCampaigns = brand.campaigns.map(c =>
+        c.id === campId ? { ...c, stage: newStage } : c
+      );
+      saveBrandOverride(brandId, { campaigns: updatedCampaigns });
+      document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+      bindCampaignPage(brandId, campId);
+    });
+  });
+
+  // AI Generate button
+  document.getElementById('aiGenerateBtn')?.addEventListener('click', () => {
+    const text = generateCampaignStrategyText(brand, campaign);
+    const el = document.getElementById('aiResponse');
+    if (el) el.textContent = text;
+  });
+
+  // AI Send button
+  const sendAI = () => {
+    const input = document.getElementById('aiInput');
+    const q = input?.value.trim();
+    if (!q) return;
+    const text = generateAIResponse(brand, campaign, q);
+    const el = document.getElementById('aiResponse');
+    if (el) el.textContent = text;
+    if (input) input.value = '';
+  };
+  document.getElementById('aiSendBtn')?.addEventListener('click', sendAI);
+  document.getElementById('aiInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendAI();
+  });
+
+  // CAMPAIGN dropdown toggle (header only, not AI button)
+  const campInfoToggle = document.getElementById('campInfoToggle');
+  const campInfoBody = document.getElementById('campInfoBody');
+  const campInfoChevron = document.getElementById('campInfoChevron');
+  campInfoToggle?.addEventListener('click', e => {
+    if (e.target.closest('#campAiBtn')) return; // AI button click — don't toggle
+    const open = campInfoBody.style.display === 'none';
+    campInfoBody.style.display = open ? 'block' : 'none';
+    campInfoChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+  });
+
+  // CAMPAIGN AI button: open body, fill strategy
+  document.getElementById('campAiBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    if (campInfoBody.style.display === 'none') {
+      campInfoBody.style.display = 'block';
+      campInfoChevron.style.transform = 'rotate(180deg)';
+    }
+    const text = generateCampaignStrategyText(brand, campaign);
+    const el = document.getElementById('aiResponse');
+    if (el) el.textContent = text;
+  });
+
+  // CAMPAIGN Save
+  document.getElementById('campInfoSave')?.addEventListener('click', () => {
+    const name   = document.getElementById('campEditName')?.value.trim() || campaign.name;
+    const start  = document.getElementById('campEditStart')?.value.trim() || campaign.startDate;
+    const end    = document.getElementById('campEditEnd')?.value.trim() || campaign.endDate;
+    const status = document.getElementById('campEditStatus')?.value.trim() || campaign.status;
+    const updatedCampaigns = brand.campaigns.map(c =>
+      c.id === campId ? { ...c, name, startDate: start, endDate: end, status } : c
+    );
+    saveBrandOverride(brandId, { campaigns: updatedCampaigns });
+    document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+    bindCampaignPage(brandId, campId);
+  });
+
+  // CONTENT PLAN dropdown toggle
+  const campPlanToggle = document.getElementById('campPlanToggle');
+  const campPlanBody = document.getElementById('campPlanBody');
+  const campPlanChevron = document.getElementById('campPlanChevron');
+  campPlanToggle?.addEventListener('click', e => {
+    if (e.target.closest('#planAiBtn')) return;
+    const open = campPlanBody.style.display === 'none';
+    campPlanBody.style.display = open ? 'block' : 'none';
+    campPlanChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+  });
+
+  // CONTENT PLAN AI button: open body, fill plan
+  document.getElementById('planAiBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    if (campPlanBody.style.display === 'none') {
+      campPlanBody.style.display = 'block';
+      campPlanChevron.style.transform = 'rotate(180deg)';
+    }
+    const text = generateContentPlanText(brand, campaign);
+    const planEl = document.getElementById('campPlanText');
+    if (planEl) planEl.value = text;
+  });
+
+  // CONTENT PLAN Save
+  document.getElementById('campPlanSave')?.addEventListener('click', () => {
+    const planText = document.getElementById('campPlanText')?.value || '';
+    const updatedCampaigns = brand.campaigns.map(c =>
+      c.id === campId ? { ...c, contentPlan: planText } : c
+    );
+    saveBrandOverride(brandId, { campaigns: updatedCampaigns });
+    // Update in-memory reference
+    const fresh = (getBrand(brandId)?.campaigns || []).find(c => c.id === campId);
+    if (fresh) fresh.contentPlan = planText;
+  });
+
+  // BRAND SNAPSHOT dropdown toggle
+  const campSnapToggle = document.getElementById('campSnapToggle');
+  const campSnapBody = document.getElementById('campSnapBody');
+  const campSnapChevron = document.getElementById('campSnapChevron');
+  campSnapToggle?.addEventListener('click', () => {
+    const open = campSnapBody.style.display === 'none';
+    campSnapBody.style.display = open ? 'block' : 'none';
+    campSnapChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+  });
+
+  // Bind capture modal
+  bindCapture();
+}
 
 /* ═══════════════════════════════════════
    PAGE: INSPIRATION
