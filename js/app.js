@@ -1836,10 +1836,6 @@ function aishaBlockHTML() {
         <button class="aisha-wizard-btn" id="aishaWizardBtn">Start Wizard</button>
       </div>
       <div class="aisha-chat" id="aishaChat"></div>
-      <div class="aisha-review" id="aishaReview" style="display:none">
-        <pre class="aisha-review-text" id="aishaReviewText"></pre>
-        <button class="aisha-save-btn" id="aishaSaveBtn">Save to Campaign Plan</button>
-      </div>
       <div class="aisha-input-row">
         <input class="aisha-input" id="aishaInput" type="text" placeholder="Ask Aisha about this campaign…">
         <button class="aisha-send" id="aishaSendBtn">${sendSVG}</button>
@@ -1874,19 +1870,10 @@ function bindAisha(brand, campaign, brandId, campId) {
 
   renderAishaChat();
 
-  if (_aishaGenerated) {
-    const rev = document.getElementById('aishaReview');
-    const txt = document.getElementById('aishaReviewText');
-    if (rev) rev.style.display = 'block';
-    if (txt) txt.textContent = _aishaGenerated.strategy;
-  }
-
   document.getElementById('aishaWizardBtn')?.addEventListener('click', () => {
     _aishaWizardStep = 0;
     _aishaAnswers = {};
     _aishaGenerated = null;
-    const rev = document.getElementById('aishaReview');
-    if (rev) rev.style.display = 'none';
     _aishaMessages.push({ role: 'aisha', text: `Let's build this out! I'll ask you ${AISHA_WIZARD_QS.length} quick questions. Brand context from ${brand.name} is already loaded in.\n\n${AISHA_WIZARD_QS[0].q}` });
     renderAishaChat();
   });
@@ -1914,12 +1901,30 @@ function bindAisha(brand, campaign, brandId, campId) {
         renderAishaChat();
         setTimeout(() => {
           _aishaGenerated = aishaGenerate(brand, campaign, _aishaAnswers);
-          _aishaMessages.push({ role: 'aisha', text: `Here's your campaign strategy for ${campaign.name}. Review it below and save when you're ready — it'll fill out the Campaign and Content Plan sections.` });
-          const rev = document.getElementById('aishaReview');
-          const txt = document.getElementById('aishaReviewText');
-          if (rev) rev.style.display = 'block';
-          if (txt) txt.textContent = _aishaGenerated.strategy;
+
+          // Populate Campaign overview card
+          const stratEl = document.getElementById('campStrategyText');
+          const infoBody = document.getElementById('campInfoBody');
+          const infoChev = document.getElementById('campInfoChevron');
+          if (stratEl) stratEl.value = _aishaGenerated.strategy;
+          if (infoBody) { infoBody.style.display = 'block'; }
+          if (infoChev) { infoChev.style.transform = 'rotate(180deg)'; }
+
+          _aishaMessages.push({ role: 'aisha', text: `I've drafted your campaign overview for ${campaign.name} — it's now open below. Review and edit it, then hit Save.\n\nNow let me build out your content plan…` });
           renderAishaChat();
+
+          setTimeout(() => {
+            // Populate Content Plan card
+            const planEl = document.getElementById('campPlanText');
+            const planBody = document.getElementById('campPlanBody');
+            const planChev = document.getElementById('campPlanChevron');
+            if (planEl) planEl.value = _aishaGenerated.contentPlan;
+            if (planBody) { planBody.style.display = 'block'; }
+            if (planChev) { planChev.style.transform = 'rotate(180deg)'; }
+
+            _aishaMessages.push({ role: 'aisha', text: `Your content plan is ready too — open below. Edit anything you like and Save both sections. ✦` });
+            renderAishaChat();
+          }, 1200);
         }, 1000);
       }
     } else {
@@ -1945,18 +1950,6 @@ function bindAisha(brand, campaign, brandId, campId) {
   document.getElementById('aishaSendBtn')?.addEventListener('click', sendMsg);
   document.getElementById('aishaInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
 
-  document.getElementById('aishaSaveBtn')?.addEventListener('click', () => {
-    if (!_aishaGenerated) return;
-    const updatedCampaigns = brand.campaigns.map(c =>
-      c.id === campId ? { ...c, strategy: _aishaGenerated.strategy, contentPlan: _aishaGenerated.contentPlan } : c
-    );
-    saveBrandOverride(brandId, { campaigns: updatedCampaigns });
-    _aishaMessages.push({ role: 'aisha', text: `Saved! Your strategy and content plan are now in the Campaign and Content Plan sections below. ✦` });
-    const rev = document.getElementById('aishaReview');
-    if (rev) rev.style.display = 'none';
-    _aishaGenerated = null;
-    renderAishaChat();
-  });
 }
 
 /* ═══════════════════════════════════════
@@ -2073,7 +2066,6 @@ function pageCampaign(brandId, campId) {
         <div class="section-card dd-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
           <div class="section-card-header" id="campInfoToggle" style="display:flex;align-items:center;gap:8px">
             <div class="section-card-title" style="flex:1">CAMPAIGN</div>
-            <button class="ai-gen-btn" id="campAiBtn" style="font-size:10px">AI</button>
             <svg class="dd-chevron" id="campInfoChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div style="margin-top:4px">
@@ -2088,7 +2080,9 @@ function pageCampaign(brandId, campId) {
             <div class="camp-field-label">END DATE</div>
             <input class="camp-field-input" id="campEditEnd" value="${campaign.endDate}" style="margin-bottom:12px">
             <div class="camp-field-label">STATUS</div>
-            <input class="camp-field-input" id="campEditStatus" value="${campaign.status}" style="margin-bottom:16px">
+            <input class="camp-field-input" id="campEditStatus" value="${campaign.status}" style="margin-bottom:12px">
+            <div class="camp-field-label">OVERVIEW</div>
+            <textarea class="camp-field-input" id="campStrategyText" rows="7" style="resize:vertical;margin-bottom:16px">${campaign.strategy || ''}</textarea>
             <button class="camp-save-btn" id="campInfoSave">Save</button>
           </div>
         </div>
@@ -2097,7 +2091,6 @@ function pageCampaign(brandId, campId) {
         <div class="section-card dd-card" id="campPlanCard" style="cursor:pointer;margin-bottom:10px">
           <div class="section-card-header" id="campPlanToggle" style="display:flex;align-items:center;gap:8px">
             <div class="section-card-title" style="flex:1">CONTENT PLAN</div>
-            <button class="ai-gen-btn" id="planAiBtn" style="font-size:10px">AI</button>
             <svg class="dd-chevron" id="campPlanChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-body" id="campPlanBody" style="display:none;padding-top:14px">
@@ -2166,8 +2159,7 @@ function bindCampaignPage(brandId, campId) {
   const campInfoToggle = document.getElementById('campInfoToggle');
   const campInfoBody = document.getElementById('campInfoBody');
   const campInfoChevron = document.getElementById('campInfoChevron');
-  campInfoToggle?.addEventListener('click', e => {
-    if (e.target.closest('#campAiBtn')) return;
+  campInfoToggle?.addEventListener('click', () => {
     const open = campInfoBody.style.display === 'none';
     campInfoBody.style.display = open ? 'block' : 'none';
     campInfoChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
@@ -2175,12 +2167,13 @@ function bindCampaignPage(brandId, campId) {
 
   // CAMPAIGN Save
   document.getElementById('campInfoSave')?.addEventListener('click', () => {
-    const name   = document.getElementById('campEditName')?.value.trim() || campaign.name;
-    const start  = document.getElementById('campEditStart')?.value.trim() || campaign.startDate;
-    const end    = document.getElementById('campEditEnd')?.value.trim() || campaign.endDate;
-    const status = document.getElementById('campEditStatus')?.value.trim() || campaign.status;
+    const name     = document.getElementById('campEditName')?.value.trim() || campaign.name;
+    const start    = document.getElementById('campEditStart')?.value.trim() || campaign.startDate;
+    const end      = document.getElementById('campEditEnd')?.value.trim() || campaign.endDate;
+    const status   = document.getElementById('campEditStatus')?.value.trim() || campaign.status;
+    const strategy = document.getElementById('campStrategyText')?.value || '';
     const updatedCampaigns = brand.campaigns.map(c =>
-      c.id === campId ? { ...c, name, startDate: start, endDate: end, status } : c
+      c.id === campId ? { ...c, name, startDate: start, endDate: end, status, strategy } : c
     );
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
     document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
@@ -2196,18 +2189,6 @@ function bindCampaignPage(brandId, campId) {
     const open = campPlanBody.style.display === 'none';
     campPlanBody.style.display = open ? 'block' : 'none';
     campPlanChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
-  });
-
-  // CONTENT PLAN AI button: open body, fill plan
-  document.getElementById('planAiBtn')?.addEventListener('click', e => {
-    e.stopPropagation();
-    if (campPlanBody.style.display === 'none') {
-      campPlanBody.style.display = 'block';
-      campPlanChevron.style.transform = 'rotate(180deg)';
-    }
-    const text = aishaGenerate(brand, campaign, _aishaAnswers).contentPlan;
-    const planEl = document.getElementById('campPlanText');
-    if (planEl) planEl.value = text;
   });
 
   // CONTENT PLAN Save
