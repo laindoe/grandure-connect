@@ -2387,15 +2387,6 @@ function pageCampaign(brandId, campId) {
         </div>
       </div>
 
-      <!-- More options sheet -->
-      <div class="camp-more-sheet" id="campMoreSheet" style="display:none">
-        <div class="camp-more-sheet-bg" id="campMoreSheetBg"></div>
-        <div class="camp-more-sheet-panel">
-          <div class="camp-more-sheet-bar"></div>
-          <button class="camp-more-item" id="campMoreChangeCover">Change Cover Photo</button>
-        </div>
-      </div>
-
       <div style="padding:0 16px;padding-top:14px">
 
         <!-- Analytics bar -->
@@ -2509,15 +2500,6 @@ function pageCampaign(brandId, campId) {
       </div>
     </div>
 
-    <!-- Aisha sheet (opened from centre nav) -->
-    <div class="aisha-sheet" id="aishaSheet" style="display:none">
-      <div class="aisha-sheet-bg" id="aishaSheetBg"></div>
-      <div class="aisha-sheet-panel">
-        <div class="aisha-sheet-bar"></div>
-        ${aishaBlockHTML()}
-      </div>
-    </div>
-
     ${captureModalHTML()}
     <div id="editPhotoMount"></div>
     ${campaignNavHTML(brandId, campId)}
@@ -2535,16 +2517,46 @@ function bindCampaignPage(brandId, campId) {
 
   const getVal = id => document.getElementById(id)?.value || '';
 
-  // More options (···) sheet
-  const campMoreSheet = document.getElementById('campMoreSheet');
+  // ── Body-level sheets (avoid iOS fixed-inside-scroll bug) ──────────────
+  // Remove any sheets left over from a previous campaign page visit
+  document.getElementById('campMoreSheet')?.remove();
+  document.getElementById('aishaSheet')?.remove();
+
+  // Inject ··· more sheet
+  const moreEl = document.createElement('div');
+  moreEl.className = 'camp-more-sheet';
+  moreEl.id = 'campMoreSheet';
+  moreEl.style.display = 'none';
+  moreEl.innerHTML = `
+    <div class="camp-more-sheet-bg" id="campMoreSheetBg"></div>
+    <div class="camp-more-sheet-panel">
+      <div class="camp-more-sheet-bar"></div>
+      <button class="camp-more-item" id="campMoreChangeCover">Change Cover Photo</button>
+    </div>`;
+  document.body.appendChild(moreEl);
+
+  // Inject Aisha sheet
+  const aishaEl = document.createElement('div');
+  aishaEl.className = 'aisha-sheet';
+  aishaEl.id = 'aishaSheet';
+  aishaEl.style.display = 'none';
+  aishaEl.innerHTML = `
+    <div class="aisha-sheet-bg" id="aishaSheetBg"></div>
+    <div class="aisha-sheet-panel">
+      <div class="aisha-sheet-bar"></div>
+      ${aishaBlockHTML()}
+    </div>`;
+  document.body.appendChild(aishaEl);
+
+  // ··· sheet bindings
   document.getElementById('campMoreBtn')?.addEventListener('click', () => {
-    if (campMoreSheet) campMoreSheet.style.display = 'flex';
+    moreEl.style.display = 'flex';
   });
   document.getElementById('campMoreSheetBg')?.addEventListener('click', () => {
-    if (campMoreSheet) campMoreSheet.style.display = 'none';
+    moreEl.style.display = 'none';
   });
   document.getElementById('campMoreChangeCover')?.addEventListener('click', () => {
-    if (campMoreSheet) campMoreSheet.style.display = 'none';
+    moreEl.style.display = 'none';
     openEditHeroPhoto(brandId, campId);
   });
 
@@ -2557,12 +2569,11 @@ function bindCampaignPage(brandId, campId) {
   document.getElementById('campNavCal')?.addEventListener('click', () => {}); // future
 
   // Aisha sheet open/close
-  const aishaSheet = document.getElementById('aishaSheet');
   document.getElementById('campNavAisha')?.addEventListener('click', () => {
-    if (aishaSheet) aishaSheet.style.display = 'flex';
+    aishaEl.style.display = 'flex';
   });
   document.getElementById('aishaSheetBg')?.addEventListener('click', () => {
-    if (aishaSheet) aishaSheet.style.display = 'none';
+    aishaEl.style.display = 'none';
   });
 
   // Stage tracker

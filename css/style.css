@@ -1018,7 +1018,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 /* More options sheet */
 .camp-more-sheet { position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;justify-content:flex-end; }
 .camp-more-sheet-bg { position:absolute;inset:0;background:rgba(0,0,0,0.55); }
-.camp-more-sheet-panel { position:relative;background:#141414;border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0); }
+.camp-more-sheet-panel { position:relative;background:#232323;border-top:1px solid rgba(255,255,255,0.13);border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0); }
 .camp-more-sheet-bar { width:40px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:12px auto 8px; }
 .camp-more-item { display:block;width:100%;padding:16px 20px;text-align:left;color:#fff;font-size:15px;background:none;border:none;border-top:1px solid rgba(255,255,255,0.05); }
 
@@ -1048,7 +1048,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 /* Aisha slide-up sheet */
 .aisha-sheet { position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;justify-content:flex-end; }
 .aisha-sheet-bg { position:absolute;inset:0;background:rgba(0,0,0,0.65); }
-.aisha-sheet-panel { position:relative;background:#0e0e0e;border-radius:24px 24px 0 0;max-height:82dvh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,0); }
+.aisha-sheet-panel { position:relative;background:#1c1c1e;border-top:1px solid rgba(255,255,255,0.13);border-radius:24px 24px 0 0;max-height:82dvh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,0); }
 .aisha-sheet-bar { width:40px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:12px auto 6px; }
 
 /* Settings modal */
