@@ -655,6 +655,7 @@ function openEditCampaignPhoto(brandId, campId) {
 
   let lastTouches = null;
   cropWin.addEventListener('touchstart', e => {
+    if (e.target.closest('#cropPlaceholder')) return;
     e.preventDefault();
     lastTouches = Array.from(e.touches);
   }, { passive: false });
@@ -810,6 +811,7 @@ function openEditPhoto(brandId) {
   // Touch pan + pinch
   let lastTouches = null;
   cropWin.addEventListener('touchstart', e => {
+    if (e.target.closest('#cropPlaceholder')) return;
     e.preventDefault();
     lastTouches = Array.from(e.touches);
   }, { passive: false });
