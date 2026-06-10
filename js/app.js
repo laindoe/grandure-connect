@@ -104,6 +104,8 @@ function render() {
     app.innerHTML = pageInspiration(params.id);
   } else if (path === '/campaign') {
     app.innerHTML = pageCampaign(params.brandId, params.id);
+  } else if (path === '/doc') {
+    app.innerHTML = pageDoc(params.brandId, params.campId, params.type);
   } else {
     app.innerHTML = pageHome();
   }
@@ -116,6 +118,7 @@ function render() {
   bindAddBrand();
   if (path === '/brand') { bindEditBrand(params.id); bindDropdowns(params.id); }
   if (path === '/campaign') { bindCampaignPage(params.brandId, params.id); }
+  if (path === '/doc') { bindDoc(params.brandId, params.campId, params.type); }
 }
 
 /* ── Bind all nav links ── */
@@ -245,6 +248,9 @@ const SETTINGS_PLATFORMS = [
   { id: 'youtube',   label: 'YouTube'   },
   { id: 'threads',   label: 'Threads'   },
   { id: 'twitter',   label: 'Twitter / X' },
+  { id: 'facebook',  label: 'Facebook'  },
+  { id: 'pinterest', label: 'Pinterest' },
+  { id: 'snapchat',  label: 'Snapchat'  },
   { id: 'email',     label: 'Email Newsletter' },
   { id: 'linkedin',  label: 'LinkedIn'  },
   { id: 'patreon',   label: 'Patreon'   },
@@ -2326,7 +2332,7 @@ function pageCampaign(brandId, campId) {
     instagram: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>`,
     tiktok:    `<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.38a8.26 8.26 0 004.83 1.55V7.48a4.85 4.85 0 01-1.06-.79z"/></svg>`,
     youtube:   `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></svg>`,
-    threads:   `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 10.5C16.4 7.4 14.5 6 12 6 8.7 6 7 9 7 12s1.7 6 5 6c2.5 0 4.2-1.4 4.9-3.8"/><path d="M17 10.5c.1.5.1 1 .1 1.5 0 2.8-1.1 5.2-5.1 5.2-2.2 0-3.9-.7-3.9-2.7 0-2.4 2.1-3 4.4-3.2a18 18 0 012.5.2"/></svg>`,
+    threads:   `<svg width="26" height="26" viewBox="0 0 192 192" fill="currentColor"><path d="M141.537 88.988a73.5 73.5 0 00-2.667-.617c-1.598-6.718-5.03-12.505-10.287-17.203C118.786 62.027 106.48 57.5 92 57.5c-18.42 0-30.4 7.12-38.387 21.887l14.84 10.107C74.13 80.127 81.78 75.6 92 75.6c9.247 0 15.44 2.573 18.78 5.953 1.898 1.927 3.254 4.204 4.073 6.674a68.5 68.5 0 00-15.64-.7c-24.28 1.4-39.9 15.587-39.9 35.187 0 11.38 6.013 22.1 16.52 28.207 8.307 4.827 18.74 5.547 27.747 1.893 10.673-4.267 17.247-13.16 19.38-26.587 2.18 1.313 3.993 2.887 5.373 4.693 3.347 4.373 3.26 11.52 3.26 11.52l16.207-.607s.16-9.413-4.293-17.487c-2.387-4.333-5.733-7.72-9.573-10.16zm-33.893 30.94c-3.68 7.427-10.367 11.733-20.107 11.64-8.88-.094-14.607-4.454-14.607-11.127 0-9.267 8.293-14.787 22.48-15.587 4.64-.267 9.14-.067 13.44.547-.5 6.573-1.24 10.813-1.24 14.5z"/></svg>`,
     twitter:   `<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
     email:     `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`,
     linkedin:  `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="10" x2="8" y2="18"/><circle cx="8" cy="7" r="0.8" fill="currentColor" stroke="none"/><path d="M12 18v-5c0-1.1.9-2 2-2s2 .9 2 2v5"/><line x1="12" y1="10" x2="12" y2="18"/></svg>`,
@@ -2357,12 +2363,13 @@ function pageCampaign(brandId, campId) {
     const m    = MOCK_ANALYTICS[p] || { count:'—', delta:0 };
     const icon = PLATFORM_ICONS[p] || `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>`;
     const bg   = PLATFORM_COLORS[p] || '#2a2a2a';
-    const lbl  = PLATFORM_METRIC[p] || 'FOLLOWERS';
+    const sign = m.delta > 0 ? '+' : '';
+    const dCls = m.delta > 0 ? 'pos' : m.delta < 0 ? 'neg' : '';
     return `
       <div class="camp-analytics-item" style="background:${bg}">
         <div class="camp-analytics-icon">${icon}</div>
         <div class="camp-analytics-count">${m.count}</div>
-        <div class="camp-analytics-label">${lbl}</div>
+        <div class="camp-analytics-delta ${dCls}">${m.delta ? sign + m.delta : ''}</div>
       </div>`;
   }).join('') : `<div style="color:#333;font-size:12px;padding:8px 0">Set platforms in Brand settings</div>`;
 
@@ -2422,6 +2429,7 @@ function pageCampaign(brandId, campId) {
         <div class="section-card dd-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
           <div class="section-card-header" id="campInfoToggle" style="display:flex;align-items:center;gap:8px">
             <div class="section-card-title" style="flex:1">CAMPAIGN OVERVIEW</div>
+            <button class="doc-open-btn" id="campInfoDocBtn">Open Doc ›</button>
             <svg class="dd-chevron" id="campInfoChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-body" id="campInfoBody" style="display:none;padding-top:16px">
@@ -2472,6 +2480,7 @@ function pageCampaign(brandId, campId) {
         <div class="section-card dd-card" id="campPlanCard" style="cursor:pointer;margin-bottom:10px">
           <div class="section-card-header" id="campPlanToggle" style="display:flex;align-items:center;gap:8px">
             <div class="section-card-title" style="flex:1">CONTENT PLAN</div>
+            <button class="doc-open-btn" id="campPlanDocBtn">Open Doc ›</button>
             <svg class="dd-chevron" id="campPlanChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-body" id="campPlanBody" style="display:none;padding-top:16px">
@@ -2609,6 +2618,19 @@ function bindCampaignPage(brandId, campId) {
     });
   });
 
+  // Clean up doc picker sheet left from a previous doc page visit
+  document.getElementById('docPickerSheet')?.remove();
+
+  // Open Doc buttons (stop prop so the card toggle doesn't also fire)
+  document.getElementById('campInfoDocBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=overview`);
+  });
+  document.getElementById('campPlanDocBtn')?.addEventListener('click', e => {
+    e.stopPropagation();
+    navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=plan`);
+  });
+
   // Bind Aisha
   bindAisha(brand, campaign, brandId, campId);
 
@@ -2718,6 +2740,260 @@ function pageInspiration(id) {
     </div>
     ${pageChrome()}
   `;
+}
+
+/* ═══════════════════════════════════════
+   DOC PAGE: HELPERS
+═══════════════════════════════════════ */
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function placeCursorAtEnd(el) {
+  try {
+    const r = document.createRange(), s = window.getSelection();
+    r.selectNodeContents(el); r.collapse(false);
+    s.removeAllRanges(); s.addRange(r);
+  } catch(e) {}
+}
+
+function getDefaultOvBlocks(campaign) {
+  const uid = () => 'b' + Math.random().toString(36).slice(2,8);
+  const blocks = [{ id: uid(), type: 'h1', text: campaign.name || 'Campaign Overview' }];
+  [['ov_objective','Objective'],['ov_audience','Target Audience'],['ov_message','Core Message'],
+   ['ov_platforms','Platforms'],['ov_cta','Call to Action'],['ov_timeline','Timeline'],['ov_notes','Notes']
+  ].forEach(([k,l]) => { if (campaign[k]) { blocks.push({ id:uid(), type:'h2', text:l }); blocks.push({ id:uid(), type:'text', text:campaign[k] }); } });
+  if (blocks.length === 1) blocks.push({ id: uid(), type: 'text', text: '' });
+  return blocks;
+}
+
+function getDefaultCpBlocks(campaign) {
+  const uid = () => 'b' + Math.random().toString(36).slice(2,8);
+  const blocks = [{ id: uid(), type: 'h1', text: 'Content Plan' }];
+  [['cp_formats','Content Formats'],['cp_cadence','Posting Cadence'],['cp_pillars','Content Pillars'],
+   ['cp_mix','Content Mix'],['cp_repurposing','Repurposing Strategy'],['cp_notes','Notes']
+  ].forEach(([k,l]) => { if (campaign[k]) { blocks.push({ id:uid(), type:'h2', text:l }); blocks.push({ id:uid(), type:'text', text:campaign[k] }); } });
+  if (blocks.length === 1) blocks.push({ id: uid(), type: 'text', text: '' });
+  return blocks;
+}
+
+function renderDocBlocks(blocks) {
+  if (!blocks || !blocks.length) return `<div class="doc-empty">Tap + to add your first block</div>`;
+
+  const delBtn  = id => `<button class="doc-block-del" data-id="${id}" aria-label="Delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  const insBtn  = id => `<button class="doc-insert-btn" data-after="${id}">+ Add block</button>`;
+  const linkSVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>`;
+  const imgSVG  = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>`;
+  const vidSVG  = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+
+  return blocks.map(({ id, type, text='', src='', caption='', url='', label='' }) => {
+    if (['h1','h2','h3','text'].includes(type)) {
+      const tag = { h1:'H1', h2:'H2', h3:'H3', text:'¶' }[type];
+      const ph  = { h1:'Heading', h2:'Subheading', h3:'Small heading', text:'Start typing…' }[type];
+      return `<div class="doc-block doc-block-${type}" data-id="${id}" data-type="${type}">
+        <div class="doc-block-inner">
+          <div class="doc-block-content" contenteditable="true" data-placeholder="${ph}">${escHtml(text)}</div>
+          <div class="doc-block-actions"><span class="doc-block-tag">${tag}</span>${delBtn(id)}</div>
+        </div>
+        ${insBtn(id)}</div>`;
+    }
+    if (type === 'image') return `<div class="doc-block doc-block-media" data-id="${id}" data-type="image">
+        <div class="doc-media-tap" data-id="${id}">${src ? `<img class="doc-block-img" src="${src}">` : `<div class="doc-media-placeholder">${imgSVG}<span>Tap to add image</span></div>`}</div>
+        <div class="doc-block-actions-row">${delBtn(id)}</div>
+        <div class="doc-block-caption" contenteditable="true" data-placeholder="Add caption…">${escHtml(caption)}</div>
+        ${insBtn(id)}</div>`;
+    if (type === 'video') return `<div class="doc-block doc-block-media" data-id="${id}" data-type="video">
+        <div class="doc-media-tap" data-id="${id}">${src ? `<video class="doc-block-vid" src="${src}" controls playsinline></video>` : `<div class="doc-media-placeholder">${vidSVG}<span>Tap to add video</span></div>`}</div>
+        <div class="doc-block-actions-row">${delBtn(id)}</div>
+        ${insBtn(id)}</div>`;
+    if (type === 'link') return `<div class="doc-block doc-block-link" data-id="${id}" data-type="link">
+        <div class="doc-link-icon">${linkSVG}</div>
+        <div class="doc-link-fields">
+          <input class="doc-link-label" value="${escHtml(label)}" placeholder="Label" style="font-size:16px">
+          <input class="doc-link-url" value="${escHtml(url)}" placeholder="https://…" type="url" style="font-size:16px">
+        </div>
+        ${delBtn(id)}
+        ${insBtn(id)}</div>`;
+    if (type === 'divider') return `<div class="doc-block doc-block-divider" data-id="${id}" data-type="divider">
+        <hr class="doc-divider"><div class="doc-block-actions-row">${delBtn(id)}</div>
+        ${insBtn(id)}</div>`;
+    return '';
+  }).join('');
+}
+
+/* ═══════════════════════════════════════
+   DOC PAGE: RENDER
+═══════════════════════════════════════ */
+function pageDoc(brandId, campId, docType) {
+  const brand = getBrand(brandId);
+  if (!brand) return `<div class="page"></div>${pageChrome()}`;
+  const campaign = (brand.campaigns || []).find(c => c.id === campId);
+  if (!campaign) return `<div class="page"></div>${pageChrome()}`;
+
+  const docKey = docType === 'overview' ? 'ov_doc' : 'cp_doc';
+  const title  = docType === 'overview' ? 'Campaign Overview' : 'Content Plan';
+  const blocks = campaign[docKey]?.blocks
+    || (docType === 'overview' ? getDefaultOvBlocks(campaign) : getDefaultCpBlocks(campaign));
+
+  return `
+    <div class="page" style="padding-bottom:120px">
+      <div class="back-header">
+        <button class="back-btn" data-href="#/campaign?brandId=${brandId}&id=${campId}">‹</button>
+        <div style="flex:1;text-align:center;min-width:0">
+          <div style="font-size:9px;letter-spacing:1px;color:#3a3a3a;text-transform:uppercase">${escHtml(campaign.name)}</div>
+          <div style="font-size:14px;font-weight:600;color:#fff">${title}</div>
+        </div>
+        <span class="doc-save-status" id="docSaveStatus"></span>
+      </div>
+
+      <div class="doc-container" id="docContainer">
+        ${renderDocBlocks(blocks)}
+      </div>
+
+      <button class="doc-add-fab" id="docAddBtn" aria-label="Add block">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    ${pageChrome()}`;
+}
+
+/* ═══════════════════════════════════════
+   DOC PAGE: BIND
+═══════════════════════════════════════ */
+function bindDoc(brandId, campId, docType) {
+  const brand = getBrand(brandId);
+  if (!brand) return;
+  const campaign = (brand.campaigns || []).find(c => c.id === campId);
+  if (!campaign) return;
+
+  const docKey = docType === 'overview' ? 'ov_doc' : 'cp_doc';
+  let blocks = campaign[docKey]?.blocks
+    || (docType === 'overview' ? getDefaultOvBlocks(campaign) : getDefaultCpBlocks(campaign));
+
+  const statusEl = () => document.getElementById('docSaveStatus');
+  let saveTimer  = null;
+
+  function schedSave() {
+    clearTimeout(saveTimer);
+    const el = statusEl(); if (el) el.textContent = '…';
+    saveTimer = setTimeout(() => {
+      blocks = collectDocBlocks();
+      const upd = brand.campaigns.map(c => c.id === campId ? { ...c, [docKey]: { blocks } } : c);
+      saveBrandOverride(brandId, { campaigns: upd });
+      const el2 = statusEl(); if (el2) { el2.textContent = 'Saved'; setTimeout(() => { if (statusEl()) statusEl().textContent = ''; }, 2000); }
+    }, 800);
+  }
+
+  function collectDocBlocks() {
+    return Array.from(document.querySelectorAll('#docContainer .doc-block[data-id]')).map(el => {
+      const id = el.dataset.id, type = el.dataset.type;
+      if (type === 'image' || type === 'video') {
+        const s = el.querySelector('.doc-block-img')?.src || el.querySelector('.doc-block-vid')?.src || '';
+        return { id, type, src: s.startsWith('blob:') ? '' : s, caption: el.querySelector('.doc-block-caption')?.innerText || '' };
+      }
+      if (type === 'link') return { id, type, label: el.querySelector('.doc-link-label')?.value || '', url: el.querySelector('.doc-link-url')?.value || '' };
+      if (type === 'divider') return { id, type };
+      return { id, type, text: el.querySelector('.doc-block-content')?.innerText || '' };
+    });
+  }
+
+  function reRender(newBlocks) {
+    blocks = newBlocks;
+    document.getElementById('docContainer').innerHTML = renderDocBlocks(blocks);
+    bindBlockEvents();
+  }
+
+  function insertBlock(type, afterId, extra) {
+    const uid = 'b' + Date.now();
+    const nb  = { id: uid, type, text: '', src: '', caption: '', url: '', label: '', ...extra };
+    const arr = [...blocks];
+    const idx = afterId ? arr.findIndex(b => b.id === afterId) : arr.length - 1;
+    arr.splice(idx + 1, 0, nb);
+    reRender(arr);
+    schedSave();
+    if (['h1','h2','h3','text'].includes(type)) {
+      const ce = document.querySelector(`#docContainer .doc-block[data-id="${uid}"] .doc-block-content`);
+      if (ce) { ce.focus(); placeCursorAtEnd(ce); }
+    }
+  }
+
+  function deleteBlock(id) { reRender(blocks.filter(b => b.id !== id)); schedSave(); }
+
+  function handleMediaTap(blockId) {
+    const block = blocks.find(b => b.id === blockId); if (!block) return;
+    const fi = document.createElement('input');
+    fi.type = 'file'; fi.accept = block.type === 'image' ? 'image/*' : 'video/*'; fi.style.display = 'none';
+    document.body.appendChild(fi); fi.click();
+    fi.addEventListener('change', () => {
+      const file = fi.files[0]; fi.remove(); if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => { blocks = blocks.map(b => b.id === blockId ? { ...b, src: ev.target.result } : b); reRender(blocks); schedSave(); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function bindBlockEvents() {
+    document.querySelectorAll('#docContainer .doc-block-content').forEach(el => el.addEventListener('input', schedSave));
+    document.querySelectorAll('#docContainer .doc-block-del').forEach(btn => btn.addEventListener('click', () => deleteBlock(btn.dataset.id)));
+    document.querySelectorAll('#docContainer .doc-insert-btn').forEach(btn => btn.addEventListener('click', () => showPicker(btn.dataset.after)));
+    document.querySelectorAll('#docContainer .doc-media-tap').forEach(el => el.addEventListener('click', () => handleMediaTap(el.dataset.id)));
+    document.querySelectorAll('#docContainer .doc-link-label, #docContainer .doc-link-url').forEach(inp => inp.addEventListener('input', schedSave));
+    document.querySelectorAll('#docContainer .doc-block-caption').forEach(el => el.addEventListener('input', schedSave));
+  }
+
+  // Block type picker sheet injected into body
+  document.getElementById('docPickerSheet')?.remove();
+  const pickerEl = document.createElement('div');
+  pickerEl.id = 'docPickerSheet'; pickerEl.className = 'doc-picker-sheet'; pickerEl.style.display = 'none';
+  const pickerTypes = [
+    { type:'h1',      label:'Heading',    icon:'H1' },
+    { type:'h2',      label:'Subheading', icon:'H2' },
+    { type:'h3',      label:'Small Head', icon:'H3' },
+    { type:'text',    label:'Body Text',  icon:'¶'  },
+    { type:'image',   label:'Image',      icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>` },
+    { type:'video',   label:'Video',      icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>` },
+    { type:'link',    label:'Link',       icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>` },
+    { type:'divider', label:'Divider',    icon:'—'  },
+  ];
+  pickerEl.innerHTML = `
+    <div class="doc-picker-bg" id="docPickerBg"></div>
+    <div class="doc-picker-panel">
+      <div class="doc-picker-bar"></div>
+      <div class="doc-picker-grid">${pickerTypes.map(t => `
+        <button class="doc-picker-item" data-type="${t.type}">
+          <span class="doc-picker-icon">${t.icon}</span>
+          <span class="doc-picker-label">${t.label}</span>
+        </button>`).join('')}
+      </div>
+    </div>`;
+  document.body.appendChild(pickerEl);
+
+  let insertAfterBlockId = null;
+  function showPicker(afterId) { insertAfterBlockId = afterId; pickerEl.style.display = 'flex'; }
+
+  document.getElementById('docPickerBg')?.addEventListener('click', () => { pickerEl.style.display = 'none'; });
+  pickerEl.querySelectorAll('.doc-picker-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pickerEl.style.display = 'none';
+      const type = btn.dataset.type;
+      if (type === 'image' || type === 'video') {
+        const fi = document.createElement('input');
+        fi.type = 'file'; fi.accept = type === 'image' ? 'image/*' : 'video/*'; fi.style.display = 'none';
+        document.body.appendChild(fi); fi.click();
+        fi.addEventListener('change', () => {
+          const file = fi.files[0]; fi.remove(); if (!file) return;
+          const reader = new FileReader();
+          reader.onload = ev => insertBlock(type, insertAfterBlockId, { src: ev.target.result });
+          reader.readAsDataURL(file);
+        });
+      } else {
+        insertBlock(type, insertAfterBlockId);
+      }
+    });
+  });
+
+  bindBlockEvents();
+  document.getElementById('docAddBtn')?.addEventListener('click', () => showPicker(blocks[blocks.length - 1]?.id || null));
 }
 
 /* ── Global settings button delegation (runs once on load) ── */
