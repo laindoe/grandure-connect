@@ -394,18 +394,34 @@ function pageHome() {
     (brand.campaigns || []).forEach(c => allCampaigns.push({ campaign: c, brand }));
   });
   const campCards = allCampaigns.length ? allCampaigns.map(({ campaign, brand }) => {
+    const isCurrentPhase = campaign.status === 'active' && campaign.name === brand.currentPhase.name;
     const pct = campaign.progress != null ? campaign.progress
-      : (campaign.status === 'active' ? brand.currentPhase.progress : 0);
+      : (isCurrentPhase ? brand.currentPhase.progress : 0);
+    const postsCompleted = isCurrentPhase ? brand.currentPhase.postsCompleted : 0;
+    const totalPosts     = isCurrentPhase ? brand.currentPhase.totalPosts : 0;
+    const postLabel = totalPosts > 0 ? `${postsCompleted} / ${totalPosts} posts` : '0 posts';
+    const upcomingVal = campaign.status === 'active'
+      ? (brand.board.ready[0]?.title || brand.board.drafting[0]?.title || '—')
+      : `Starts ${campaign.startDate}`;
     return `
       <div class="home-camp-card" data-href="#/brand?id=${brand.id}">
         <div class="home-camp-banner" style="${bannerStyle(brand)}"></div>
         <div class="home-camp-body">
-          <div class="home-camp-name">${campaign.name}</div>
-          <div class="home-camp-dates">${campaign.startDate} – ${campaign.endDate}</div>
-          <div class="home-camp-prog-track">
-            <div class="home-camp-prog-fill" style="width:${pct}%"></div>
+          <div class="home-camp-cols">
+            <div class="home-camp-left">
+              <div class="home-camp-name">${campaign.name}</div>
+              <div class="home-camp-dates">${campaign.startDate} – ${campaign.endDate}</div>
+              <div class="home-camp-upcoming-label">UPCOMING</div>
+              <div class="home-camp-upcoming-val">${upcomingVal}</div>
+            </div>
+            <div class="home-camp-right">
+              <div class="home-camp-pct">${pct}%</div>
+              <div class="home-camp-prog-track">
+                <div class="home-camp-prog-fill" style="width:${pct}%"></div>
+              </div>
+              <div class="home-camp-count">${postLabel}</div>
+            </div>
           </div>
-          <div class="home-camp-pct">${pct}%</div>
         </div>
       </div>
     `;
