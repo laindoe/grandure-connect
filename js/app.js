@@ -2843,7 +2843,6 @@ function renderDocBlocks(blocks) {
   if (!blocks || !blocks.length) return `<div class="doc-empty">Tap + to add your first block</div>`;
 
   const delBtn  = id => `<button class="doc-block-del" data-id="${id}" aria-label="Delete"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
-  const insBtn  = id => `<button class="doc-insert-btn" data-after="${id}">+ Add block</button>`;
   const linkSVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>`;
   const imgSVG  = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>`;
   const vidSVG  = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
@@ -2857,17 +2856,17 @@ function renderDocBlocks(blocks) {
           <div class="doc-block-content" contenteditable="true" data-placeholder="${ph}">${escHtml(text)}</div>
           <div class="doc-block-actions"><span class="doc-block-tag">${tag}</span>${delBtn(id)}</div>
         </div>
-        ${insBtn(id)}</div>`;
+        </div>`;
     }
     if (type === 'image') return `<div class="doc-block doc-block-media" data-id="${id}" data-type="image">
         <div class="doc-media-tap" data-id="${id}">${src ? `<img class="doc-block-img" src="${src}">` : `<div class="doc-media-placeholder">${imgSVG}<span>Tap to add image</span></div>`}</div>
         <div class="doc-block-actions-row">${delBtn(id)}</div>
         <div class="doc-block-caption" contenteditable="true" data-placeholder="Add caption…">${escHtml(caption)}</div>
-        ${insBtn(id)}</div>`;
+        </div>`;
     if (type === 'video') return `<div class="doc-block doc-block-media" data-id="${id}" data-type="video">
         <div class="doc-media-tap" data-id="${id}">${src ? `<video class="doc-block-vid" src="${src}" controls playsinline></video>` : `<div class="doc-media-placeholder">${vidSVG}<span>Tap to add video</span></div>`}</div>
         <div class="doc-block-actions-row">${delBtn(id)}</div>
-        ${insBtn(id)}</div>`;
+        </div>`;
     if (type === 'link') return `<div class="doc-block doc-block-link" data-id="${id}" data-type="link">
         <div class="doc-link-icon">${linkSVG}</div>
         <div class="doc-link-fields">
@@ -2875,10 +2874,10 @@ function renderDocBlocks(blocks) {
           <input class="doc-link-url" value="${escHtml(url)}" placeholder="https://…" type="url" style="font-size:16px">
         </div>
         ${delBtn(id)}
-        ${insBtn(id)}</div>`;
+        </div>`;
     if (type === 'divider') return `<div class="doc-block doc-block-divider" data-id="${id}" data-type="divider">
         <hr class="doc-divider"><div class="doc-block-actions-row">${delBtn(id)}</div>
-        ${insBtn(id)}</div>`;
+        </div>`;
     return '';
   }).join('');
 }
@@ -2997,7 +2996,6 @@ function bindDoc(brandId, campId, docType) {
   function bindBlockEvents() {
     document.querySelectorAll('#docContainer .doc-block-content').forEach(el => el.addEventListener('input', schedSave));
     document.querySelectorAll('#docContainer .doc-block-del').forEach(btn => btn.addEventListener('click', () => deleteBlock(btn.dataset.id)));
-    document.querySelectorAll('#docContainer .doc-insert-btn').forEach(btn => btn.addEventListener('click', () => showPicker(btn.dataset.after)));
     document.querySelectorAll('#docContainer .doc-media-tap').forEach(el => el.addEventListener('click', () => handleMediaTap(el.dataset.id)));
     document.querySelectorAll('#docContainer .doc-link-label, #docContainer .doc-link-url').forEach(inp => inp.addEventListener('input', schedSave));
     document.querySelectorAll('#docContainer .doc-block-caption').forEach(el => el.addEventListener('input', schedSave));
