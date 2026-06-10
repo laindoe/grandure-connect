@@ -713,7 +713,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 /* ── Campaign detail banner ── */
 .camp-detail-banner {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 16 / 9;
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 20px;
