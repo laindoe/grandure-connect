@@ -85,9 +85,13 @@ function render() {
   const { path, params } = parseHash();
   const app = document.getElementById('app');
 
-  // Remove campaign nav when leaving campaign context
+  // Remove campaign nav + doc picker sheets when leaving campaign context
   if (path !== '/campaign' && path !== '/doc') {
     document.getElementById('campaignBottomNav')?.remove();
+  }
+  if (path !== '/doc') {
+    document.getElementById('docPickerSheet')?.remove();
+    document.getElementById('docSectionPicker')?.remove();
   }
 
   if (path === '/' || path === '') {
@@ -2648,8 +2652,9 @@ function bindCampaignPage(brandId, campId) {
     });
   });
 
-  // Clean up doc picker sheet left from a previous doc page visit
+  // Clean up doc picker sheets left from a previous doc page visit
   document.getElementById('docPickerSheet')?.remove();
+  document.getElementById('docSectionPicker')?.remove();
 
   // Open Doc buttons (stop prop so the card toggle doesn't also fire)
   document.getElementById('campInfoDocBtn')?.addEventListener('click', e => {
@@ -2817,24 +2822,24 @@ function placeCursorAtEnd(el) {
 
 function getDefaultOvBlocks(campaign) {
   const uid = () => 'b' + Math.random().toString(36).slice(2,8);
-  const blocks = [{ id: uid(), type: 'h1', text: campaign.name || 'Campaign Overview' }];
+  const blocks = [{ id: uid(), type: 'h1', text: campaign.name || 'Campaign Overview', generated: true }];
   [['ov_objective','Objective'],['ov_audience','Target Audience'],['ov_message','Core Message'],
    ['ov_platforms','Platforms'],['ov_cta','Call to Action'],['ov_timeline','Timeline'],['ov_notes','Notes']
   ].forEach(([k,l]) => {
-    blocks.push({ id: uid(), type: 'h2', text: l });
-    blocks.push({ id: uid(), type: 'text', text: campaign[k] || '' });
+    blocks.push({ id: uid(), type: 'h2', text: l, generated: true });
+    blocks.push({ id: uid(), type: 'text', text: campaign[k] || '', generated: true });
   });
   return blocks;
 }
 
 function getDefaultCpBlocks(campaign) {
   const uid = () => 'b' + Math.random().toString(36).slice(2,8);
-  const blocks = [{ id: uid(), type: 'h1', text: 'Content Plan' }];
+  const blocks = [{ id: uid(), type: 'h1', text: 'Content Plan', generated: true }];
   [['cp_formats','Content Formats'],['cp_cadence','Posting Cadence'],['cp_pillars','Content Pillars'],
    ['cp_mix','Content Mix'],['cp_repurposing','Repurposing Strategy'],['cp_notes','Notes']
   ].forEach(([k,l]) => {
-    blocks.push({ id: uid(), type: 'h2', text: l });
-    blocks.push({ id: uid(), type: 'text', text: campaign[k] || '' });
+    blocks.push({ id: uid(), type: 'h2', text: l, generated: true });
+    blocks.push({ id: uid(), type: 'text', text: campaign[k] || '', generated: true });
   });
   return blocks;
 }
@@ -2847,8 +2852,29 @@ function renderDocBlocks(blocks) {
   const imgSVG  = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>`;
   const vidSVG  = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
 
-  return blocks.map(({ id, type, text='', src='', caption='', url='', label='' }) => {
+  return blocks.map(({ id, type, text='', src='', caption='', url='', label='', generated=false }) => {
     if (['h1','h2','h3','text'].includes(type)) {
+      if (generated) {
+        // Read-only generated content — styled as a proper document
+        const safeText = escHtml(text).replace(/"/g, '&quot;');
+        if (type === 'h1') {
+          return `<div class="doc-block doc-block-gen-h1" data-id="${id}" data-type="${type}" data-gen="true" data-stored="${safeText}">
+            <div class="doc-gen-h1">${escHtml(text)}</div>
+          </div>`;
+        }
+        if (type === 'h2') {
+          return `<div class="doc-block doc-block-gen-h2" data-id="${id}" data-type="${type}" data-gen="true" data-stored="${safeText}">
+            <div class="doc-gen-section-rule"></div>
+            <div class="doc-gen-h2">${escHtml(text)}</div>
+          </div>`;
+        }
+        // generated text block
+        return `<div class="doc-block doc-block-gen-text" data-id="${id}" data-type="${type}" data-gen="true" data-stored="${safeText}">
+          <div class="doc-gen-text">${text ? escHtml(text).replace(/\n/g,'<br>') : '<span class="doc-gen-empty">—</span>'}</div>
+          ${delBtn(id)}
+        </div>`;
+      }
+      // user-added editable block
       const tag = { h1:'H1', h2:'H2', h3:'H3', text:'¶' }[type];
       const ph  = { h1:'Heading', h2:'Subheading', h3:'Small heading', text:'Start typing…' }[type];
       return `<div class="doc-block doc-block-${type}" data-id="${id}" data-type="${type}">
@@ -2948,6 +2974,8 @@ function bindDoc(brandId, campId, docType) {
   function collectDocBlocks() {
     return Array.from(document.querySelectorAll('#docContainer .doc-block[data-id]')).map(el => {
       const id = el.dataset.id, type = el.dataset.type;
+      // Generated (read-only) blocks — text stored in data-stored attribute
+      if (el.dataset.gen === 'true') return { id, type, text: el.dataset.stored || '', generated: true };
       if (type === 'image' || type === 'video') {
         const s = el.querySelector('.doc-block-img')?.src || el.querySelector('.doc-block-vid')?.src || '';
         return { id, type, src: s.startsWith('blob:') ? '' : s, caption: el.querySelector('.doc-block-caption')?.innerText || '' };
@@ -3001,24 +3029,22 @@ function bindDoc(brandId, campId, docType) {
     document.querySelectorAll('#docContainer .doc-block-caption').forEach(el => el.addEventListener('input', schedSave));
   }
 
-  // Block type picker sheet injected into body
+  // Block type picker sheet (step 2)
   document.getElementById('docPickerSheet')?.remove();
   const pickerEl = document.createElement('div');
   pickerEl.id = 'docPickerSheet'; pickerEl.className = 'doc-picker-sheet'; pickerEl.style.display = 'none';
   const pickerTypes = [
-    { type:'h1',      label:'Heading',    icon:'H1' },
-    { type:'h2',      label:'Subheading', icon:'H2' },
-    { type:'h3',      label:'Small Head', icon:'H3' },
-    { type:'text',    label:'Body Text',  icon:'¶'  },
     { type:'image',   label:'Image',      icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>` },
     { type:'video',   label:'Video',      icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>` },
     { type:'link',    label:'Link',       icon:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>` },
+    { type:'text',    label:'Text Note',  icon:'¶'  },
     { type:'divider', label:'Divider',    icon:'—'  },
   ];
   pickerEl.innerHTML = `
     <div class="doc-picker-bg" id="docPickerBg"></div>
     <div class="doc-picker-panel">
       <div class="doc-picker-bar"></div>
+      <div class="doc-picker-title">ADD BLOCK</div>
       <div class="doc-picker-grid">${pickerTypes.map(t => `
         <button class="doc-picker-item" data-type="${t.type}">
           <span class="doc-picker-icon">${t.icon}</span>
@@ -3028,10 +3054,59 @@ function bindDoc(brandId, campId, docType) {
     </div>`;
   document.body.appendChild(pickerEl);
 
+  // Section picker sheet (step 1)
+  document.getElementById('docSectionPicker')?.remove();
+  const sectionPickerEl = document.createElement('div');
+  sectionPickerEl.id = 'docSectionPicker'; sectionPickerEl.className = 'doc-section-picker'; sectionPickerEl.style.display = 'none';
+  sectionPickerEl.innerHTML = `
+    <div class="doc-section-picker-bg" id="docSectionPickerBg"></div>
+    <div class="doc-section-picker-panel">
+      <div class="doc-picker-bar"></div>
+      <div class="doc-picker-title">INSERT AFTER</div>
+      <div id="docSectionList"></div>
+    </div>`;
+  document.body.appendChild(sectionPickerEl);
+
   let insertAfterBlockId = null;
   function showPicker(afterId) { insertAfterBlockId = afterId; pickerEl.style.display = 'flex'; }
 
+  function getLastIdInSection(sectionId) {
+    const idx = blocks.findIndex(b => b.id === sectionId);
+    if (idx === -1) return blocks[blocks.length - 1]?.id || null;
+    for (let i = idx + 1; i < blocks.length; i++) {
+      if (['h1','h2'].includes(blocks[i].type)) return blocks[i - 1].id;
+    }
+    return blocks[blocks.length - 1]?.id || sectionId;
+  }
+
+  function showSectionPicker() {
+    const list = document.getElementById('docSectionList');
+    if (!list) return;
+    const headers = blocks.filter(b => ['h1','h2'].includes(b.type));
+    list.innerHTML = headers.map(b =>
+      `<button class="doc-section-item" data-id="${b.id}">
+        <span class="doc-section-dot doc-section-dot-${b.type}"></span>
+        <span class="doc-section-label">${escHtml(b.text || 'Untitled')}</span>
+      </button>`
+    ).join('') +
+    `<button class="doc-section-item doc-section-end" data-id="__end__">
+      <span class="doc-section-dot" style="background:rgba(255,255,255,0.15)"></span>
+      <span class="doc-section-label" style="color:#555">End of document</span>
+    </button>`;
+    list.querySelectorAll('.doc-section-item').forEach(item => {
+      item.addEventListener('click', () => {
+        sectionPickerEl.style.display = 'none';
+        const sid = item.dataset.id;
+        const afterId = sid === '__end__' ? (blocks[blocks.length - 1]?.id || null) : getLastIdInSection(sid);
+        showPicker(afterId);
+      });
+    });
+    sectionPickerEl.style.display = 'flex';
+  }
+
+  document.getElementById('docSectionPickerBg')?.addEventListener('click', () => { sectionPickerEl.style.display = 'none'; });
   document.getElementById('docPickerBg')?.addEventListener('click', () => { pickerEl.style.display = 'none'; });
+
   pickerEl.querySelectorAll('.doc-picker-item').forEach(btn => {
     btn.addEventListener('click', () => {
       pickerEl.style.display = 'none';
@@ -3053,7 +3128,7 @@ function bindDoc(brandId, campId, docType) {
   });
 
   bindBlockEvents();
-  document.getElementById('docAddBtn')?.addEventListener('click', () => showPicker(blocks[blocks.length - 1]?.id || null));
+  document.getElementById('docAddBtn')?.addEventListener('click', showSectionPicker);
 
   // Same campaign nav as the campaign page (Aisha opens campaign page on doc page)
   injectCampaignNav(brandId, campId, 'doc', () => navigate(`#/campaign?brandId=${brandId}&id=${campId}`));
