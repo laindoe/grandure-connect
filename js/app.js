@@ -2368,6 +2368,7 @@ function pageCampaign(brandId, campId) {
     </div>
 
     ${captureModalHTML()}
+    <div id="editPhotoMount"></div>
     ${campaignNavHTML(brandId, campId)}
   `;
 }
