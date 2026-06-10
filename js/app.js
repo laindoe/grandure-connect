@@ -418,12 +418,14 @@ function pageHome() {
     const campBannerStyle = cb
       ? (cb.startsWith('data:') || cb.startsWith('http') ? `background:url('${cb}') center/cover no-repeat` : `background:${cb}`)
       : bannerStyle(brand);
-    const iconBg = brand.banner.startsWith('data:') || brand.banner.startsWith('http')
-      ? 'background:rgba(255,255,255,0.15)'
-      : `background:${brand.banner}`;
+    const iconContent = brand.icon
+      ? `<img src="${brand.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+      : brand.name[0].toUpperCase();
+    const iconBg = brand.icon ? 'background:rgba(255,255,255,0.07)'
+      : (brand.banner.startsWith('data:') || brand.banner.startsWith('http') ? 'background:rgba(255,255,255,0.15)' : `background:${brand.banner}`);
     return `
       <div class="home-camp-brand-header">
-        <div class="home-camp-brand-icon" style="${iconBg}">${brand.name[0].toUpperCase()}</div>
+        <div class="home-camp-brand-icon" style="${iconBg}">${iconContent}</div>
         <span class="home-camp-brand-header-name">${brand.name}</span>
       </div>
       <div class="swipe-wrap" data-camp-id="${campaign.id}" data-brand-id="${brand.id}">
@@ -942,6 +944,10 @@ function bindSwipeCards() {
 
 /* ── Edit Brand Sheet ── */
 function editBrandSheetHTML(brand) {
+  const iconPreview = brand.icon
+    ? `<img src="${brand.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    : `<span style="font-size:16px;font-weight:800;color:#fff">${brand.name[0].toUpperCase()}</span>`;
+  const logoPreviewStyle = brand.logo ? 'display:block' : 'display:none';
   return `
     <div class="capture-overlay" id="editBrandOverlay" style="display:none">
       <div class="capture-sheet">
@@ -953,6 +959,39 @@ function editBrandSheetHTML(brand) {
           style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);
                  border-radius:14px;padding:14px;color:#fff;font-size:15px;
                  font-family:inherit;margin-bottom:20px;outline:none;">
+
+        <div class="capture-section-label">BRAND ICON</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+          <div id="editIconCircle" style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
+            ${iconPreview}
+          </div>
+          <label style="flex:1;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:13px 14px;cursor:pointer">
+            <div>
+              <div style="font-size:14px;font-weight:600">Upload Icon</div>
+              <div style="color:#555;font-size:12px;margin-top:2px">Square image</div>
+            </div>
+            <div style="width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;font-size:15px">&#8679;</div>
+            <input type="file" id="editBrandIcon" accept="image/*" style="display:none">
+          </label>
+        </div>
+
+        <div class="capture-section-label">FULL LOGO</div>
+        <label style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);
+                      border:1px solid rgba(255,255,255,0.08);border-radius:14px;
+                      padding:14px;cursor:pointer;margin-bottom:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.08);
+                      display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">
+            &#8679;
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:600">Upload Logo</div>
+            <div style="color:#555;font-size:12px;margin-top:2px">JPG or PNG</div>
+          </div>
+          <input type="file" id="editBrandLogo" accept="image/*" style="display:none">
+        </label>
+        <div id="editLogoPreview" style="${logoPreviewStyle};margin-bottom:20px">
+          <img id="editLogoThumb" src="${brand.logo || ''}" style="width:100%;height:56px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,0.04);padding:6px">
+        </div>
 
         <div class="capture-section-label">CARD IMAGE</div>
         <label style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);
@@ -986,6 +1025,8 @@ function bindEditBrand(id) {
   if (!overlay) return;
 
   let pendingBanner = null;
+  let pendingIcon   = null;
+  let pendingLogo   = null;
 
   document.getElementById('openEditBrand')?.addEventListener('click', () => {
     overlay.style.display = 'flex';
@@ -995,23 +1036,41 @@ function bindEditBrand(id) {
   });
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.style.display = 'none'; });
 
-  document.getElementById('editBrandImage')?.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      pendingBanner = ev.target.result;
-      document.getElementById('editImagePreview').style.display = 'block';
-      document.getElementById('editImageThumb').src = pendingBanner;
-    };
-    reader.readAsDataURL(file);
+  const readFile = (inputId, onLoad) => {
+    document.getElementById(inputId)?.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => onLoad(ev.target.result);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  readFile('editBrandIcon', dataUrl => {
+    pendingIcon = dataUrl;
+    const circle = document.getElementById('editIconCircle');
+    if (circle) circle.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  });
+
+  readFile('editBrandLogo', dataUrl => {
+    pendingLogo = dataUrl;
+    document.getElementById('editLogoPreview').style.display = 'block';
+    document.getElementById('editLogoThumb').src = dataUrl;
+  });
+
+  readFile('editBrandImage', dataUrl => {
+    pendingBanner = dataUrl;
+    document.getElementById('editImagePreview').style.display = 'block';
+    document.getElementById('editImageThumb').src = dataUrl;
   });
 
   document.getElementById('editBrandSave')?.addEventListener('click', () => {
     const name = document.getElementById('editBrandName')?.value.trim();
     const patch = {};
-    if (name) patch.name = name;
+    if (name)          patch.name   = name;
     if (pendingBanner) patch.banner = pendingBanner;
+    if (pendingIcon)   patch.icon   = pendingIcon;
+    if (pendingLogo)   patch.logo   = pendingLogo;
     saveBrandOverride(id, patch);
     saveCustomBrands();
     overlay.style.display = 'none';
