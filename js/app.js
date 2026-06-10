@@ -2472,7 +2472,10 @@ function pageCampaign(brandId, campId) {
               <div class="notion-label">NOTES</div>
               <textarea class="notion-textarea" id="ov_notes" placeholder="Anything else…">${campaign.ov_notes || ''}</textarea>
             </div>
-            <button class="camp-save-btn" id="campInfoSave">Save Overview</button>
+            <div class="camp-doc-row">
+              <button class="camp-save-btn" id="campInfoSave" style="flex:1">Save Overview</button>
+              <button class="camp-see-doc-btn" id="campInfoSeeDoc">See Doc ›</button>
+            </div>
           </div>
         </div>
 
@@ -2508,7 +2511,10 @@ function pageCampaign(brandId, campId) {
               <div class="notion-label">NOTES</div>
               <textarea class="notion-textarea" id="cp_notes" placeholder="Anything else…">${campaign.cp_notes || ''}</textarea>
             </div>
-            <button class="camp-save-btn" id="campPlanSave">Save Content Plan</button>
+            <div class="camp-doc-row">
+              <button class="camp-save-btn" id="campPlanSave" style="flex:1">Save Content Plan</button>
+              <button class="camp-see-doc-btn" id="campPlanSeeDoc">See Doc ›</button>
+            </div>
           </div>
         </div>
 
@@ -2630,6 +2636,12 @@ function bindCampaignPage(brandId, campId) {
     e.stopPropagation();
     navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=plan`);
   });
+  document.getElementById('campInfoSeeDoc')?.addEventListener('click', () =>
+    navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=overview`)
+  );
+  document.getElementById('campPlanSeeDoc')?.addEventListener('click', () =>
+    navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=plan`)
+  );
 
   // Bind Aisha
   bindAisha(brand, campaign, brandId, campId);

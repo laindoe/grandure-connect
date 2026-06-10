@@ -993,6 +993,9 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-field-label { color:#3a3a3a;font-size:9px;font-weight:700;letter-spacing:1.5px;margin-bottom:5px; }
 .camp-field-input { width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:16px;font-family:inherit;outline:none; }
 .camp-save-btn { background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:13px;color:#fff;font-size:14px;font-weight:600;width:100%; }
+.camp-doc-row { display:flex;align-items:center;gap:10px;margin-bottom:4px; }
+.camp-see-doc-btn { flex-shrink:0;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:13px 16px;color:rgba(255,255,255,0.55);font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer; }
+.camp-see-doc-btn:active { background:rgba(255,255,255,0.12);color:#fff; }
 
 /* Campaign hero card */
 /* Campaign hero card — full-width banner */
