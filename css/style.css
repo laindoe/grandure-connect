@@ -1029,7 +1029,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-analytics-more { font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);letter-spacing:.3px;background:none;border:none;padding:0;cursor:pointer; }
 .camp-analytics-row { display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none; }
 .camp-analytics-row::-webkit-scrollbar { display:none; }
-.camp-analytics-item { flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;border-radius:16px;padding:16px 10px 14px;width:84px;min-height:110px;border:none; }
+.camp-analytics-item { flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;border-radius:16px;padding:16px 10px 14px;width:84px;min-height:110px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 4px 20px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.1); }
 .camp-analytics-icon { color:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;line-height:0; }
 .camp-analytics-count { font-size:22px;font-weight:800;color:#fff;line-height:1; }
 .camp-analytics-label { font-size:7.5px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.72); }

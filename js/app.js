@@ -2333,14 +2333,14 @@ function pageCampaign(brandId, campId) {
     patreon:   `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="14.5" cy="10" r="6"/><line x1="5" y1="2" x2="5" y2="22"/></svg>`,
   };
   const PLATFORM_COLORS = {
-    instagram: '#C50060',
-    tiktok:    '#009B95',
-    youtube:   '#CC0000',
-    threads:   '#0050D0',
-    twitter:   '#0044BB',
-    email:     '#74AE00',
-    linkedin:  '#003DB5',
-    patreon:   '#E03000',
+    instagram: 'rgba(197,0,96,0.28)',
+    tiktok:    'rgba(0,155,149,0.28)',
+    youtube:   'rgba(204,0,0,0.28)',
+    threads:   'rgba(0,80,208,0.28)',
+    twitter:   'rgba(0,68,187,0.28)',
+    email:     'rgba(116,174,0,0.28)',
+    linkedin:  'rgba(0,61,181,0.28)',
+    patreon:   'rgba(224,48,0,0.28)',
   };
   const PLATFORM_METRIC = {
     instagram: 'FOLLOWERS',
