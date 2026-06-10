@@ -985,14 +985,14 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .aisha-opt.selected,.aisha-opt:active { background:rgba(124,58,173,0.3);border-color:rgba(180,120,255,0.4);color:#d4aaff; }
 .aisha-opts-done { align-self:flex-end;background:rgba(124,58,173,0.3);border:1px solid rgba(180,120,255,0.3);border-radius:20px;padding:9px 20px;color:#d4aaff;font-size:13px;font-weight:700; }
 .aisha-input-row { display:flex;gap:8px;align-items:center;padding:0 14px 14px; }
-.aisha-input { flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 13px;color:#fff;font-size:13px;font-family:inherit;outline:none; }
+.aisha-input { flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 13px;color:#fff;font-size:16px;font-family:inherit;outline:none; }
 .aisha-input::placeholder { color:#2e2e2e; }
 .aisha-send { width:36px;height:36px;border-radius:50%;background:rgba(124,58,173,0.3);border:1px solid rgba(180,120,255,0.2);display:flex;align-items:center;justify-content:center;color:#c8a0ff;flex-shrink:0; }
 .ai-gen-btn { background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:5px 11px;color:#bbb;font-size:10px;font-weight:700;letter-spacing:.5px;flex-shrink:0; }
 
 /* Campaign edit fields */
 .camp-field-label { color:#3a3a3a;font-size:9px;font-weight:700;letter-spacing:1.5px;margin-bottom:5px; }
-.camp-field-input { width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none; }
+.camp-field-input { width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:16px;font-family:inherit;outline:none; }
 .camp-save-btn { background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:13px;color:#fff;font-size:14px;font-weight:600;width:100%; }
 
 /* Campaign hero card */
@@ -1029,9 +1029,9 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 /* Notion-style doc fields */
 .notion-field { margin-bottom:16px; }
 .notion-label { font-size:9px;font-weight:700;letter-spacing:1.4px;color:#3a3a3a;margin-bottom:6px; }
-.notion-input { width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.07);padding:6px 0;color:#fff;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box; }
+.notion-input { width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.07);padding:6px 0;color:#fff;font-size:16px;font-family:inherit;outline:none;box-sizing:border-box; }
 .notion-input:focus { border-bottom-color:rgba(255,255,255,0.22); }
-.notion-textarea { width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.07);padding:6px 0;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:none;min-height:52px;line-height:1.55;box-sizing:border-box; }
+.notion-textarea { width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.07);padding:6px 0;color:#fff;font-size:16px;font-family:inherit;outline:none;resize:none;min-height:52px;line-height:1.55;box-sizing:border-box; }
 .notion-textarea:focus { border-bottom-color:rgba(255,255,255,0.22); }
 .notion-pillar { display:inline-block;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:5px 12px;font-size:11px;color:#bbb;margin:3px 4px 3px 0; }
 
