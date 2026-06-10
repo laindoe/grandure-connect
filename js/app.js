@@ -208,6 +208,23 @@ function bottomNavHTML() {
 let _homeView = 'campaigns';
 let _campFilter = 'date';
 
+/* ── Aisha AI state ── */
+let _aishaCampKey = '';
+let _aishaMessages = []; // { role: 'aisha'|'user', text }
+let _aishaWizardStep = -1; // -1=idle, 0-6=wizard, 7=done
+let _aishaAnswers = {};
+let _aishaGenerated = null; // { strategy, contentPlan }
+
+const AISHA_WIZARD_QS = [
+  { id: 'goal',       q: "What's the main goal of this campaign? (awareness, launch, community, sales…)" },
+  { id: 'audience',   q: "Who's the primary audience we're speaking to for this one?" },
+  { id: 'message',    q: "What's the core message or theme you want to convey?" },
+  { id: 'platforms',  q: "Which platforms will this campaign live on?" },
+  { id: 'content',    q: "What types of content are you planning — reels, carousels, stories, emails?" },
+  { id: 'cta',        q: "What's the key call to action? What do you want people to do?" },
+  { id: 'milestones', q: "Any specific dates or milestones to hit? Just say skip if not." },
+];
+
 /* ── Icon crop state ── */
 let _iconCrop = { naturalW:0, naturalH:0, scale:1, minScale:1, offsetX:0, offsetY:0, cropW:0, cropH:0 };
 
@@ -1734,55 +1751,212 @@ window.vaultFilter = function(id, platform, format) {
 };
 
 /* ═══════════════════════════════════════
-   CAMPAIGN PAGE: AI GENERATORS
+   AISHA: GENERATE
 ═══════════════════════════════════════ */
-function generateCampaignStrategyText(brand, campaign) {
+function aishaGenerate(brand, campaign, answers) {
   const ov = brand.overview || {};
-  const mission = ov.mission || 'Build an authentic brand presence.';
-  const audience = ov.audience || 'A core engaged audience.';
-  const pillars = (ov.contentPillars || []).join(', ') || 'content pillars';
-  const voice = ov.brandVoice || 'Authentic and engaging.';
-  const campName = campaign.name || 'this campaign';
-  const startDate = campaign.startDate || 'TBD';
-  const endDate = campaign.endDate || 'TBD';
+  const mission  = ov.mission || '';
+  const audience = ov.audience || '';
+  const pillars  = (ov.contentPillars || []).join(', ');
+  const voice    = ov.brandVoice || '';
+  const platforms = Object.keys(brand.platformStrategy || {}).map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ');
 
-  return `Campaign: ${campName}\nTimeline: ${startDate} – ${endDate}\n\nObjective\nDrive meaningful engagement aligned with ${brand.name}'s mission: "${mission.slice(0, 80)}${mission.length > 80 ? '…' : ''}"\n\nTarget Audience\n${audience}\n\nContent Pillars Focus\n${pillars}\n\nTone & Voice\n${voice}\n\nPhase Strategy\n1. Awareness — establish campaign narrative across platforms\n2. Engagement — interactive content that deepens connection\n3. Conversion — clear calls-to-action that reflect brand values\n\nSuccess Metrics\n· Reach & impressions growth vs. baseline\n· Engagement rate above brand average\n· Community responses & saves`;
+  const a = answers;
+
+  const strategy =
+`CAMPAIGN: ${campaign.name}
+${campaign.startDate} – ${campaign.endDate}
+
+OBJECTIVE
+${a.goal || `Drive meaningful engagement aligned with ${brand.name}'s mission`}
+
+TARGET AUDIENCE
+${a.audience || audience || 'Core brand community'}
+
+CORE MESSAGE
+${a.message || `Authentic content that reflects ${brand.name}'s values`}
+
+PLATFORMS
+${a.platforms || platforms || 'Primary social channels'}
+
+CALL TO ACTION
+${a.cta || 'Engage, share, and connect'}
+
+BRAND CONTEXT
+Mission: ${mission || `${brand.name} brand mission`}
+Voice: ${voice || 'Authentic and engaging'}
+Pillars: ${pillars || 'Core content areas'}
+
+PHASE STRATEGY
+1. Awareness — establish the campaign narrative and hook
+2. Engagement — deepen connection with interactive content
+3. Conversion — clear CTAs that reflect ${brand.name}'s values
+${a.milestones && a.milestones.toLowerCase() !== 'skip' ? `\nKEY DATES\n${a.milestones}` : ''}`.trim();
+
+  const contentPlan =
+`CONTENT PLAN: ${campaign.name}
+
+CONTENT TYPES
+${a.content || 'Reels · Carousels · Stories'}
+
+WEEKLY BREAKDOWN
+Week 1 — Awareness: Introduce the campaign theme with hero content
+Week 2 — Engagement: Behind-the-scenes and community-first posts
+Week 3 — Depth: Value-driven content on ${(ov.contentPillars || ['core topics'])[0]}
+Week 4 — Conversion: CTA-focused content driving "${a.cta || 'action'}"
+
+PLATFORM DISTRIBUTION
+${a.platforms || platforms || 'Adapt format per platform — prioritize native formats'}
+
+CONTENT MIX
+· 40% Educational / value-driven
+· 30% Storytelling / behind the scenes
+· 20% Community engagement
+· 10% Promotional / offer-forward
+
+TONE
+${voice || 'Authentic, grounded, on-brand'}`.trim();
+
+  return { strategy, contentPlan };
 }
 
-function generateContentPlanText(brand, campaign) {
-  const ov = brand.overview || {};
-  const pillars = ov.contentPillars || [];
-  const campName = campaign.name || 'Campaign';
-  const pillarLines = pillars.length
-    ? pillars.map((p, i) => `Week ${i + 1}: ${p} — 2–3 posts anchored in this pillar`).join('\n')
-    : 'Week 1: Brand story\nWeek 2: Value content\nWeek 3: Community spotlight\nWeek 4: Call to action';
-
-  const platforms = Object.keys(brand.platformStrategy || {});
-  const platformLine = platforms.length
-    ? platforms.map(p => `· ${(p.charAt(0).toUpperCase() + p.slice(1))}: adapted format for platform strengths`).join('\n')
-    : '· Instagram, Threads, YouTube';
-
-  return `Content Plan — ${campName}\n\nWeekly Cadence\n${pillarLines}\n\nPlatform Distribution\n${platformLine}\n\nContent Mix\n· 40% Educational / value-driven\n· 30% Storytelling / behind the scenes\n· 20% Community engagement\n· 10% Promotional / offer-forward\n\nRepurposing Strategy\nLong-form → short clips → quote cards → thread breakdowns`;
+/* ═══════════════════════════════════════
+   AISHA: CHAT HTML
+═══════════════════════════════════════ */
+function aishaBlockHTML() {
+  const sendSVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+  return `
+    <div class="aisha-block">
+      <div class="aisha-header">
+        <div class="aisha-avatar">✦</div>
+        <div class="aisha-info">
+          <div class="aisha-name">Ask Aisha</div>
+          <div class="aisha-role">Campaign Strategist · AI</div>
+        </div>
+        <button class="aisha-wizard-btn" id="aishaWizardBtn">Start Wizard</button>
+      </div>
+      <div class="aisha-chat" id="aishaChat"></div>
+      <div class="aisha-review" id="aishaReview" style="display:none">
+        <pre class="aisha-review-text" id="aishaReviewText"></pre>
+        <button class="aisha-save-btn" id="aishaSaveBtn">Save to Campaign Plan</button>
+      </div>
+      <div class="aisha-input-row">
+        <input class="aisha-input" id="aishaInput" type="text" placeholder="Ask Aisha about this campaign…">
+        <button class="aisha-send" id="aishaSendBtn">${sendSVG}</button>
+      </div>
+    </div>
+  `;
 }
 
-function generateAIResponse(brand, campaign, question) {
-  const q = (question || '').toLowerCase();
-  if (q.includes('content') || q.includes('plan') || q.includes('post') || q.includes('what to') || q.includes('schedule')) {
-    return generateContentPlanText(brand, campaign);
+function renderAishaChat() {
+  const chat = document.getElementById('aishaChat');
+  if (!chat) return;
+  chat.innerHTML = _aishaMessages.map(m =>
+    `<div class="aisha-msg ${m.role === 'aisha' ? 'from-aisha' : 'from-user'}">${m.text.replace(/\n/g, '<br>')}</div>`
+  ).join('');
+  chat.scrollTop = chat.scrollHeight;
+}
+
+/* ═══════════════════════════════════════
+   AISHA: BIND
+═══════════════════════════════════════ */
+function bindAisha(brand, campaign, brandId, campId) {
+  const campKey = `${brandId}:${campId}`;
+
+  if (_aishaCampKey !== campKey) {
+    _aishaCampKey = campKey;
+    _aishaMessages = [];
+    _aishaWizardStep = -1;
+    _aishaAnswers = {};
+    _aishaGenerated = null;
+    _aishaMessages.push({ role: 'aisha', text: `Hi, I'm Aisha — your campaign strategist. I already have ${brand.name}'s brand context loaded in. Tap "Start Wizard" and I'll walk you through a few questions to build out the strategy for ${campaign.name}. Or just ask me anything.` });
   }
-  if (q.includes('strateg') || q.includes('goal') || q.includes('objective') || q.includes('campaign')) {
-    return generateCampaignStrategyText(brand, campaign);
+
+  renderAishaChat();
+
+  if (_aishaGenerated) {
+    const rev = document.getElementById('aishaReview');
+    const txt = document.getElementById('aishaReviewText');
+    if (rev) rev.style.display = 'block';
+    if (txt) txt.textContent = _aishaGenerated.strategy;
   }
-  if (q.includes('audience') || q.includes('who') || q.includes('target')) {
-    const ov = brand.overview || {};
-    return `Target Audience for ${campaign.name}\n\n${ov.audience || 'Your core audience.'}\n\nEngage them through:\n· Relatable storytelling\n· Content that solves real problems\n· Community-first language`;
-  }
-  if (q.includes('voice') || q.includes('tone') || q.includes('how to write') || q.includes('sound')) {
-    const ov = brand.overview || {};
-    return `Brand Voice — ${brand.name}\n\n${ov.brandVoice || 'Authentic and engaging.'}\n\nApply this to ${campaign.name} by:\n· Leading with the community, not the offer\n· Using language your audience already uses\n· Staying consistent across platforms`;
-  }
-  // fallback
-  return generateCampaignStrategyText(brand, campaign);
+
+  document.getElementById('aishaWizardBtn')?.addEventListener('click', () => {
+    _aishaWizardStep = 0;
+    _aishaAnswers = {};
+    _aishaGenerated = null;
+    const rev = document.getElementById('aishaReview');
+    if (rev) rev.style.display = 'none';
+    _aishaMessages.push({ role: 'aisha', text: `Let's build this out! I'll ask you ${AISHA_WIZARD_QS.length} quick questions. Brand context from ${brand.name} is already loaded in.\n\n${AISHA_WIZARD_QS[0].q}` });
+    renderAishaChat();
+  });
+
+  const acks = ['Got it.', 'Perfect.', 'Love that.', 'Nice.', 'Great, noted.'];
+
+  const sendMsg = () => {
+    const input = document.getElementById('aishaInput');
+    const text = input?.value.trim();
+    if (!text) return;
+    if (input) input.value = '';
+
+    _aishaMessages.push({ role: 'user', text });
+
+    if (_aishaWizardStep >= 0 && _aishaWizardStep < AISHA_WIZARD_QS.length) {
+      _aishaAnswers[AISHA_WIZARD_QS[_aishaWizardStep].id] = text;
+      _aishaWizardStep++;
+
+      if (_aishaWizardStep < AISHA_WIZARD_QS.length) {
+        const ack = acks[(_aishaWizardStep - 1) % acks.length];
+        _aishaMessages.push({ role: 'aisha', text: `${ack}\n\n${AISHA_WIZARD_QS[_aishaWizardStep].q}` });
+        renderAishaChat();
+      } else {
+        _aishaMessages.push({ role: 'aisha', text: `That's everything I need. Give me a second to put this together…` });
+        renderAishaChat();
+        setTimeout(() => {
+          _aishaGenerated = aishaGenerate(brand, campaign, _aishaAnswers);
+          _aishaMessages.push({ role: 'aisha', text: `Here's your campaign strategy for ${campaign.name}. Review it below and save when you're ready — it'll fill out the Campaign and Content Plan sections.` });
+          const rev = document.getElementById('aishaReview');
+          const txt = document.getElementById('aishaReviewText');
+          if (rev) rev.style.display = 'block';
+          if (txt) txt.textContent = _aishaGenerated.strategy;
+          renderAishaChat();
+        }, 1000);
+      }
+    } else {
+      // freeform Q&A using brand + campaign context
+      const q = text.toLowerCase();
+      let reply;
+      if (q.includes('content') || q.includes('plan') || q.includes('post') || q.includes('schedule')) {
+        const cp = aishaGenerate(brand, campaign, _aishaAnswers).contentPlan;
+        reply = `Here's a content plan for ${campaign.name}:\n\n${cp}`;
+      } else if (q.includes('audience') || q.includes('who') || q.includes('target')) {
+        reply = `For ${campaign.name}, we're speaking to:\n\n${brand.overview?.audience || 'Your core brand community'}\n\nSpeak to them with ${brand.overview?.brandVoice || 'an authentic voice that reflects your brand'}.`;
+      } else if (q.includes('voice') || q.includes('tone')) {
+        reply = `${brand.name}'s brand voice: ${brand.overview?.brandVoice || 'Authentic and engaging.'}\n\nFor ${campaign.name}, keep that voice consistent across every piece of content.`;
+      } else {
+        const strat = aishaGenerate(brand, campaign, _aishaAnswers).strategy;
+        reply = strat;
+      }
+      _aishaMessages.push({ role: 'aisha', text: reply });
+      renderAishaChat();
+    }
+  };
+
+  document.getElementById('aishaSendBtn')?.addEventListener('click', sendMsg);
+  document.getElementById('aishaInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
+
+  document.getElementById('aishaSaveBtn')?.addEventListener('click', () => {
+    if (!_aishaGenerated) return;
+    const updatedCampaigns = brand.campaigns.map(c =>
+      c.id === campId ? { ...c, strategy: _aishaGenerated.strategy, contentPlan: _aishaGenerated.contentPlan } : c
+    );
+    saveBrandOverride(brandId, { campaigns: updatedCampaigns });
+    _aishaMessages.push({ role: 'aisha', text: `Saved! Your strategy and content plan are now in the Campaign and Content Plan sections below. ✦` });
+    const rev = document.getElementById('aishaReview');
+    if (rev) rev.style.display = 'none';
+    _aishaGenerated = null;
+    renderAishaChat();
+  });
 }
 
 /* ═══════════════════════════════════════
@@ -1853,9 +2027,6 @@ function pageCampaign(brandId, campId) {
     return `<div class="${cls}" data-stage="${i}">${label}</div>`;
   }).join('');
 
-  // AI response text
-  const aiResponseText = campaign.strategy || 'Tap "Generate" to get a tailored strategy for this campaign.';
-
   // Brand icon
   const iconContent = brand.icon
     ? `<img src="${brand.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
@@ -1895,24 +2066,8 @@ function pageCampaign(brandId, campId) {
           ${stageTrackerHTML}
         </div>
 
-        <!-- AI Agent block -->
-        <div class="ai-agent-block">
-          <div class="ai-agent-header">
-            <div class="ai-agent-avatar">✦</div>
-            <div class="ai-agent-info">
-              <div class="ai-agent-name">Campaign AI <span class="ai-sparkle">✦</span></div>
-              <div class="ai-agent-role">Strategy · Content · Planning</div>
-            </div>
-            <button class="ai-gen-btn" id="aiGenerateBtn">Generate</button>
-          </div>
-          <div class="ai-response" id="aiResponse">${aiResponseText}</div>
-          <div class="ai-input-row">
-            <input class="ai-input" id="aiInput" type="text" placeholder="Ask about this campaign…">
-            <button class="ai-send" id="aiSendBtn">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
-          </div>
-        </div>
+        <!-- Ask Aisha -->
+        ${aishaBlockHTML()}
 
         <!-- CAMPAIGN dropdown -->
         <div class="section-card dd-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
@@ -2004,49 +2159,18 @@ function bindCampaignPage(brandId, campId) {
     });
   });
 
-  // AI Generate button
-  document.getElementById('aiGenerateBtn')?.addEventListener('click', () => {
-    const text = generateCampaignStrategyText(brand, campaign);
-    const el = document.getElementById('aiResponse');
-    if (el) el.textContent = text;
-  });
-
-  // AI Send button
-  const sendAI = () => {
-    const input = document.getElementById('aiInput');
-    const q = input?.value.trim();
-    if (!q) return;
-    const text = generateAIResponse(brand, campaign, q);
-    const el = document.getElementById('aiResponse');
-    if (el) el.textContent = text;
-    if (input) input.value = '';
-  };
-  document.getElementById('aiSendBtn')?.addEventListener('click', sendAI);
-  document.getElementById('aiInput')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') sendAI();
-  });
+  // Ask Aisha
+  bindAisha(brand, campaign, brandId, campId);
 
   // CAMPAIGN dropdown toggle (header only, not AI button)
   const campInfoToggle = document.getElementById('campInfoToggle');
   const campInfoBody = document.getElementById('campInfoBody');
   const campInfoChevron = document.getElementById('campInfoChevron');
   campInfoToggle?.addEventListener('click', e => {
-    if (e.target.closest('#campAiBtn')) return; // AI button click — don't toggle
+    if (e.target.closest('#campAiBtn')) return;
     const open = campInfoBody.style.display === 'none';
     campInfoBody.style.display = open ? 'block' : 'none';
     campInfoChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
-  });
-
-  // CAMPAIGN AI button: open body, fill strategy
-  document.getElementById('campAiBtn')?.addEventListener('click', e => {
-    e.stopPropagation();
-    if (campInfoBody.style.display === 'none') {
-      campInfoBody.style.display = 'block';
-      campInfoChevron.style.transform = 'rotate(180deg)';
-    }
-    const text = generateCampaignStrategyText(brand, campaign);
-    const el = document.getElementById('aiResponse');
-    if (el) el.textContent = text;
   });
 
   // CAMPAIGN Save
@@ -2081,7 +2205,7 @@ function bindCampaignPage(brandId, campId) {
       campPlanBody.style.display = 'block';
       campPlanChevron.style.transform = 'rotate(180deg)';
     }
-    const text = generateContentPlanText(brand, campaign);
+    const text = aishaGenerate(brand, campaign, _aishaAnswers).contentPlan;
     const planEl = document.getElementById('campPlanText');
     if (planEl) planEl.value = text;
   });
