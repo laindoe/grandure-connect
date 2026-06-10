@@ -1887,13 +1887,13 @@ function pageCampaign(brandId, campId) {
 
       <div style="padding:0 16px">
 
+        <!-- Campaign detail banner (separate from home card image) -->
+        <div class="camp-detail-banner" style="${campaign.detailBanner ? (campaign.detailBanner.startsWith('data:') || campaign.detailBanner.startsWith('http') ? `background:url('${campaign.detailBanner}') center/cover no-repeat` : `background:${campaign.detailBanner}`) : (brand.banner && (brand.banner.startsWith('data:') || brand.banner.startsWith('http')) ? `background:url('${brand.banner}') center/cover no-repeat` : `background:${brand.banner || 'rgba(255,255,255,0.04)'}`)}"></div>
+
         <!-- Stage tracker -->
         <div class="camp-stage-tracker" id="campStageTracker">
           ${stageTrackerHTML}
         </div>
-
-        <!-- Campaign detail banner (separate from home card image) -->
-        <div class="camp-detail-banner" style="${campaign.detailBanner ? (campaign.detailBanner.startsWith('data:') || campaign.detailBanner.startsWith('http') ? `background:url('${campaign.detailBanner}') center/cover no-repeat` : `background:${campaign.detailBanner}`) : (brand.banner && (brand.banner.startsWith('data:') || brand.banner.startsWith('http')) ? `background:url('${brand.banner}') center/cover no-repeat` : `background:${brand.banner || 'rgba(255,255,255,0.04)'}`)}"></div>
 
         <!-- AI Agent block -->
         <div class="ai-agent-block">
