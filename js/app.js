@@ -202,7 +202,7 @@ function bottomNavHTML() {
 }
 
 /* ── Home view state ── */
-let _homeView = 'brands';
+let _homeView = 'campaigns';
 
 /* ── Idea Capture Modal ── */
 let captureState = { platform: '', format: '', brandId: '' };
@@ -242,12 +242,11 @@ function pageChrome() {
 function homeDockHTML() {
   return `
     <nav class="bottom-nav" id="homeDock">
-      <button class="nav-btn" id="dockBrands">
+      <button class="nav-btn" id="dockCampaigns">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
       </button>
       <button class="nav-btn nav-btn-center" id="dockCapture">
@@ -255,11 +254,12 @@ function homeDockHTML() {
           <path d="M13 2L4 13h7l-1 9 10-12h-7z"/>
         </svg>
       </button>
-      <button class="nav-btn" id="dockCampaigns">
+      <button class="nav-btn" id="dockBrands">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="6" x2="21" y2="6"/>
-          <line x1="3" y1="12" x2="21" y2="12"/>
-          <line x1="3" y1="18" x2="21" y2="18"/>
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
         </svg>
       </button>
     </nav>
