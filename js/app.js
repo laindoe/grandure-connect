@@ -236,6 +236,75 @@ let _aishaSelectedOpts = [];
 /* ── Icon crop state ── */
 let _iconCrop = { naturalW:0, naturalH:0, scale:1, minScale:1, offsetX:0, offsetY:0, cropW:0, cropH:0 };
 
+/* ═══════════════════════════════════════
+   SETTINGS MODAL
+═══════════════════════════════════════ */
+function openSettings() {
+  let overlay = document.getElementById('settingsOverlay');
+  if (!overlay) {
+    const el = document.createElement('div');
+    el.innerHTML = `
+      <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-modal">
+          <div class="settings-modal-header">
+            <div class="settings-modal-title">Settings</div>
+            <button class="settings-modal-close" id="settingsClose">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-label">DATA</div>
+            <button class="settings-row" id="settingsExport">
+              <span>Export All Data</span><span class="settings-row-arrow">›</span>
+            </button>
+            <button class="settings-row settings-row-danger" id="settingsClearData">
+              <span>Clear All Data</span><span class="settings-row-arrow">›</span>
+            </button>
+          </div>
+
+          <div class="settings-section">
+            <div class="settings-section-label">ABOUT</div>
+            <div class="settings-row" style="cursor:default">
+              <span>Grandure Connect</span><span class="settings-row-val">v2.0</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(el.firstElementChild);
+    overlay = document.getElementById('settingsOverlay');
+
+    document.getElementById('settingsClose')?.addEventListener('click', () => { overlay.style.display = 'none'; });
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.style.display = 'none'; });
+
+    document.getElementById('settingsExport')?.addEventListener('click', () => {
+      const data = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('gc_')) data[k] = localStorage.getItem(k);
+      }
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'grandure-connect-backup.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('settingsClearData')?.addEventListener('click', () => {
+      if (!confirm('Clear all data? This cannot be undone.')) return;
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('gc_')) keys.push(k);
+      }
+      keys.forEach(k => localStorage.removeItem(k));
+      overlay.style.display = 'none';
+      navigate('/');
+    });
+  }
+  overlay.style.display = 'flex';
+}
+
 /* ── Idea Capture Modal ── */
 let captureState = { platform: '', format: '', brandId: '' };
 
@@ -310,7 +379,7 @@ function bindCapture() {
   document.getElementById('captureCancel')?.addEventListener('click', close);
 
   document.getElementById('navHome')?.addEventListener('click', () => navigate('/'));
-  document.getElementById('navSettings')?.addEventListener('click', () => navigate('/settings'));
+  document.getElementById('navSettings')?.addEventListener('click', openSettings);
 
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 
