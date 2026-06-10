@@ -944,16 +944,12 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-header-icon { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;border:1px solid rgba(255,255,255,0.15);overflow:hidden; }
 .camp-header-brand { color:#fff;font-size:17px;font-weight:700; }
 
-/* Stage tracker */
-.camp-stage-tracker { display:flex;align-items:flex-start;padding:20px 0 28px; }
-.camp-stage-step { display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0; }
-.camp-stage-dot { width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.18);cursor:pointer;transition:background .2s,transform .15s; }
-.camp-stage-dot.active { background:#fff;border-color:#fff; }
-.camp-stage-dot:active { transform:scale(1.4); }
-.camp-stage-line { flex:1;height:1.5px;background:rgba(255,255,255,0.1);margin-top:4px;align-self:flex-start; }
-.camp-stage-line.active { background:rgba(255,255,255,0.65); }
-.camp-stage-label { font-size:9px;font-weight:600;letter-spacing:.3px;color:#333;text-align:center;white-space:nowrap; }
-.camp-stage-label.active { color:#777; }
+/* Stage tracker - bold segmented pill */
+.camp-stage-tracker { display:flex;border-radius:100px;overflow:hidden;height:54px;margin:16px 0 28px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.1);gap:2px; }
+.camp-stage-seg { flex:1;display:flex;align-items:center;justify-content:center;font-size:7.5px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;cursor:pointer;transition:background .2s,color .2s;color:rgba(255,255,255,0.18);background:rgba(255,255,255,0.03);text-align:center;padding:0 4px; }
+.camp-stage-seg.completed { background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.45); }
+.camp-stage-seg.current { background:rgba(255,255,255,0.22);color:#fff;font-weight:800;letter-spacing:1.3px; }
+.camp-stage-seg:active { opacity:.7; }
 
 /* AI block */
 .ai-agent-block { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3); }

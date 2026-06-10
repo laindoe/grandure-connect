@@ -1845,20 +1845,12 @@ function pageCampaign(brandId, campId) {
 
   const stages = ['Ideation', 'Planning Phase', 'Production', 'Distribution'];
 
-  // Stage tracker HTML: step | line | step | line | step | line | step
+  // Stage tracker HTML: bold segmented pill
   const stageTrackerHTML = stages.map((label, i) => {
-    const isDot = true;
-    const isActive = i <= stageIndex;
-    const dotHTML = `
-      <div class="camp-stage-step">
-        <div class="camp-stage-dot${isActive ? ' active' : ''}" data-stage="${i}"></div>
-        <div class="camp-stage-label${isActive ? ' active' : ''}">${label}</div>
-      </div>
-    `;
-    const lineHTML = i < stages.length - 1
-      ? `<div class="camp-stage-line${isActive && i < stageIndex ? ' active' : ''}"></div>`
-      : '';
-    return dotHTML + lineHTML;
+    let cls = 'camp-stage-seg';
+    if (i < stageIndex) cls += ' completed';
+    else if (i === stageIndex) cls += ' current';
+    return `<div class="${cls}" data-stage="${i}">${label}</div>`;
   }).join('');
 
   // AI response text
@@ -1997,7 +1989,7 @@ function bindCampaignPage(brandId, campId) {
   });
 
   // Stage tracker
-  document.querySelectorAll('#campStageTracker .camp-stage-dot').forEach(dot => {
+  document.querySelectorAll('#campStageTracker .camp-stage-seg').forEach(dot => {
     dot.addEventListener('click', () => {
       const newStage = parseInt(dot.dataset.stage, 10);
       const updatedCampaigns = brand.campaigns.map(c =>
