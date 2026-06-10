@@ -205,6 +205,9 @@ function bottomNavHTML() {
 let _homeView = 'campaigns';
 let _campFilter = 'date';
 
+/* ── Icon crop state ── */
+let _iconCrop = { naturalW:0, naturalH:0, scale:1, minScale:1, offsetX:0, offsetY:0, cropW:0, cropH:0 };
+
 /* ── Idea Capture Modal ── */
 let captureState = { platform: '', format: '', brandId: '' };
 
@@ -720,6 +723,141 @@ function openEditCampaignPhoto(brandId, campId) {
   cropWin.addEventListener('touchend', e => { lastTouches = Array.from(e.touches); });
 }
 
+/* ── Icon Crop Sheet ── */
+function editIconCropSheetHTML() {
+  return `
+    <div class="capture-overlay" id="iconCropOverlay" style="display:none">
+      <div class="capture-sheet" style="padding:0;overflow:hidden;border-radius:28px 28px 0 0">
+        <div style="padding:20px 24px 12px">
+          <div class="capture-handle"></div>
+          <div class="capture-title" style="margin-bottom:4px">Crop Icon</div>
+          <div style="color:#555;font-size:12px;letter-spacing:.5px">Drag to position · Pinch to zoom</div>
+        </div>
+        <div id="iconCropWindow" style="position:relative;width:100%;aspect-ratio:1;overflow:hidden;background:#0d0d0d;touch-action:none;display:flex;align-items:center;justify-content:center">
+          <img id="iconCropImg" style="position:absolute;touch-action:none;user-select:none;-webkit-user-select:none;pointer-events:none;display:none">
+          <div id="iconCropPlaceholder" style="display:flex;flex-direction:column;align-items:center;gap:10px;color:#3a3a3a;font-size:13px;cursor:pointer">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <span>Tap to choose photo</span>
+          </div>
+        </div>
+        <div style="padding:16px 24px 36px">
+          <input type="file" id="iconCropFileInput" accept="image/*" style="display:none">
+          <button id="iconCropPickBtn" class="capture-cancel" style="width:100%;margin-bottom:12px">Change Image</button>
+          <div class="capture-actions">
+            <button class="capture-cancel" id="iconCropCancel">Cancel</button>
+            <button class="capture-save" id="iconCropSave">Save Icon</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function openEditIconPhoto(sourceDataUrl, onSave) {
+  let mount = document.getElementById('iconCropMount');
+  if (!mount) {
+    mount = document.createElement('div');
+    mount.id = 'iconCropMount';
+    (document.getElementById('app') || document.body).appendChild(mount);
+  }
+  mount.innerHTML = editIconCropSheetHTML();
+
+  const overlay     = document.getElementById('iconCropOverlay');
+  const cropWin     = document.getElementById('iconCropWindow');
+  const cropImg     = document.getElementById('iconCropImg');
+  const placeholder = document.getElementById('iconCropPlaceholder');
+  const fileInput   = document.getElementById('iconCropFileInput');
+
+  overlay.style.display = 'flex';
+
+  function initCrop() {
+    const sz = cropWin.offsetWidth;
+    _iconCrop.cropW = sz; _iconCrop.cropH = sz;
+    _iconCrop.naturalW = cropImg.naturalWidth; _iconCrop.naturalH = cropImg.naturalHeight;
+    const min = Math.max(sz / cropImg.naturalWidth, sz / cropImg.naturalHeight);
+    _iconCrop.minScale = min; _iconCrop.scale = min;
+    _iconCrop.offsetX = 0; _iconCrop.offsetY = 0;
+    applyCrop();
+  }
+
+  function applyCrop() {
+    const { naturalW, naturalH, scale, offsetX, offsetY, cropW, cropH } = _iconCrop;
+    const dw = naturalW * scale, dh = naturalH * scale;
+    cropImg.style.width  = dw + 'px';
+    cropImg.style.height = dh + 'px';
+    cropImg.style.left   = ((cropW - dw) / 2 + offsetX) + 'px';
+    cropImg.style.top    = ((cropH - dh) / 2 + offsetY) + 'px';
+  }
+
+  function clampCrop() {
+    const { naturalW, naturalH, scale, cropW, cropH } = _iconCrop;
+    const dw = naturalW * scale, dh = naturalH * scale;
+    const maxX = Math.max(0, (dw - cropW) / 2);
+    const maxY = Math.max(0, (dh - cropH) / 2);
+    _iconCrop.offsetX = Math.max(-maxX, Math.min(maxX, _iconCrop.offsetX));
+    _iconCrop.offsetY = Math.max(-maxY, Math.min(maxY, _iconCrop.offsetY));
+  }
+
+  function exportCrop() {
+    if (cropImg.style.display === 'none') return null;
+    const { naturalW, naturalH, scale, offsetX, offsetY, cropW, cropH } = _iconCrop;
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const canvas = document.createElement('canvas');
+    canvas.width = cropW * dpr; canvas.height = cropH * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const dw = naturalW * scale, dh = naturalH * scale;
+    ctx.drawImage(cropImg, (cropW - dw) / 2 + offsetX, (cropH - dh) / 2 + offsetY, dw, dh);
+    return canvas.toDataURL('image/jpeg', 0.9);
+  }
+
+  const loadSrc = src => {
+    cropImg.src = src;
+    cropImg.style.display = 'block';
+    placeholder.style.display = 'none';
+    cropImg.onload = () => initCrop();
+  };
+
+  if (sourceDataUrl) loadSrc(sourceDataUrl);
+
+  document.getElementById('iconCropPickBtn').addEventListener('click', () => fileInput.click());
+  placeholder.addEventListener('click', () => fileInput.click());
+  placeholder.addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); fileInput.click(); });
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) { const r = new FileReader(); r.onload = ev => loadSrc(ev.target.result); r.readAsDataURL(e.target.files[0]); } });
+
+  document.getElementById('iconCropCancel').addEventListener('click', () => { overlay.style.display = 'none'; });
+
+  document.getElementById('iconCropSave').addEventListener('click', () => {
+    const dataUrl = exportCrop();
+    overlay.style.display = 'none';
+    if (dataUrl) onSave(dataUrl);
+  });
+
+  let lastTouches = null;
+  cropWin.addEventListener('touchstart', e => {
+    if (e.target.closest('#iconCropPlaceholder')) return;
+    e.preventDefault();
+    lastTouches = Array.from(e.touches);
+  }, { passive: false });
+
+  cropWin.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = Array.from(e.touches);
+    if (t.length === 1 && lastTouches?.length >= 1) {
+      _iconCrop.offsetX += t[0].clientX - lastTouches[0].clientX;
+      _iconCrop.offsetY += t[0].clientY - lastTouches[0].clientY;
+    } else if (t.length === 2 && lastTouches?.length >= 2) {
+      const prev = Math.hypot(lastTouches[1].clientX - lastTouches[0].clientX, lastTouches[1].clientY - lastTouches[0].clientY);
+      const curr = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+      _iconCrop.scale = Math.max(_iconCrop.minScale, Math.min(8, _iconCrop.scale * (curr / prev)));
+    }
+    lastTouches = t;
+    clampCrop(); applyCrop();
+  }, { passive: false });
+
+  cropWin.addEventListener('touchend', e => { lastTouches = Array.from(e.touches); });
+}
+
 /* ── Edit Photo / Crop Sheet ── */
 function editPhotoCropSheetHTML() {
   return `
@@ -1047,9 +1185,11 @@ function bindEditBrand(id) {
   };
 
   readFile('editBrandIcon', dataUrl => {
-    pendingIcon = dataUrl;
-    const circle = document.getElementById('editIconCircle');
-    if (circle) circle.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    openEditIconPhoto(dataUrl, croppedUrl => {
+      pendingIcon = croppedUrl;
+      const circle = document.getElementById('editIconCircle');
+      if (circle) circle.innerHTML = `<img src="${croppedUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    });
   });
 
   readFile('editBrandLogo', dataUrl => {
