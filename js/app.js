@@ -407,20 +407,22 @@ function pageHome() {
       <div class="home-camp-card" data-href="#/brand?id=${brand.id}">
         <div class="home-camp-banner" style="${bannerStyle(brand)}"></div>
         <div class="home-camp-body">
-          <div class="home-camp-cols">
+          <div class="home-camp-top">
             <div class="home-camp-left">
               <div class="home-camp-name">${campaign.name}</div>
               <div class="home-camp-dates">${campaign.startDate} – ${campaign.endDate}</div>
-              <div class="home-camp-upcoming-label">UPCOMING</div>
-              <div class="home-camp-upcoming-val">${upcomingVal}</div>
             </div>
             <div class="home-camp-right">
-              <div class="home-camp-pct">${pct}%</div>
-              <div class="home-camp-prog-track">
-                <div class="home-camp-prog-fill" style="width:${pct}%"></div>
-              </div>
-              <div class="home-camp-count">${postLabel}</div>
+              <div class="home-camp-next-label">NEXT UP</div>
+              <div class="home-camp-next-val">${upcomingVal}</div>
             </div>
+          </div>
+          <div class="home-camp-prog-track">
+            <div class="home-camp-prog-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="home-camp-bottom">
+            <div class="home-camp-count">${postLabel}</div>
+            <div class="home-camp-pct">${pct}%</div>
           </div>
         </div>
       </div>
