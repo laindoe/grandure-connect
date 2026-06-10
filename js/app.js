@@ -509,6 +509,7 @@ function pageHome() {
           </div>
         </div>
       </div>
+      <div class="home-banner-card"></div>
       <div class="home-brand-grid" id="homeBrandsView">${brandGrid}</div>
       <div class="home-camp-list" id="homeCampsView" style="display:none">${campViewHTML}</div>
     </div>
