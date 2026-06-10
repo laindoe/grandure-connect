@@ -725,7 +725,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .home-camp-card:active { transform: scale(0.99); }
 .home-camp-banner {
   width: 100%;
-  height: 200px;
+  aspect-ratio: 4 / 5;
 }
 .home-camp-brand-tag {
   position: absolute;
