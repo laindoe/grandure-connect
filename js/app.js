@@ -1939,22 +1939,35 @@ function bindAisha(brand, campaign, brandId, campId) {
         renderAishaChat();
         setTimeout(() => {
           _aishaGenerated = aishaGenerate(brand, campaign, _aishaAnswers);
-          const stratEl = document.getElementById('campStrategyText');
+          const a = _aishaAnswers;
+          const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+
+          // Populate Campaign Overview from wizard answers
+          setVal('ov_objective', a.goal);
+          setVal('ov_audience',  a.audience);
+          setVal('ov_message',   a.message);
+          setVal('ov_platforms', a.platforms);
+          setVal('ov_cta',       a.cta);
+          setVal('ov_timeline',  a.milestones !== 'Skip for now' ? a.milestones : '');
+
           const infoBody = document.getElementById('campInfoBody');
           const infoChev = document.getElementById('campInfoChevron');
-          if (stratEl) stratEl.value = _aishaGenerated.strategy;
           if (infoBody) infoBody.style.display = 'block';
           if (infoChev) infoChev.style.transform = 'rotate(180deg)';
-          _aishaMessages.push({ role: 'aisha', text: `I've drafted your campaign overview for ${campaign.name} — it's open below. Review and edit it, then hit Save.\n\nNow let me build out your content plan…` });
+
+          _aishaMessages.push({ role: 'aisha', text: `I've filled in your Campaign Overview for ${campaign.name} — it's open below the hero card. Review and edit, then hit Save.\n\nNow building your Content Plan…` });
           renderAishaChat();
           setTimeout(() => {
-            const planEl = document.getElementById('campPlanText');
+            // Populate Content Plan from wizard answers
+            setVal('cp_formats', a.content);
+            setVal('cp_mix', '40% Educational / value-driven\n30% Storytelling / behind the scenes\n20% Community engagement\n10% Promotional / offer-forward');
+
             const planBody = document.getElementById('campPlanBody');
             const planChev = document.getElementById('campPlanChevron');
-            if (planEl) planEl.value = _aishaGenerated.contentPlan;
             if (planBody) planBody.style.display = 'block';
             if (planChev) planChev.style.transform = 'rotate(180deg)';
-            _aishaMessages.push({ role: 'aisha', text: `Your content plan is ready too — open below. Edit anything you like and Save both sections. ✦` });
+
+            _aishaMessages.push({ role: 'aisha', text: `Content Plan is ready too — open below. Fill in Pillars and Cadence, then Save both sections. ✦` });
             renderAishaChat();
           }, 1200);
         }, 1000);
@@ -2007,41 +2020,18 @@ function bindAisha(brand, campaign, brandId, campId) {
    CAMPAIGN PAGE: NAV HTML
 ═══════════════════════════════════════ */
 function campaignNavHTML(brandId, campId) {
+  const docSVG    = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>`;
+  const ideaSVG   = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 01-1 1H9a1 1 0 01-1-1v-2.26A7.003 7.003 0 0112 2z"/></svg>`;
+  const aishaSVG  = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>`;
+  const visualSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
+  const calSVG    = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
   return `
     <nav class="bottom-nav">
-      <button class="nav-btn" id="campNavHome" data-href="#/">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1v-9.5z"/>
-          <path d="M9 21v-9h6v9"/>
-        </svg>
-      </button>
-      <button class="nav-btn" id="campNavVault" data-href="#/vault?id=${brandId}">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="9"/>
-          <path d="M12 8v4l2 2"/>
-        </svg>
-      </button>
-      <button class="nav-btn nav-btn-center" id="campNavCapture">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M13 2L4 13h7l-1 9 10-12h-7z"/>
-        </svg>
-      </button>
-      <button class="nav-btn" id="campNavVisual" data-href="#/brand?id=${brandId}">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-        </svg>
-      </button>
-      <button class="nav-btn" id="campNavCal">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2"/>
-          <line x1="16" y1="2" x2="16" y2="6"/>
-          <line x1="8" y1="2" x2="8" y2="6"/>
-          <line x1="3" y1="10" x2="21" y2="10"/>
-        </svg>
-      </button>
+      <button class="nav-btn nav-active" id="campNavDoc">${docSVG}</button>
+      <button class="nav-btn" id="campNavIdeas">${ideaSVG}</button>
+      <button class="nav-btn nav-btn-center" id="campNavAisha">${aishaSVG}</button>
+      <button class="nav-btn" id="campNavVisual">${visualSVG}</button>
+      <button class="nav-btn" id="campNavCal">${calSVG}</button>
     </nav>
   `;
 }
@@ -2055,21 +2045,28 @@ function pageCampaign(brandId, campId) {
   const campaign = (brand.campaigns || []).find(c => c.id === campId);
   if (!campaign) return pageHome();
 
-  // Stage index: default from campaign.stage; if not set, derive from status
+  // Stage
   let stageIndex = campaign.stage != null ? campaign.stage : (
-    campaign.status === 'active' ? 2 :
-    campaign.status === 'upcoming' ? 1 : 0
+    campaign.status === 'active' ? 2 : campaign.status === 'upcoming' ? 1 : 0
   );
-
   const stages = ['Ideation', 'Planning Phase', 'Production', 'Distribution'];
-
-  // Stage tracker HTML: bold segmented pill
   const stageTrackerHTML = stages.map((label, i) => {
     let cls = 'camp-stage-seg';
     if (i < stageIndex) cls += ' completed';
     else if (i === stageIndex) cls += ' current';
     return `<div class="${cls}" data-stage="${i}">${label}</div>`;
   }).join('');
+
+  // Progress data
+  const isCurrentPhase = campaign.status === 'active' && campaign.name === brand.currentPhase?.name;
+  const pct = campaign.progress != null ? campaign.progress : (isCurrentPhase ? brand.currentPhase?.progress || 0 : 0);
+  const postsCompleted = isCurrentPhase ? brand.currentPhase?.postsCompleted || 0 : 0;
+  const totalPosts     = isCurrentPhase ? brand.currentPhase?.totalPosts || 0 : 0;
+  const postLabel = totalPosts > 0 ? `${postsCompleted} / ${totalPosts} posts` : '0 posts';
+  const upcomingVal = campaign.status === 'active'
+    ? (brand.board?.ready?.[0]?.title || brand.board?.drafting?.[0]?.title || '—')
+    : `Starts ${campaign.startDate}`;
+  const stageName = stages[stageIndex] || 'Ideation';
 
   // Brand icon
   const iconContent = brand.icon
@@ -2080,12 +2077,35 @@ function pageCampaign(brandId, campId) {
       ? 'background:rgba(255,255,255,0.15)'
       : `background:${brand.banner}`);
 
-  // Content plan
-  const contentPlanText = campaign.contentPlan || '';
+  // Analytics bar
+  const MOCK_ANALYTICS = {
+    instagram: { count: '2.8K', delta: +127, metric: 'followers' },
+    youtube:   { count: '1.2K', delta: +89,  metric: 'subscribers' },
+    tiktok:    { count: '8.9K', delta: -12,  metric: 'followers' },
+    threads:   { count: '456',  delta: +67,  metric: 'followers' },
+    twitter:   { count: '1.1K', delta: +34,  metric: 'followers' },
+    email:     { count: '892',  delta: +45,  metric: 'subscribers' },
+    linkedin:  { count: '234',  delta: +11,  metric: 'connections' },
+    patreon:   { count: '78',   delta: +3,   metric: 'patrons' },
+  };
+  const PLATFORM_ABBR = { instagram:'IG', youtube:'YT', tiktok:'TK', threads:'TH', twitter:'X', email:'EM', linkedin:'LI', patreon:'PT' };
+  const activePlatforms = Object.keys(brand.platformStrategy || {});
+  const analyticsItemsHTML = activePlatforms.length ? activePlatforms.map(p => {
+    const m = MOCK_ANALYTICS[p] || { count:'—', delta:0, metric:'followers' };
+    const sign = m.delta > 0 ? '+' : '';
+    const cls  = m.delta > 0 ? 'pos' : m.delta < 0 ? 'neg' : '';
+    return `
+      <div class="camp-analytics-item">
+        <div class="camp-analytics-badge">${PLATFORM_ABBR[p] || p.slice(0,2).toUpperCase()}</div>
+        <div class="camp-analytics-count">${m.count}</div>
+        <div class="camp-analytics-delta ${cls}">${sign}${m.delta}</div>
+        <div class="camp-analytics-metric">${m.metric}</div>
+      </div>`;
+  }).join('') : `<div style="color:#333;font-size:12px">Set platforms in Brand settings</div>`;
 
-  // Brand overview data
+  // Brand overview for snapshot
   const ov = brand.overview || {};
-  const pillarsHTML = (ov.contentPillars || []).map(p => `<span style="display:inline-block;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 10px;font-size:11px;color:#aaa;margin:3px 3px 3px 0">${p}</span>`).join('');
+  const pillarsHTML = (ov.contentPillars || []).map(p => `<span class="notion-pillar">${p}</span>`).join('');
 
   return `
     <div class="page" style="padding-bottom:110px">
@@ -2102,70 +2122,153 @@ function pageCampaign(brandId, campId) {
 
       <div style="padding:0 16px">
 
-        <!-- Campaign detail banner (separate from home card image) -->
-        <div class="camp-detail-banner" style="${campaign.detailBanner ? (campaign.detailBanner.startsWith('data:') || campaign.detailBanner.startsWith('http') ? `background:url('${campaign.detailBanner}') center/cover no-repeat` : `background:${campaign.detailBanner}`) : (brand.banner && (brand.banner.startsWith('data:') || brand.banner.startsWith('http')) ? `background:url('${brand.banner}') center/cover no-repeat` : `background:${brand.banner || 'rgba(255,255,255,0.04)'}`)}"></div>
+        <!-- Campaign hero card -->
+        <div class="camp-hero-card">
+          <div class="camp-hero-top">
+            <div class="camp-hero-stage-pill">${stageName.toUpperCase()}</div>
+            <div class="camp-hero-dates">${campaign.startDate} – ${campaign.endDate}</div>
+          </div>
+          <div class="camp-hero-name">${campaign.name}</div>
+          <div class="camp-hero-prog-track">
+            <div class="camp-hero-prog-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="camp-hero-foot">
+            <div class="camp-hero-next">
+              <div class="camp-hero-next-label">NEXT UP</div>
+              <div class="camp-hero-next-val">${upcomingVal}</div>
+            </div>
+            <div class="camp-hero-right">
+              <div class="camp-hero-posts">${postLabel}</div>
+              <div class="camp-hero-pct">${pct}%</div>
+            </div>
+          </div>
+        </div>
 
         <!-- Stage tracker -->
         <div class="camp-stage-tracker" id="campStageTracker">
           ${stageTrackerHTML}
         </div>
 
-        <!-- Ask Aisha -->
-        ${aishaBlockHTML()}
+        <!-- Analytics bar -->
+        <div class="camp-analytics">
+          <div class="camp-analytics-header">
+            <span class="camp-analytics-title">ANALYTICS</span>
+            <span class="camp-analytics-live">● Live</span>
+          </div>
+          <div class="camp-analytics-row">${analyticsItemsHTML}</div>
+        </div>
 
-        <!-- CAMPAIGN dropdown -->
+        <!-- CAMPAIGN OVERVIEW (Notion doc) -->
         <div class="section-card dd-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
           <div class="section-card-header" id="campInfoToggle" style="display:flex;align-items:center;gap:8px">
-            <div class="section-card-title" style="flex:1">CAMPAIGN</div>
+            <div class="section-card-title" style="flex:1">CAMPAIGN OVERVIEW</div>
             <svg class="dd-chevron" id="campInfoChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div style="margin-top:4px">
-            <div class="body-text">${campaign.name}</div>
-            <div class="body-text" style="font-size:12px;color:#555;margin-top:2px">${campaign.startDate} – ${campaign.endDate}</div>
-          </div>
-          <div class="dd-body" id="campInfoBody" style="display:none;padding-top:14px">
-            <div class="camp-field-label">NAME</div>
-            <input class="camp-field-input" id="campEditName" value="${campaign.name}" style="margin-bottom:12px">
-            <div class="camp-field-label">START DATE</div>
-            <input class="camp-field-input" id="campEditStart" value="${campaign.startDate}" style="margin-bottom:12px">
-            <div class="camp-field-label">END DATE</div>
-            <input class="camp-field-input" id="campEditEnd" value="${campaign.endDate}" style="margin-bottom:12px">
-            <div class="camp-field-label">STATUS</div>
-            <input class="camp-field-input" id="campEditStatus" value="${campaign.status}" style="margin-bottom:12px">
-            <div class="camp-field-label">OVERVIEW</div>
-            <textarea class="camp-field-input" id="campStrategyText" rows="7" style="resize:vertical;margin-bottom:16px">${campaign.strategy || ''}</textarea>
-            <button class="camp-save-btn" id="campInfoSave">Save</button>
+          <div class="dd-body" id="campInfoBody" style="display:none;padding-top:16px">
+            <div class="notion-field">
+              <div class="notion-label">CAMPAIGN NAME</div>
+              <input class="notion-input" id="campEditName" value="${campaign.name}" placeholder="Campaign name">
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">DATES</div>
+              <div style="display:flex;gap:10px">
+                <input class="notion-input" id="campEditStart" value="${campaign.startDate}" placeholder="Start" style="flex:1">
+                <input class="notion-input" id="campEditEnd" value="${campaign.endDate}" placeholder="End" style="flex:1">
+              </div>
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">OBJECTIVE</div>
+              <textarea class="notion-textarea" id="ov_objective" placeholder="What's the goal of this campaign?">${campaign.ov_objective || ''}</textarea>
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">TARGET AUDIENCE</div>
+              <textarea class="notion-textarea" id="ov_audience" placeholder="Who are we speaking to?">${campaign.ov_audience || ''}</textarea>
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">CORE MESSAGE</div>
+              <textarea class="notion-textarea" id="ov_message" placeholder="Main theme or hook">${campaign.ov_message || ''}</textarea>
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">PLATFORMS</div>
+              <input class="notion-input" id="ov_platforms" value="${campaign.ov_platforms || ''}" placeholder="Instagram, TikTok, Email…">
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">CALL TO ACTION</div>
+              <input class="notion-input" id="ov_cta" value="${campaign.ov_cta || ''}" placeholder="What do you want people to do?">
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">TIMELINE & MILESTONES</div>
+              <textarea class="notion-textarea" id="ov_timeline" placeholder="Key dates, launch moments, deadlines">${campaign.ov_timeline || ''}</textarea>
+            </div>
+            <div class="notion-field" style="margin-bottom:20px">
+              <div class="notion-label">NOTES</div>
+              <textarea class="notion-textarea" id="ov_notes" placeholder="Anything else…">${campaign.ov_notes || ''}</textarea>
+            </div>
+            <button class="camp-save-btn" id="campInfoSave">Save Overview</button>
           </div>
         </div>
 
-        <!-- CONTENT PLAN dropdown -->
+        <!-- CONTENT PLAN (Notion doc) -->
         <div class="section-card dd-card" id="campPlanCard" style="cursor:pointer;margin-bottom:10px">
           <div class="section-card-header" id="campPlanToggle" style="display:flex;align-items:center;gap:8px">
             <div class="section-card-title" style="flex:1">CONTENT PLAN</div>
             <svg class="dd-chevron" id="campPlanChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="dd-body" id="campPlanBody" style="display:none;padding-top:14px">
-            <textarea class="camp-field-input" id="campPlanText" rows="8" style="resize:vertical;margin-bottom:16px">${contentPlanText}</textarea>
-            <button class="camp-save-btn" id="campPlanSave">Save</button>
+          <div class="dd-body" id="campPlanBody" style="display:none;padding-top:16px">
+            <div class="notion-field">
+              <div class="notion-label">CONTENT FORMATS</div>
+              <input class="notion-input" id="cp_formats" value="${campaign.cp_formats || ''}" placeholder="Reels, Carousels, Stories, Email…">
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">POSTING CADENCE</div>
+              <textarea class="notion-textarea" id="cp_cadence" placeholder="How often, which days, which platforms">${campaign.cp_cadence || ''}</textarea>
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">CONTENT PILLARS</div>
+              <textarea class="notion-textarea" id="cp_pillars" placeholder="Main themes to hit across this campaign">${campaign.cp_pillars || ''}</textarea>
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">CONTENT MIX</div>
+              <textarea class="notion-textarea" id="cp_mix" placeholder="% breakdown — educational, storytelling, promotional…">${campaign.cp_mix || ''}</textarea>
+            </div>
+            <div class="notion-field">
+              <div class="notion-label">REPURPOSING STRATEGY</div>
+              <textarea class="notion-textarea" id="cp_repurposing" placeholder="How will content be reused across formats/platforms">${campaign.cp_repurposing || ''}</textarea>
+            </div>
+            <div class="notion-field" style="margin-bottom:20px">
+              <div class="notion-label">NOTES</div>
+              <textarea class="notion-textarea" id="cp_notes" placeholder="Anything else…">${campaign.cp_notes || ''}</textarea>
+            </div>
+            <button class="camp-save-btn" id="campPlanSave">Save Content Plan</button>
           </div>
         </div>
 
-        <!-- BRAND SNAPSHOT dropdown -->
+        <!-- BRAND SNAPSHOT -->
         <div class="section-card dd-card" id="campSnapCard" style="cursor:pointer;margin-bottom:10px">
           <div class="section-card-header" id="campSnapToggle" style="display:flex;align-items:center;gap:8px">
             <div class="section-card-title" style="flex:1">BRAND SNAPSHOT</div>
             <svg class="dd-chevron" id="campSnapChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-body" id="campSnapBody" style="display:none;padding-top:14px">
-            ${ov.mission ? `<div class="camp-field-label">MISSION</div><div class="body-text" style="margin-bottom:12px">${ov.mission}</div>` : ''}
-            ${ov.audience ? `<div class="camp-field-label">AUDIENCE</div><div class="body-text" style="margin-bottom:12px">${ov.audience}</div>` : ''}
-            ${(ov.contentPillars || []).length ? `<div class="camp-field-label">CONTENT PILLARS</div><div style="margin-bottom:12px">${pillarsHTML}</div>` : ''}
-            ${ov.brandVoice ? `<div class="camp-field-label">BRAND VOICE</div><div class="body-text">${ov.brandVoice}</div>` : ''}
+            ${ov.mission ? `<div class="notion-label" style="margin-bottom:6px">MISSION</div><div class="body-text" style="margin-bottom:16px">${ov.mission}</div>` : ''}
+            ${ov.audience ? `<div class="notion-label" style="margin-bottom:6px">AUDIENCE</div><div class="body-text" style="margin-bottom:16px">${ov.audience}</div>` : ''}
+            ${(ov.contentPillars || []).length ? `<div class="notion-label" style="margin-bottom:8px">CONTENT PILLARS</div><div style="margin-bottom:16px">${pillarsHTML}</div>` : ''}
+            ${ov.brandVoice ? `<div class="notion-label" style="margin-bottom:6px">BRAND VOICE</div><div class="body-text">${ov.brandVoice}</div>` : ''}
           </div>
         </div>
 
       </div>
     </div>
+
+    <!-- Aisha sheet (opened from centre nav) -->
+    <div class="aisha-sheet" id="aishaSheet" style="display:none">
+      <div class="aisha-sheet-bg" id="aishaSheetBg"></div>
+      <div class="aisha-sheet-panel">
+        <div class="aisha-sheet-bar"></div>
+        ${aishaBlockHTML()}
+      </div>
+    </div>
+
     ${captureModalHTML()}
     ${campaignNavHTML(brandId, campId)}
   `;
@@ -2180,14 +2283,23 @@ function bindCampaignPage(brandId, campId) {
   const campaign = (brand.campaigns || []).find(c => c.id === campId);
   if (!campaign) return;
 
-  // Nav buttons
-  document.getElementById('campNavHome')?.addEventListener('click', () => navigate('#/'));
-  document.getElementById('campNavVault')?.addEventListener('click', () => navigate(`#/vault?id=${brandId}`));
+  const getVal = id => document.getElementById(id)?.value || '';
+
+  // Nav tabs
+  document.getElementById('campNavDoc')?.addEventListener('click', () => {
+    document.querySelector('.page')?.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  document.getElementById('campNavIdeas')?.addEventListener('click', () => navigate(`#/vault?id=${brandId}`));
   document.getElementById('campNavVisual')?.addEventListener('click', () => navigate(`#/brand?id=${brandId}`));
-  document.getElementById('campNavCal')?.addEventListener('click', () => {}); // no-op
-  document.getElementById('campNavCapture')?.addEventListener('click', () => {
-    const overlay = document.getElementById('captureOverlay');
-    if (overlay) overlay.style.display = 'flex';
+  document.getElementById('campNavCal')?.addEventListener('click', () => {}); // future
+
+  // Aisha sheet open/close
+  const aishaSheet = document.getElementById('aishaSheet');
+  document.getElementById('campNavAisha')?.addEventListener('click', () => {
+    if (aishaSheet) aishaSheet.style.display = 'flex';
+  });
+  document.getElementById('aishaSheetBg')?.addEventListener('click', () => {
+    if (aishaSheet) aishaSheet.style.display = 'none';
   });
 
   // Stage tracker
@@ -2203,12 +2315,12 @@ function bindCampaignPage(brandId, campId) {
     });
   });
 
-  // Ask Aisha
+  // Bind Aisha
   bindAisha(brand, campaign, brandId, campId);
 
-  // CAMPAIGN dropdown toggle (header only, not AI button)
-  const campInfoToggle = document.getElementById('campInfoToggle');
-  const campInfoBody = document.getElementById('campInfoBody');
+  // CAMPAIGN OVERVIEW toggle
+  const campInfoToggle  = document.getElementById('campInfoToggle');
+  const campInfoBody    = document.getElementById('campInfoBody');
   const campInfoChevron = document.getElementById('campInfoChevron');
   campInfoToggle?.addEventListener('click', () => {
     const open = campInfoBody.style.display === 'none';
@@ -2216,27 +2328,32 @@ function bindCampaignPage(brandId, campId) {
     campInfoChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
   });
 
-  // CAMPAIGN Save
+  // CAMPAIGN OVERVIEW Save
   document.getElementById('campInfoSave')?.addEventListener('click', () => {
-    const name     = document.getElementById('campEditName')?.value.trim() || campaign.name;
-    const start    = document.getElementById('campEditStart')?.value.trim() || campaign.startDate;
-    const end      = document.getElementById('campEditEnd')?.value.trim() || campaign.endDate;
-    const status   = document.getElementById('campEditStatus')?.value.trim() || campaign.status;
-    const strategy = document.getElementById('campStrategyText')?.value || '';
     const updatedCampaigns = brand.campaigns.map(c =>
-      c.id === campId ? { ...c, name, startDate: start, endDate: end, status, strategy } : c
+      c.id === campId ? { ...c,
+        name: getVal('campEditName') || c.name,
+        startDate: getVal('campEditStart') || c.startDate,
+        endDate: getVal('campEditEnd') || c.endDate,
+        ov_objective: getVal('ov_objective'),
+        ov_audience:  getVal('ov_audience'),
+        ov_message:   getVal('ov_message'),
+        ov_platforms: getVal('ov_platforms'),
+        ov_cta:       getVal('ov_cta'),
+        ov_timeline:  getVal('ov_timeline'),
+        ov_notes:     getVal('ov_notes'),
+      } : c
     );
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
     document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
     bindCampaignPage(brandId, campId);
   });
 
-  // CONTENT PLAN dropdown toggle
-  const campPlanToggle = document.getElementById('campPlanToggle');
-  const campPlanBody = document.getElementById('campPlanBody');
+  // CONTENT PLAN toggle
+  const campPlanToggle  = document.getElementById('campPlanToggle');
+  const campPlanBody    = document.getElementById('campPlanBody');
   const campPlanChevron = document.getElementById('campPlanChevron');
-  campPlanToggle?.addEventListener('click', e => {
-    if (e.target.closest('#planAiBtn')) return;
+  campPlanToggle?.addEventListener('click', () => {
     const open = campPlanBody.style.display === 'none';
     campPlanBody.style.display = open ? 'block' : 'none';
     campPlanChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
@@ -2244,19 +2361,25 @@ function bindCampaignPage(brandId, campId) {
 
   // CONTENT PLAN Save
   document.getElementById('campPlanSave')?.addEventListener('click', () => {
-    const planText = document.getElementById('campPlanText')?.value || '';
     const updatedCampaigns = brand.campaigns.map(c =>
-      c.id === campId ? { ...c, contentPlan: planText } : c
+      c.id === campId ? { ...c,
+        cp_formats:     getVal('cp_formats'),
+        cp_cadence:     getVal('cp_cadence'),
+        cp_pillars:     getVal('cp_pillars'),
+        cp_mix:         getVal('cp_mix'),
+        cp_repurposing: getVal('cp_repurposing'),
+        cp_notes:       getVal('cp_notes'),
+        contentPlan:    [getVal('cp_formats'), getVal('cp_cadence'), getVal('cp_pillars')].filter(Boolean).join('\n\n'),
+      } : c
     );
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
-    // Update in-memory reference
     const fresh = (getBrand(brandId)?.campaigns || []).find(c => c.id === campId);
-    if (fresh) fresh.contentPlan = planText;
+    if (fresh) Object.assign(fresh, updatedCampaigns.find(c => c.id === campId) || {});
   });
 
-  // BRAND SNAPSHOT dropdown toggle
-  const campSnapToggle = document.getElementById('campSnapToggle');
-  const campSnapBody = document.getElementById('campSnapBody');
+  // BRAND SNAPSHOT toggle
+  const campSnapToggle  = document.getElementById('campSnapToggle');
+  const campSnapBody    = document.getElementById('campSnapBody');
   const campSnapChevron = document.getElementById('campSnapChevron');
   campSnapToggle?.addEventListener('click', () => {
     const open = campSnapBody.style.display === 'none';
@@ -2264,7 +2387,6 @@ function bindCampaignPage(brandId, campId) {
     campSnapChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
   });
 
-  // Bind capture modal
   bindCapture();
 }
 

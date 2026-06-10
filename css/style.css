@@ -994,3 +994,49 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-field-label { color:#3a3a3a;font-size:9px;font-weight:700;letter-spacing:1.5px;margin-bottom:5px; }
 .camp-field-input { width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none; }
 .camp-save-btn { background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:13px;color:#fff;font-size:14px;font-weight:600;width:100%; }
+
+/* Campaign hero card */
+.camp-hero-card { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:18px 18px 16px;margin-bottom:12px; }
+.camp-hero-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px; }
+.camp-hero-stage-pill { background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.14);border-radius:20px;padding:4px 10px;font-size:9px;font-weight:700;letter-spacing:1.2px;color:#fff; }
+.camp-hero-dates { font-size:11px;color:#555; }
+.camp-hero-name { font-size:22px;font-weight:700;color:#fff;margin-bottom:16px;line-height:1.2; }
+.camp-hero-prog-track { height:4px;border-radius:100px;background:rgba(255,255,255,0.08);overflow:hidden;margin-bottom:14px; }
+.camp-hero-prog-fill { height:100%;border-radius:100px;background:rgba(255,255,255,0.45);transition:width .4s; }
+.camp-hero-foot { display:flex;align-items:flex-end;justify-content:space-between; }
+.camp-hero-next { display:flex;flex-direction:column;gap:3px; }
+.camp-hero-next-label { font-size:8px;font-weight:700;letter-spacing:1.2px;color:#3a3a3a; }
+.camp-hero-next-val { font-size:13px;color:#ccc;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.camp-hero-right { display:flex;flex-direction:column;align-items:flex-end;gap:2px; }
+.camp-hero-posts { font-size:11px;color:#444; }
+.camp-hero-pct { font-size:18px;font-weight:700;color:#fff; }
+
+/* Analytics bar */
+.camp-analytics { margin-bottom:12px; }
+.camp-analytics-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
+.camp-analytics-title { font-size:9px;font-weight:700;letter-spacing:1.4px;color:#3a3a3a; }
+.camp-analytics-live { font-size:9px;color:#2a8a4a;font-weight:700;letter-spacing:.4px; }
+.camp-analytics-row { display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none; }
+.camp-analytics-row::-webkit-scrollbar { display:none; }
+.camp-analytics-item { flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:10px 12px;min-width:58px; }
+.camp-analytics-badge { font-size:8px;font-weight:800;letter-spacing:.8px;color:#666;background:rgba(255,255,255,0.06);border-radius:6px;padding:2px 5px; }
+.camp-analytics-count { font-size:14px;font-weight:700;color:#fff; }
+.camp-analytics-delta { font-size:10px;font-weight:700; }
+.camp-analytics-delta.pos { color:#2a8a4a; }
+.camp-analytics-delta.neg { color:#a02020; }
+.camp-analytics-metric { font-size:8px;color:#444;text-align:center; }
+
+/* Notion-style doc fields */
+.notion-field { margin-bottom:16px; }
+.notion-label { font-size:9px;font-weight:700;letter-spacing:1.4px;color:#3a3a3a;margin-bottom:6px; }
+.notion-input { width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.07);padding:6px 0;color:#fff;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box; }
+.notion-input:focus { border-bottom-color:rgba(255,255,255,0.22); }
+.notion-textarea { width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.07);padding:6px 0;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:none;min-height:52px;line-height:1.55;box-sizing:border-box; }
+.notion-textarea:focus { border-bottom-color:rgba(255,255,255,0.22); }
+.notion-pillar { display:inline-block;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:5px 12px;font-size:11px;color:#bbb;margin:3px 4px 3px 0; }
+
+/* Aisha slide-up sheet */
+.aisha-sheet { position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;justify-content:flex-end; }
+.aisha-sheet-bg { position:absolute;inset:0;background:rgba(0,0,0,0.65); }
+.aisha-sheet-panel { position:relative;background:#0e0e0e;border-radius:24px 24px 0 0;max-height:82dvh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,0); }
+.aisha-sheet-bar { width:40px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:12px auto 6px; }
