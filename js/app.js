@@ -403,11 +403,24 @@ function pageHome() {
     const upcomingVal = campaign.status === 'active'
       ? (brand.board.ready[0]?.title || brand.board.drafting[0]?.title || '—')
       : `Starts ${campaign.startDate}`;
+    const cb = campaign.banner;
+    const campBannerStyle = cb
+      ? (cb.startsWith('data:') || cb.startsWith('http') ? `background:url('${cb}') center/cover no-repeat` : `background:${cb}`)
+      : bannerStyle(brand);
+    const dotBg = brand.banner.startsWith('data:') || brand.banner.startsWith('http')
+      ? 'background:rgba(255,255,255,0.5)'
+      : `background:${brand.banner}`;
     return `
       <div class="swipe-wrap" data-camp-id="${campaign.id}" data-brand-id="${brand.id}">
         <div class="swipe-row">
           <div class="home-camp-card" data-href="#/brand?id=${brand.id}">
-            <div class="home-camp-banner" style="${bannerStyle(brand)}"></div>
+            <div style="position:relative">
+              <div class="home-camp-banner" style="${campBannerStyle}"></div>
+              <div class="home-camp-brand-tag">
+                <div class="home-camp-brand-dot" style="${dotBg}"></div>
+                <span class="home-camp-brand-name">${brand.name}</span>
+              </div>
+            </div>
             <div class="home-camp-body">
               <div class="home-camp-top">
                 <div class="home-camp-left">
@@ -572,7 +585,7 @@ function bindCampSwipe() {
     });
 
     wrap.querySelector('.card-action-edit').addEventListener('click', () => {
-      navigate(`/brand?id=${brandId}`);
+      openEditCampaignPhoto(brandId, campId);
     });
 
     wrap.querySelector('.card-action-delete').addEventListener('click', () => {
@@ -586,6 +599,80 @@ function bindCampSwipe() {
       bindHomeDock(); bindCapture(); bindNav(); bindAddBrand();
     });
   });
+}
+
+function openEditCampaignPhoto(brandId, campId) {
+  const mount = document.getElementById('editPhotoMount');
+  if (!mount) return;
+  mount.innerHTML = editPhotoCropSheetHTML();
+
+  const overlay     = document.getElementById('editPhotoOverlay');
+  const cropWin     = document.getElementById('cropWindow');
+  const cropImg     = document.getElementById('cropImg');
+  const placeholder = document.getElementById('cropPlaceholder');
+  const fileInput   = document.getElementById('cropFileInput');
+
+  overlay.style.display = 'flex';
+  _cropState.brandId = brandId;
+
+  const brand    = getBrand(brandId);
+  const campaign = brand?.campaigns.find(c => c.id === campId);
+  if (campaign?.banner && (campaign.banner.startsWith('data:') || campaign.banner.startsWith('http'))) {
+    cropImg.src = campaign.banner;
+    cropImg.style.display = 'block';
+    placeholder.style.display = 'none';
+    const setup = () => _initCrop(cropWin.offsetWidth, cropWin.offsetHeight);
+    cropImg.complete ? setup() : (cropImg.onload = setup);
+  }
+
+  const loadFile = file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      cropImg.src = ev.target.result;
+      cropImg.style.display = 'block';
+      placeholder.style.display = 'none';
+      cropImg.onload = () => _initCrop(cropWin.offsetWidth, cropWin.offsetHeight);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  document.getElementById('cropPickBtn').addEventListener('click', () => fileInput.click());
+  placeholder.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+  document.getElementById('editPhotoCancel').addEventListener('click', () => { overlay.style.display = 'none'; });
+
+  document.getElementById('editPhotoSave').addEventListener('click', () => {
+    const dataUrl = _exportCrop();
+    if (dataUrl && brand) {
+      const campaigns = brand.campaigns.map(c => c.id === campId ? { ...c, banner: dataUrl } : c);
+      saveBrandOverride(brandId, { campaigns });
+      document.getElementById('app').innerHTML = pageHome();
+      bindHomeDock(); bindCapture(); bindNav(); bindAddBrand();
+    } else {
+      overlay.style.display = 'none';
+    }
+  });
+
+  let lastTouches = null;
+  cropWin.addEventListener('touchstart', e => {
+    e.preventDefault();
+    lastTouches = Array.from(e.touches);
+  }, { passive: false });
+  cropWin.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = Array.from(e.touches);
+    if (t.length === 1 && lastTouches?.length >= 1) {
+      _cropState.offsetX += t[0].clientX - lastTouches[0].clientX;
+      _cropState.offsetY += t[0].clientY - lastTouches[0].clientY;
+    } else if (t.length === 2 && lastTouches?.length >= 2) {
+      const prev = Math.hypot(lastTouches[1].clientX - lastTouches[0].clientX, lastTouches[1].clientY - lastTouches[0].clientY);
+      const curr = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+      _cropState.scale = Math.max(_cropState.minScale, Math.min(8, _cropState.scale * (curr / prev)));
+    }
+    lastTouches = t;
+    _clampCrop(); _applyCrop();
+  }, { passive: false });
+  cropWin.addEventListener('touchend', e => { lastTouches = Array.from(e.touches); });
 }
 
 /* ── Edit Photo / Crop Sheet ── */
