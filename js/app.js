@@ -480,7 +480,7 @@ function bindHomeDock() {
 
   function showView(v) {
     _homeView = v;
-    if (brandsView) brandsView.style.display = v === 'brands' ? 'block' : 'none';
+    if (brandsView) brandsView.style.display = v === 'brands' ? 'grid' : 'none';
     if (campsView)  campsView.style.display  = v === 'campaigns' ? 'block' : 'none';
     dockBrands?.classList.toggle('nav-active', v === 'brands');
     dockCamps?.classList.toggle('nav-active', v === 'campaigns');
