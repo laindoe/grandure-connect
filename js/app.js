@@ -239,70 +239,153 @@ let _iconCrop = { naturalW:0, naturalH:0, scale:1, minScale:1, offsetX:0, offset
 /* ═══════════════════════════════════════
    SETTINGS MODAL
 ═══════════════════════════════════════ */
+const SETTINGS_PLATFORMS = [
+  { id: 'instagram', label: 'Instagram' },
+  { id: 'tiktok',    label: 'TikTok'    },
+  { id: 'youtube',   label: 'YouTube'   },
+  { id: 'threads',   label: 'Threads'   },
+  { id: 'twitter',   label: 'Twitter / X' },
+  { id: 'email',     label: 'Email Newsletter' },
+  { id: 'linkedin',  label: 'LinkedIn'  },
+  { id: 'patreon',   label: 'Patreon'   },
+];
+
 function openSettings() {
+  // Re-use existing overlay if already mounted
   let overlay = document.getElementById('settingsOverlay');
-  if (!overlay) {
-    const el = document.createElement('div');
-    el.innerHTML = `
-      <div class="settings-overlay" id="settingsOverlay">
-        <div class="settings-modal">
-          <div class="settings-modal-header">
-            <div class="settings-modal-title">Settings</div>
-            <button class="settings-modal-close" id="settingsClose">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
+  if (overlay) { overlay.style.display = 'flex'; _populateSettings(); return; }
 
-          <div class="settings-section">
-            <div class="settings-section-label">DATA</div>
-            <button class="settings-row" id="settingsExport">
-              <span>Export All Data</span><span class="settings-row-arrow">›</span>
-            </button>
-            <button class="settings-row settings-row-danger" id="settingsClearData">
-              <span>Clear All Data</span><span class="settings-row-arrow">›</span>
-            </button>
-          </div>
+  const savedLinks  = JSON.parse(localStorage.getItem('gc_social_links') || '{}');
+  const savedBanner = localStorage.getItem('gc_profile_banner') || '';
 
-          <div class="settings-section">
-            <div class="settings-section-label">ABOUT</div>
-            <div class="settings-row" style="cursor:default">
-              <span>Grandure Connect</span><span class="settings-row-val">v2.0</span>
-            </div>
+  const socialRows = SETTINGS_PLATFORMS.map(p => `
+    <div class="settings-social-row">
+      <label class="settings-social-label">${p.label}</label>
+      <input class="settings-social-input" data-platform="${p.id}" placeholder="handle or URL" value="${savedLinks[p.id] || ''}">
+    </div>`).join('');
+
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <div class="settings-overlay" id="settingsOverlay">
+      <div class="settings-modal">
+
+        <div class="settings-modal-header">
+          <div class="settings-modal-title">Settings</div>
+          <button class="settings-modal-close" id="settingsClose">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-label">BANNER IMAGE</div>
+          <div class="settings-banner-area" id="settingsBannerArea" style="${savedBanner ? `background-image:url(${savedBanner})` : ''}">
+            ${savedBanner ? '' : '<div class="settings-banner-placeholder">Tap to add banner photo</div>'}
+          </div>
+          <input type="file" id="settingsBannerInput" accept="image/*" style="display:none">
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-label">SOCIAL MEDIA</div>
+          ${socialRows}
+          <button class="settings-save-btn" id="settingsSaveSocial">Save</button>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-label">DATA</div>
+          <button class="settings-row" id="settingsExport">
+            <span>Export All Data</span><span class="settings-row-arrow">›</span>
+          </button>
+          <button class="settings-row settings-row-danger" id="settingsClearData">
+            <span>Clear All Data</span><span class="settings-row-arrow">›</span>
+          </button>
+        </div>
+
+        <div class="settings-section" style="padding-bottom:20px">
+          <div class="settings-section-label">ABOUT</div>
+          <div class="settings-row" style="cursor:default">
+            <span>Grandure Connect</span><span class="settings-row-val">v2.0</span>
           </div>
         </div>
-      </div>`;
-    document.body.appendChild(el.firstElementChild);
-    overlay = document.getElementById('settingsOverlay');
 
-    document.getElementById('settingsClose')?.addEventListener('click', () => { overlay.style.display = 'none'; });
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.style.display = 'none'; });
+      </div>
+    </div>`;
+  document.body.appendChild(el.firstElementChild);
+  overlay = document.getElementById('settingsOverlay');
 
-    document.getElementById('settingsExport')?.addEventListener('click', () => {
-      const data = {};
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('gc_')) data[k] = localStorage.getItem(k);
-      }
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'grandure-connect-backup.json'; a.click();
-      URL.revokeObjectURL(url);
+  const close = () => { overlay.style.display = 'none'; };
+
+  document.getElementById('settingsClose')?.addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  // Banner image upload
+  const bannerArea  = document.getElementById('settingsBannerArea');
+  const bannerInput = document.getElementById('settingsBannerInput');
+  bannerArea.addEventListener('click', () => bannerInput.click());
+  bannerInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      localStorage.setItem('gc_profile_banner', ev.target.result);
+      bannerArea.style.backgroundImage = `url(${ev.target.result})`;
+      bannerArea.querySelector('.settings-banner-placeholder')?.remove();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Social media save
+  document.getElementById('settingsSaveSocial')?.addEventListener('click', () => {
+    const links = {};
+    overlay.querySelectorAll('.settings-social-input').forEach(inp => {
+      if (inp.value.trim()) links[inp.dataset.platform] = inp.value.trim();
     });
+    localStorage.setItem('gc_social_links', JSON.stringify(links));
+    close();
+  });
 
-    document.getElementById('settingsClearData')?.addEventListener('click', () => {
-      if (!confirm('Clear all data? This cannot be undone.')) return;
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('gc_')) keys.push(k);
-      }
-      keys.forEach(k => localStorage.removeItem(k));
-      overlay.style.display = 'none';
-      navigate('/');
-    });
-  }
+  // Export
+  document.getElementById('settingsExport')?.addEventListener('click', () => {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('gc_')) data[k] = localStorage.getItem(k);
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'grandure-connect-backup.json'; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Clear data
+  document.getElementById('settingsClearData')?.addEventListener('click', () => {
+    if (!confirm('Clear all data? This cannot be undone.')) return;
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('gc_')) keys.push(k);
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+    close();
+    navigate('/');
+  });
+
   overlay.style.display = 'flex';
+}
+
+function _populateSettings() {
+  const savedLinks  = JSON.parse(localStorage.getItem('gc_social_links') || '{}');
+  const savedBanner = localStorage.getItem('gc_profile_banner') || '';
+  document.querySelectorAll('.settings-social-input').forEach(inp => {
+    inp.value = savedLinks[inp.dataset.platform] || '';
+  });
+  const area = document.getElementById('settingsBannerArea');
+  if (area) {
+    area.style.backgroundImage = savedBanner ? `url(${savedBanner})` : '';
+    if (!savedBanner && !area.querySelector('.settings-banner-placeholder')) {
+      area.innerHTML = '<div class="settings-banner-placeholder">Tap to add banner photo</div>';
+    }
+  }
 }
 
 /* ── Idea Capture Modal ── */
@@ -379,7 +462,6 @@ function bindCapture() {
   document.getElementById('captureCancel')?.addEventListener('click', close);
 
   document.getElementById('navHome')?.addEventListener('click', () => navigate('/'));
-  document.getElementById('navSettings')?.addEventListener('click', openSettings);
 
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 
@@ -2606,3 +2688,8 @@ function pageInspiration(id) {
     ${pageChrome()}
   `;
 }
+
+/* ── Global settings button delegation (runs once on load) ── */
+document.addEventListener('click', e => {
+  if (e.target.closest('#navSettings')) openSettings();
+});
