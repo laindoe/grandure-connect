@@ -2864,14 +2864,12 @@ function renderDocBlocks(blocks) {
         }
         if (type === 'h2') {
           return `<div class="doc-block doc-block-gen-h2" data-id="${id}" data-type="${type}" data-gen="true" data-stored="${safeText}">
-            <div class="doc-gen-section-rule"></div>
             <div class="doc-gen-h2">${escHtml(text)}</div>
           </div>`;
         }
         // generated text block
         return `<div class="doc-block doc-block-gen-text" data-id="${id}" data-type="${type}" data-gen="true" data-stored="${safeText}">
           <div class="doc-gen-text">${text ? escHtml(text).replace(/\n/g,'<br>') : '<span class="doc-gen-empty">—</span>'}</div>
-          ${delBtn(id)}
         </div>`;
       }
       // user-added editable block
@@ -2880,18 +2878,16 @@ function renderDocBlocks(blocks) {
       return `<div class="doc-block doc-block-${type}" data-id="${id}" data-type="${type}">
         <div class="doc-block-inner">
           <div class="doc-block-content" contenteditable="true" data-placeholder="${ph}">${escHtml(text)}</div>
-          <div class="doc-block-actions"><span class="doc-block-tag">${tag}</span>${delBtn(id)}</div>
+          <div class="doc-block-actions"><span class="doc-block-tag">${tag}</span></div>
         </div>
         </div>`;
     }
     if (type === 'image') return `<div class="doc-block doc-block-media" data-id="${id}" data-type="image">
         <div class="doc-media-tap" data-id="${id}">${src ? `<img class="doc-block-img" src="${src}">` : `<div class="doc-media-placeholder">${imgSVG}<span>Tap to add image</span></div>`}</div>
-        <div class="doc-block-actions-row">${delBtn(id)}</div>
         <div class="doc-block-caption" contenteditable="true" data-placeholder="Add caption…">${escHtml(caption)}</div>
         </div>`;
     if (type === 'video') return `<div class="doc-block doc-block-media" data-id="${id}" data-type="video">
         <div class="doc-media-tap" data-id="${id}">${src ? `<video class="doc-block-vid" src="${src}" controls playsinline></video>` : `<div class="doc-media-placeholder">${vidSVG}<span>Tap to add video</span></div>`}</div>
-        <div class="doc-block-actions-row">${delBtn(id)}</div>
         </div>`;
     if (type === 'link') return `<div class="doc-block doc-block-link" data-id="${id}" data-type="link">
         <div class="doc-link-icon">${linkSVG}</div>
@@ -2899,11 +2895,9 @@ function renderDocBlocks(blocks) {
           <input class="doc-link-label" value="${escHtml(label)}" placeholder="Label" style="font-size:16px">
           <input class="doc-link-url" value="${escHtml(url)}" placeholder="https://…" type="url" style="font-size:16px">
         </div>
-        ${delBtn(id)}
         </div>`;
     if (type === 'divider') return `<div class="doc-block doc-block-divider" data-id="${id}" data-type="divider">
-        <hr class="doc-divider"><div class="doc-block-actions-row">${delBtn(id)}</div>
-        </div>`;
+        <hr class="doc-divider"></div>`;
     return '';
   }).join('');
 }
@@ -3023,7 +3017,6 @@ function bindDoc(brandId, campId, docType) {
 
   function bindBlockEvents() {
     document.querySelectorAll('#docContainer .doc-block-content').forEach(el => el.addEventListener('input', schedSave));
-    document.querySelectorAll('#docContainer .doc-block-del').forEach(btn => btn.addEventListener('click', () => deleteBlock(btn.dataset.id)));
     document.querySelectorAll('#docContainer .doc-media-tap').forEach(el => el.addEventListener('click', () => handleMediaTap(el.dataset.id)));
     document.querySelectorAll('#docContainer .doc-link-label, #docContainer .doc-link-url').forEach(inp => inp.addEventListener('input', schedSave));
     document.querySelectorAll('#docContainer .doc-block-caption').forEach(el => el.addEventListener('input', schedSave));
