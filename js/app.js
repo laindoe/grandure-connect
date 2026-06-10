@@ -87,7 +87,7 @@ function render() {
 
   if (path === '/' || path === '') {
     app.innerHTML = pageHome();
-    bindSwipeCards();
+    bindHomeDock();
   } else if (path === '/brand') {
     app.innerHTML = pageBrandWorkspace(params.id);
   } else if (path === '/phase') {
@@ -201,6 +201,9 @@ function bottomNavHTML() {
   `;
 }
 
+/* ── Home view state ── */
+let _homeView = 'brands';
+
 /* ── Idea Capture Modal ── */
 let captureState = { platform: '', format: '', brandId: '' };
 
@@ -236,6 +239,33 @@ function pageChrome() {
   return captureModalHTML() + bottomNavHTML();
 }
 
+function homeDockHTML() {
+  return `
+    <nav class="bottom-nav" id="homeDock">
+      <button class="nav-btn" id="dockBrands">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+        </svg>
+      </button>
+      <button class="nav-btn nav-btn-center" id="dockCapture">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13 2L4 13h7l-1 9 10-12h-7z"/>
+        </svg>
+      </button>
+      <button class="nav-btn" id="dockCampaigns">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </nav>
+  `;
+}
+
 function bindCapture() {
   const overlay = document.getElementById('captureOverlay');
   if (!overlay) return;
@@ -244,6 +274,7 @@ function bindCapture() {
   const close = () => { overlay.style.display = 'none'; };
 
   document.getElementById('navCapture')?.addEventListener('click', open);
+  document.getElementById('dockCapture')?.addEventListener('click', open);
   document.getElementById('captureCancel')?.addEventListener('click', close);
 
   document.getElementById('navHome')?.addEventListener('click', () => navigate('/'));
@@ -342,7 +373,7 @@ function bindAddBrand() {
     saveCustomBrands();
     overlay.style.display = 'none';
     document.getElementById('app').innerHTML = pageHome();
-    bindSwipeCards(); bindCapture(); bindNav(); bindAddBrand();
+    bindHomeDock(); bindCapture(); bindNav(); bindAddBrand();
   });
 }
 
@@ -351,49 +382,112 @@ function pageHome() {
     ? `background:url('${b.banner}') center/cover no-repeat`
     : `background:${b.banner}`;
 
-  const cards = BRANDS.map(brand => `
-    <div class="swipe-wrap" data-brand-id="${brand.id}">
-      <div class="swipe-row">
-        <div class="brand-card" data-href="#/brand?id=${brand.id}">
-          <div class="brand-banner" style="${bannerStyle(brand)}"></div>
-          <div class="card-bottom">
-            <div class="card-bottom-name">${brand.name}</div>
-            <div style="text-align:right">
-              <div class="phase-label">CURRENT PHASE</div>
-              <div class="phase-name-small">${brand.currentPhase.name}</div>
-            </div>
-          </div>
-        </div>
-        <div class="card-actions">
-          <button class="card-action-btn card-action-edit">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit
-          </button>
-          <button class="card-action-btn card-action-delete">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-            Delete
-          </button>
-        </div>
-      </div>
+  const brandGrid = BRANDS.map(brand => `
+    <div class="home-brand-cell" data-href="#/brand?id=${brand.id}">
+      <div class="home-brand-img" style="${bannerStyle(brand)}"></div>
+      <div class="home-brand-label">${brand.name}</div>
     </div>
   `).join('');
 
+  const allCampaigns = [];
+  BRANDS.forEach(brand => {
+    (brand.campaigns || []).forEach(c => allCampaigns.push({ campaign: c, brand }));
+  });
+  const campCards = allCampaigns.length ? allCampaigns.map(({ campaign, brand }) => {
+    const pct = campaign.progress != null ? campaign.progress
+      : (campaign.status === 'active' ? brand.currentPhase.progress : 0);
+    return `
+      <div class="home-camp-card" data-href="#/brand?id=${brand.id}">
+        <div class="home-camp-banner" style="${bannerStyle(brand)}"></div>
+        <div class="home-camp-body">
+          <div class="home-camp-name">${campaign.name}</div>
+          <div class="home-camp-dates">${campaign.startDate} – ${campaign.endDate}</div>
+          <div class="home-camp-prog-track">
+            <div class="home-camp-prog-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="home-camp-pct">${pct}%</div>
+        </div>
+      </div>
+    `;
+  }).join('') : `<div style="color:#333;font-size:13px;padding:20px 0;text-align:center">No campaigns yet</div>`;
+
   return `
-    <div class="page" style="padding-bottom:24px">
+    <div class="page" style="padding-bottom:110px">
       <div class="top-header">
-        <div class="icon-btn">&#9776;</div>
+        <div class="icon-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
         <div class="logo-wrap">
           <img src="img/grandure-connect.png" alt="Grandure Connect" class="logo-img">
         </div>
-        <button class="icon-btn" id="openAddBrand" style="font-size:22px;font-weight:200">+</button>
+        <div style="position:relative">
+          <button class="icon-btn" id="openAddMenu" style="font-size:22px;font-weight:200">+</button>
+          <div class="add-menu" id="addMenu" style="display:none">
+            <button class="add-menu-item" id="menuAddCampaign">Campaign</button>
+            <button class="add-menu-item" id="menuAddContent">Content</button>
+            <button class="add-menu-item" id="menuAddBrand">Brand</button>
+          </div>
+        </div>
       </div>
-      <div style="padding:0 16px 20px">
-        ${cards}
-      </div>
+      <div class="home-brand-grid" id="homeBrandsView">${brandGrid}</div>
+      <div class="home-camp-list" id="homeCampsView" style="display:none">${campCards}</div>
     </div>
+    ${captureModalHTML()}
     ${addBrandSheetHTML()}
     <div id="editPhotoMount"></div>
+    ${homeDockHTML()}
   `;
+}
+
+/* ── Home Dock ── */
+function bindHomeDock() {
+  const brandsView = document.getElementById('homeBrandsView');
+  const campsView  = document.getElementById('homeCampsView');
+  const dockBrands = document.getElementById('dockBrands');
+  const dockCamps  = document.getElementById('dockCampaigns');
+
+  function showView(v) {
+    _homeView = v;
+    if (brandsView) brandsView.style.display = v === 'brands' ? 'block' : 'none';
+    if (campsView)  campsView.style.display  = v === 'campaigns' ? 'block' : 'none';
+    dockBrands?.classList.toggle('nav-active', v === 'brands');
+    dockCamps?.classList.toggle('nav-active', v === 'campaigns');
+  }
+
+  showView(_homeView);
+
+  dockBrands?.addEventListener('click', () => showView('brands'));
+  dockCamps?.addEventListener('click', () => showView('campaigns'));
+
+  const openAddMenu = document.getElementById('openAddMenu');
+  const addMenu     = document.getElementById('addMenu');
+
+  openAddMenu?.addEventListener('click', e => {
+    e.stopPropagation();
+    if (addMenu) addMenu.style.display = addMenu.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.addEventListener('click', function closeMenu() {
+    if (addMenu) addMenu.style.display = 'none';
+    document.removeEventListener('click', closeMenu);
+  });
+
+  document.getElementById('menuAddBrand')?.addEventListener('click', e => {
+    e.stopPropagation();
+    if (addMenu) addMenu.style.display = 'none';
+    const overlay = document.getElementById('addBrandOverlay');
+    if (overlay) overlay.style.display = 'flex';
+  });
+
+  document.getElementById('menuAddCampaign')?.addEventListener('click', e => {
+    e.stopPropagation();
+    if (addMenu) addMenu.style.display = 'none';
+  });
+
+  document.getElementById('menuAddContent')?.addEventListener('click', e => {
+    e.stopPropagation();
+    if (addMenu) addMenu.style.display = 'none';
+  });
 }
 
 /* ── Edit Photo / Crop Sheet ── */
@@ -522,7 +616,7 @@ function openEditPhoto(brandId) {
     if (dataUrl) {
       saveBrandOverride(brandId, { banner: dataUrl });
       document.getElementById('app').innerHTML = pageHome();
-      bindSwipeCards(); bindCapture(); bindNav(); bindAddBrand();
+      bindHomeDock(); bindCapture(); bindNav(); bindAddBrand();
     } else {
       overlay.style.display = 'none';
     }
@@ -612,7 +706,7 @@ function bindSwipeCards() {
         localStorage.setItem(OVERRIDES_KEY, JSON.stringify(ov));
       } catch(e) {}
       document.getElementById('app').innerHTML = pageHome();
-      bindSwipeCards(); bindCapture(); bindNav(); bindAddBrand();
+      bindHomeDock(); bindCapture(); bindNav(); bindAddBrand();
     });
   });
 }
