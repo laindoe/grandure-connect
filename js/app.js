@@ -751,6 +751,83 @@ function openEditCampaignPhoto(brandId, campId) {
   cropWin.addEventListener('touchend', e => { lastTouches = Array.from(e.touches); });
 }
 
+function openEditHeroPhoto(brandId, campId) {
+  const mount = document.getElementById('editPhotoMount');
+  if (!mount) return;
+  mount.innerHTML = editPhotoCropSheetHTML();
+
+  const overlay     = document.getElementById('editPhotoOverlay');
+  const cropWin     = document.getElementById('cropWindow');
+  const cropImg     = document.getElementById('cropImg');
+  const placeholder = document.getElementById('cropPlaceholder');
+  const fileInput   = document.getElementById('cropFileInput');
+
+  // Use landscape crop ratio for the hero card
+  if (cropWin) cropWin.style.aspectRatio = '16/9';
+
+  overlay.style.display = 'flex';
+
+  const brand    = getBrand(brandId);
+  const campaign = brand?.campaigns.find(c => c.id === campId);
+  if (campaign?.heroImage && (campaign.heroImage.startsWith('data:') || campaign.heroImage.startsWith('http'))) {
+    cropImg.src = campaign.heroImage;
+    cropImg.style.display = 'block';
+    placeholder.style.display = 'none';
+    const setup = () => _initCrop(cropWin.offsetWidth, cropWin.offsetHeight);
+    cropImg.complete ? setup() : (cropImg.onload = setup);
+  }
+
+  const loadFile = file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      cropImg.src = ev.target.result;
+      cropImg.style.display = 'block';
+      placeholder.style.display = 'none';
+      cropImg.onload = () => _initCrop(cropWin.offsetWidth, cropWin.offsetHeight);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  document.getElementById('cropPickBtn').addEventListener('click', () => fileInput.click());
+  placeholder.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+  document.getElementById('editPhotoCancel').addEventListener('click', () => { overlay.style.display = 'none'; });
+
+  document.getElementById('editPhotoSave').addEventListener('click', () => {
+    const dataUrl = _exportCrop();
+    if (dataUrl && brand) {
+      const campaigns = brand.campaigns.map(c => c.id === campId ? { ...c, heroImage: dataUrl } : c);
+      saveBrandOverride(brandId, { campaigns });
+      document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+      bindCampaignPage(brandId, campId);
+    } else {
+      overlay.style.display = 'none';
+    }
+  });
+
+  let lastTouches = null;
+  cropWin.addEventListener('touchstart', e => {
+    if (e.target.closest('#cropPlaceholder')) return;
+    e.preventDefault();
+    lastTouches = Array.from(e.touches);
+  }, { passive: false });
+  cropWin.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = Array.from(e.touches);
+    if (t.length === 1 && lastTouches?.length >= 1) {
+      _cropState.offsetX += t[0].clientX - lastTouches[0].clientX;
+      _cropState.offsetY += t[0].clientY - lastTouches[0].clientY;
+    } else if (t.length === 2 && lastTouches?.length >= 2) {
+      const prev = Math.hypot(lastTouches[1].clientX - lastTouches[0].clientX, lastTouches[1].clientY - lastTouches[0].clientY);
+      const curr = Math.hypot(t[1].clientX - t[0].clientX, t[1].clientY - t[0].clientY);
+      _cropState.scale = Math.max(_cropState.minScale, Math.min(8, _cropState.scale * (curr / prev)));
+    }
+    lastTouches = t;
+    _clampCrop(); _applyCrop();
+  }, { passive: false });
+  cropWin.addEventListener('touchend', e => { lastTouches = Array.from(e.touches); });
+}
+
 /* ── Icon Crop Sheet ── */
 function editIconCropSheetHTML() {
   return `
@@ -2107,6 +2184,9 @@ function pageCampaign(brandId, campId) {
   const ov = brand.overview || {};
   const pillarsHTML = (ov.contentPillars || []).map(p => `<span class="notion-pillar">${p}</span>`).join('');
 
+  const heroImgStyle = campaign.heroImage ? `background-image:url(${campaign.heroImage})` : '';
+  const cameraIconSVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+
   return `
     <div class="page" style="padding-bottom:110px">
 
@@ -2120,34 +2200,29 @@ function pageCampaign(brandId, campId) {
         <button class="back-btn" id="campMoreBtn" style="font-size:18px;font-weight:400;letter-spacing:1px">···</button>
       </div>
 
-      <div style="padding:0 16px">
-
-        <!-- Campaign hero card -->
-        <div class="camp-hero-card">
-          <div class="camp-hero-top">
-            <div class="camp-hero-stage-pill">${stageName.toUpperCase()}</div>
-            <div class="camp-hero-dates">${campaign.startDate} – ${campaign.endDate}</div>
+      <!-- Campaign hero card: full-width -->
+      <div class="camp-hero-card" id="campHeroCard" style="${heroImgStyle}">
+        <div class="camp-hero-top">
+          <div class="camp-hero-dates">${campaign.startDate} – ${campaign.endDate}</div>
+        </div>
+        <div class="camp-hero-name">${campaign.name}</div>
+        <div class="camp-hero-prog-track">
+          <div class="camp-hero-prog-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="camp-hero-foot">
+          <div class="camp-hero-next">
+            <div class="camp-hero-next-label">NEXT UP</div>
+            <div class="camp-hero-next-val">${upcomingVal}</div>
           </div>
-          <div class="camp-hero-name">${campaign.name}</div>
-          <div class="camp-hero-prog-track">
-            <div class="camp-hero-prog-fill" style="width:${pct}%"></div>
-          </div>
-          <div class="camp-hero-foot">
-            <div class="camp-hero-next">
-              <div class="camp-hero-next-label">NEXT UP</div>
-              <div class="camp-hero-next-val">${upcomingVal}</div>
-            </div>
-            <div class="camp-hero-right">
-              <div class="camp-hero-posts">${postLabel}</div>
-              <div class="camp-hero-pct">${pct}%</div>
-            </div>
+          <div class="camp-hero-right">
+            <div class="camp-hero-posts">${postLabel}</div>
+            <div class="camp-hero-pct">${pct}%</div>
           </div>
         </div>
+        <button class="camp-hero-edit-btn" id="campHeroEditBtn">${cameraIconSVG}</button>
+      </div>
 
-        <!-- Stage tracker -->
-        <div class="camp-stage-tracker" id="campStageTracker">
-          ${stageTrackerHTML}
-        </div>
+      <div style="padding:0 16px;padding-top:14px">
 
         <!-- Analytics bar -->
         <div class="camp-analytics">
@@ -2156,6 +2231,11 @@ function pageCampaign(brandId, campId) {
             <span class="camp-analytics-live">● Live</span>
           </div>
           <div class="camp-analytics-row">${analyticsItemsHTML}</div>
+        </div>
+
+        <!-- Stage tracker -->
+        <div class="camp-stage-tracker" id="campStageTracker">
+          ${stageTrackerHTML}
         </div>
 
         <!-- CAMPAIGN OVERVIEW (Notion doc) -->
@@ -2284,6 +2364,9 @@ function bindCampaignPage(brandId, campId) {
   if (!campaign) return;
 
   const getVal = id => document.getElementById(id)?.value || '';
+
+  // Hero card background image edit
+  document.getElementById('campHeroEditBtn')?.addEventListener('click', () => openEditHeroPhoto(brandId, campId));
 
   // Nav tabs
   document.getElementById('campNavDoc')?.addEventListener('click', () => {
