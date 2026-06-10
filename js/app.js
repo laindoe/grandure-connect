@@ -2323,26 +2323,46 @@ function pageCampaign(brandId, campId) {
     patreon:   { count: '78',   delta: +3   },
   };
   const PLATFORM_ICONS = {
-    instagram: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>`,
-    tiktok:    `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.38a8.26 8.26 0 004.83 1.55V7.48a4.85 4.85 0 01-1.06-.79z"/></svg>`,
-    youtube:   `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.95 1.96A29 29 0 001 12a29 29 0 00.46 5.58 2.78 2.78 0 001.95 1.96C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 001.95-1.96A29 29 0 0023 12a29 29 0 00-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#0e0e0e"/></svg>`,
-    threads:   `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 10.5C16.4 7.4 14.5 6 12 6 8.7 6 7 9 7 12s1.7 6 5 6c2.5 0 4.2-1.4 4.9-3.8"/><path d="M17 10.5c.1.5.1 1 .1 1.5 0 2.8-1.1 5.2-5.1 5.2-2.2 0-3.9-.7-3.9-2.7 0-2.4 2.1-3 4.4-3.2a18 18 0 012.5.2"/></svg>`,
-    twitter:   `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
-    email:     `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`,
-    linkedin:  `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="4"/><path d="M8 10v8M8 7a.5.5 0 110-1 .5.5 0 010 1M12 18v-5c0-1.1.9-2 2-2s2 .9 2 2v5M12 10v8" stroke="#0e0e0e" stroke-width="1.8" stroke-linecap="round"/></svg>`,
-    patreon:   `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="14.5" cy="10" r="6"/><line x1="5" y1="2" x2="5" y2="22"/></svg>`,
+    instagram: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>`,
+    tiktok:    `<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.38a8.26 8.26 0 004.83 1.55V7.48a4.85 4.85 0 01-1.06-.79z"/></svg>`,
+    youtube:   `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></svg>`,
+    threads:   `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 10.5C16.4 7.4 14.5 6 12 6 8.7 6 7 9 7 12s1.7 6 5 6c2.5 0 4.2-1.4 4.9-3.8"/><path d="M17 10.5c.1.5.1 1 .1 1.5 0 2.8-1.1 5.2-5.1 5.2-2.2 0-3.9-.7-3.9-2.7 0-2.4 2.1-3 4.4-3.2a18 18 0 012.5.2"/></svg>`,
+    twitter:   `<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+    email:     `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`,
+    linkedin:  `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="10" x2="8" y2="18"/><circle cx="8" cy="7" r="0.8" fill="currentColor" stroke="none"/><path d="M12 18v-5c0-1.1.9-2 2-2s2 .9 2 2v5"/><line x1="12" y1="10" x2="12" y2="18"/></svg>`,
+    patreon:   `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="14.5" cy="10" r="6"/><line x1="5" y1="2" x2="5" y2="22"/></svg>`,
+  };
+  const PLATFORM_COLORS = {
+    instagram: '#C50060',
+    tiktok:    '#009B95',
+    youtube:   '#CC0000',
+    threads:   '#0050D0',
+    twitter:   '#0044BB',
+    email:     '#74AE00',
+    linkedin:  '#003DB5',
+    patreon:   '#E03000',
+  };
+  const PLATFORM_METRIC = {
+    instagram: 'FOLLOWERS',
+    tiktok:    'FOLLOWERS',
+    youtube:   'SUBSCRIBERS',
+    threads:   'FOLLOWERS',
+    twitter:   'FOLLOWERS',
+    email:     'CONTACTS',
+    linkedin:  'CONNECTIONS',
+    patreon:   'PATRONS',
   };
   const activePlatforms = Object.keys(brand.platformStrategy || {});
   const analyticsItemsHTML = activePlatforms.length ? activePlatforms.map(p => {
-    const m = MOCK_ANALYTICS[p] || { count:'—', delta:0 };
-    const sign = m.delta > 0 ? '+' : '';
-    const cls  = m.delta > 0 ? 'pos' : m.delta < 0 ? 'neg' : '';
-    const icon = PLATFORM_ICONS[p] || `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`;
+    const m    = MOCK_ANALYTICS[p] || { count:'—', delta:0 };
+    const icon = PLATFORM_ICONS[p] || `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>`;
+    const bg   = PLATFORM_COLORS[p] || '#2a2a2a';
+    const lbl  = PLATFORM_METRIC[p] || 'FOLLOWERS';
     return `
-      <div class="camp-analytics-item">
+      <div class="camp-analytics-item" style="background:${bg}">
         <div class="camp-analytics-icon">${icon}</div>
         <div class="camp-analytics-count">${m.count}</div>
-        <div class="camp-analytics-delta ${cls}">${sign}${m.delta}</div>
+        <div class="camp-analytics-label">${lbl}</div>
       </div>`;
   }).join('') : `<div style="color:#333;font-size:12px;padding:8px 0">Set platforms in Brand settings</div>`;
 
