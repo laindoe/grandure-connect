@@ -216,14 +216,22 @@ let _aishaAnswers = {};
 let _aishaGenerated = null; // { strategy, contentPlan }
 
 const AISHA_WIZARD_QS = [
-  { id: 'goal',       q: "What's the main goal of this campaign? (awareness, launch, community, sales…)" },
-  { id: 'audience',   q: "Who's the primary audience we're speaking to for this one?" },
-  { id: 'message',    q: "What's the core message or theme you want to convey?" },
-  { id: 'platforms',  q: "Which platforms will this campaign live on?" },
-  { id: 'content',    q: "What types of content are you planning — reels, carousels, stories, emails?" },
-  { id: 'cta',        q: "What's the key call to action? What do you want people to do?" },
-  { id: 'milestones', q: "Any specific dates or milestones to hit? Just say skip if not." },
+  { id: 'goal', q: "What's the main goal of this campaign?", multi: false,
+    options: ['Grow awareness', 'Launch something new', 'Build community', 'Drive sales', 'Re-engage audience', 'Educate my audience'] },
+  { id: 'audience', q: "Who's the primary audience we're speaking to?", multi: false,
+    options: ['Existing followers', 'New audience', 'Warm leads', 'Brand community', 'General public', 'Niche community'] },
+  { id: 'message', q: "What's the core message or theme?", multi: false,
+    options: ['Inspirational', 'Educational', 'Behind-the-scenes', 'Product launch', 'Community-first', 'Story-driven'] },
+  { id: 'platforms', q: "Which platforms will this live on? (tap all that apply)", multi: true,
+    options: ['Instagram', 'TikTok', 'YouTube', 'Threads', 'Twitter / X', 'Email', 'LinkedIn'] },
+  { id: 'content', q: "What content types are you planning? (tap all that apply)", multi: true,
+    options: ['Reels', 'Carousels', 'Stories', 'Static posts', 'Long-form video', 'Email newsletter', 'Threads / tweets'] },
+  { id: 'cta', q: "What's the key call to action?", multi: false,
+    options: ['Follow / Subscribe', 'Shop now', 'Sign up', 'Share & tag', 'Save for later', 'Visit website', 'DM us'] },
+  { id: 'milestones', q: "Any specific timing or milestones?", multi: false,
+    options: ['No specific dates', 'Weekly drops', 'Monthly cadence', 'Event-based', 'Launch day', 'Skip for now'] },
 ];
+let _aishaSelectedOpts = [];
 
 /* ── Icon crop state ── */
 let _iconCrop = { naturalW:0, naturalH:0, scale:1, minScale:1, offsetX:0, offsetY:0, cropW:0, cropH:0 };
@@ -1836,6 +1844,10 @@ function aishaBlockHTML() {
         <button class="aisha-wizard-btn" id="aishaWizardBtn">Start Wizard</button>
       </div>
       <div class="aisha-chat" id="aishaChat"></div>
+      <div class="aisha-opts-wrap" id="aishaOptsWrap" style="display:none">
+        <div class="aisha-opts-grid" id="aishaOptsGrid"></div>
+        <button class="aisha-opts-done" id="aishaOptsDone" style="display:none">Done ›</button>
+      </div>
       <div class="aisha-input-row">
         <input class="aisha-input" id="aishaInput" type="text" placeholder="Ask Aisha about this campaign…">
         <button class="aisha-send" id="aishaSendBtn">${sendSVG}</button>
@@ -1870,22 +1882,47 @@ function bindAisha(brand, campaign, brandId, campId) {
 
   renderAishaChat();
 
-  document.getElementById('aishaWizardBtn')?.addEventListener('click', () => {
-    _aishaWizardStep = 0;
-    _aishaAnswers = {};
-    _aishaGenerated = null;
-    _aishaMessages.push({ role: 'aisha', text: `Let's build this out! I'll ask you ${AISHA_WIZARD_QS.length} quick questions. Brand context from ${brand.name} is already loaded in.\n\n${AISHA_WIZARD_QS[0].q}` });
-    renderAishaChat();
-  });
+  // Show option chips for a wizard step
+  function showAishaOptions(step) {
+    const q = AISHA_WIZARD_QS[step];
+    const wrap = document.getElementById('aishaOptsWrap');
+    const grid = document.getElementById('aishaOptsGrid');
+    const doneBtn = document.getElementById('aishaOptsDone');
+    if (!wrap || !grid || !q?.options) return;
+    _aishaSelectedOpts = [];
+    grid.innerHTML = q.options.map(opt =>
+      `<button class="aisha-opt" data-opt="${opt}">${opt}</button>`
+    ).join('');
+    doneBtn.style.display = q.multi ? 'block' : 'none';
+    wrap.style.display = 'block';
+    grid.querySelectorAll('.aisha-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (q.multi) {
+          btn.classList.toggle('selected');
+          const val = btn.dataset.opt;
+          _aishaSelectedOpts = _aishaSelectedOpts.includes(val)
+            ? _aishaSelectedOpts.filter(o => o !== val)
+            : [..._aishaSelectedOpts, val];
+        } else {
+          processAishaInput(btn.dataset.opt);
+        }
+      });
+    });
+    doneBtn.onclick = () => {
+      if (_aishaSelectedOpts.length) processAishaInput(_aishaSelectedOpts.join(', '));
+    };
+  }
+
+  function hideAishaOptions() {
+    const wrap = document.getElementById('aishaOptsWrap');
+    if (wrap) wrap.style.display = 'none';
+    _aishaSelectedOpts = [];
+  }
 
   const acks = ['Got it.', 'Perfect.', 'Love that.', 'Nice.', 'Great, noted.'];
 
-  const sendMsg = () => {
-    const input = document.getElementById('aishaInput');
-    const text = input?.value.trim();
-    if (!text) return;
-    if (input) input.value = '';
-
+  function processAishaInput(text) {
+    hideAishaOptions();
     _aishaMessages.push({ role: 'user', text });
 
     if (_aishaWizardStep >= 0 && _aishaWizardStep < AISHA_WIZARD_QS.length) {
@@ -1896,55 +1933,69 @@ function bindAisha(brand, campaign, brandId, campId) {
         const ack = acks[(_aishaWizardStep - 1) % acks.length];
         _aishaMessages.push({ role: 'aisha', text: `${ack}\n\n${AISHA_WIZARD_QS[_aishaWizardStep].q}` });
         renderAishaChat();
+        showAishaOptions(_aishaWizardStep);
       } else {
         _aishaMessages.push({ role: 'aisha', text: `That's everything I need. Give me a second to put this together…` });
         renderAishaChat();
         setTimeout(() => {
           _aishaGenerated = aishaGenerate(brand, campaign, _aishaAnswers);
-
-          // Populate Campaign overview card
           const stratEl = document.getElementById('campStrategyText');
           const infoBody = document.getElementById('campInfoBody');
           const infoChev = document.getElementById('campInfoChevron');
           if (stratEl) stratEl.value = _aishaGenerated.strategy;
-          if (infoBody) { infoBody.style.display = 'block'; }
-          if (infoChev) { infoChev.style.transform = 'rotate(180deg)'; }
-
-          _aishaMessages.push({ role: 'aisha', text: `I've drafted your campaign overview for ${campaign.name} — it's now open below. Review and edit it, then hit Save.\n\nNow let me build out your content plan…` });
+          if (infoBody) infoBody.style.display = 'block';
+          if (infoChev) infoChev.style.transform = 'rotate(180deg)';
+          _aishaMessages.push({ role: 'aisha', text: `I've drafted your campaign overview for ${campaign.name} — it's open below. Review and edit it, then hit Save.\n\nNow let me build out your content plan…` });
           renderAishaChat();
-
           setTimeout(() => {
-            // Populate Content Plan card
             const planEl = document.getElementById('campPlanText');
             const planBody = document.getElementById('campPlanBody');
             const planChev = document.getElementById('campPlanChevron');
             if (planEl) planEl.value = _aishaGenerated.contentPlan;
-            if (planBody) { planBody.style.display = 'block'; }
-            if (planChev) { planChev.style.transform = 'rotate(180deg)'; }
-
+            if (planBody) planBody.style.display = 'block';
+            if (planChev) planChev.style.transform = 'rotate(180deg)';
             _aishaMessages.push({ role: 'aisha', text: `Your content plan is ready too — open below. Edit anything you like and Save both sections. ✦` });
             renderAishaChat();
           }, 1200);
         }, 1000);
       }
     } else {
-      // freeform Q&A using brand + campaign context
       const q = text.toLowerCase();
       let reply;
       if (q.includes('content') || q.includes('plan') || q.includes('post') || q.includes('schedule')) {
-        const cp = aishaGenerate(brand, campaign, _aishaAnswers).contentPlan;
-        reply = `Here's a content plan for ${campaign.name}:\n\n${cp}`;
+        reply = `Here's a content plan for ${campaign.name}:\n\n${aishaGenerate(brand, campaign, _aishaAnswers).contentPlan}`;
       } else if (q.includes('audience') || q.includes('who') || q.includes('target')) {
         reply = `For ${campaign.name}, we're speaking to:\n\n${brand.overview?.audience || 'Your core brand community'}\n\nSpeak to them with ${brand.overview?.brandVoice || 'an authentic voice that reflects your brand'}.`;
       } else if (q.includes('voice') || q.includes('tone')) {
         reply = `${brand.name}'s brand voice: ${brand.overview?.brandVoice || 'Authentic and engaging.'}\n\nFor ${campaign.name}, keep that voice consistent across every piece of content.`;
       } else {
-        const strat = aishaGenerate(brand, campaign, _aishaAnswers).strategy;
-        reply = strat;
+        reply = aishaGenerate(brand, campaign, _aishaAnswers).strategy;
       }
       _aishaMessages.push({ role: 'aisha', text: reply });
       renderAishaChat();
     }
+  }
+
+  // Restore options if wizard is mid-flow after a re-render
+  if (_aishaWizardStep >= 0 && _aishaWizardStep < AISHA_WIZARD_QS.length) {
+    showAishaOptions(_aishaWizardStep);
+  }
+
+  document.getElementById('aishaWizardBtn')?.addEventListener('click', () => {
+    _aishaWizardStep = 0;
+    _aishaAnswers = {};
+    _aishaGenerated = null;
+    _aishaMessages.push({ role: 'aisha', text: `Let's build this out! Brand context from ${brand.name} is already loaded in.\n\n${AISHA_WIZARD_QS[0].q}` });
+    renderAishaChat();
+    showAishaOptions(0);
+  });
+
+  const sendMsg = () => {
+    const input = document.getElementById('aishaInput');
+    const text = input?.value.trim();
+    if (!text) return;
+    if (input) input.value = '';
+    processAishaInput(text);
   };
 
   document.getElementById('aishaSendBtn')?.addEventListener('click', sendMsg);
