@@ -420,6 +420,10 @@ function pageHome() {
     const upcomingVal = campaign.status === 'active'
       ? (brand.board.ready[0]?.title || brand.board.drafting[0]?.title || '—')
       : `Starts ${campaign.startDate}`;
+    const cb = campaign.banner;
+    const campBannerStyle = cb
+      ? (cb.startsWith('data:') || cb.startsWith('http') ? `background:url('${cb}') center/cover no-repeat` : `background:${cb}`)
+      : bannerStyle(brand);
     const iconContent = brand.icon
       ? `<img src="${brand.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
       : brand.name[0].toUpperCase();
@@ -433,6 +437,7 @@ function pageHome() {
       <div class="swipe-wrap" data-camp-id="${campaign.id}" data-brand-id="${brand.id}">
         <div class="swipe-row">
           <div class="home-camp-card" data-href="#/campaign?brandId=${brand.id}&id=${campaign.id}">
+            <div class="home-camp-banner" style="${campBannerStyle}"></div>
             <div class="home-camp-body">
               <div class="home-camp-top">
                 <div class="home-camp-left">
@@ -504,7 +509,6 @@ function pageHome() {
           </div>
         </div>
       </div>
-      <div class="home-banner-card"></div>
       <div class="home-brand-grid" id="homeBrandsView">${brandGrid}</div>
       <div class="home-camp-list" id="homeCampsView" style="display:none">${campViewHTML}</div>
     </div>
@@ -1887,6 +1891,9 @@ function pageCampaign(brandId, campId) {
         <div class="camp-stage-tracker" id="campStageTracker">
           ${stageTrackerHTML}
         </div>
+
+        <!-- Campaign banner -->
+        <div class="camp-detail-banner" style="${campaign.banner ? (campaign.banner.startsWith('data:') || campaign.banner.startsWith('http') ? `background:url('${campaign.banner}') center/cover no-repeat` : `background:${campaign.banner}`) : (brand.banner && (brand.banner.startsWith('data:') || brand.banner.startsWith('http')) ? `background:url('${brand.banner}') center/cover no-repeat` : `background:${brand.banner || 'rgba(255,255,255,0.04)'}`)}"></div>
 
         <!-- AI Agent block -->
         <div class="ai-agent-block">
