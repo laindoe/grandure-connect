@@ -208,15 +208,15 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 
 /* ── Workspace Section Card ── */
 .section-card {
-  background: rgba(255,255,255,0.03);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
   border-radius: 18px;
   padding: 18px; margin-bottom: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.07);
   cursor: pointer;
   transition: transform 0.15s;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 .section-card:active { transform: scale(0.985); }
 .dd-card { cursor: pointer; }
@@ -995,7 +995,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-save-btn { background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:13px;color:#fff;font-size:14px;font-weight:600;width:100%; }
 .camp-doc-row { display:flex;align-items:center;gap:10px;margin-bottom:4px; }
 .camp-doc-row-btn { flex:1;width:auto; }
-.camp-see-doc-btn { background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:13px 16px;color:rgba(255,255,255,0.55);font-size:13px;font-weight:600;cursor:pointer; }
+.camp-see-doc-btn { background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:13px 16px;color:rgba(255,255,255,0.55);font-size:14px;font-weight:600;cursor:pointer; }
 .camp-see-doc-btn:active { background:rgba(255,255,255,0.12);color:#fff; }
 
 /* Campaign hero card */
@@ -1035,9 +1035,9 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-analytics-item { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;border-radius:16px;padding:16px 10px 14px;min-height:110px;border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 4px 20px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.1); }
 .camp-analytics-icon { color:rgba(255,255,255,0.92);display:flex;align-items:center;justify-content:center;line-height:0; }
 .camp-analytics-count { font-size:22px;font-weight:800;color:#fff;line-height:1; }
-.camp-analytics-delta { font-size:10px;font-weight:700;color:rgba(255,255,255,0.55); }
-.camp-analytics-delta.pos { color:rgba(100,230,120,0.9); }
-.camp-analytics-delta.neg { color:rgba(230,100,100,0.9); }
+.camp-analytics-delta { font-size:10px;font-weight:700;color:rgba(255,255,255,0.45); }
+.camp-analytics-delta.pos { color:rgba(255,255,255,0.55); }
+.camp-analytics-delta.neg { color:rgba(255,255,255,0.3); }
 
 /* Notion-style doc fields */
 .notion-field { margin-bottom:16px; }
