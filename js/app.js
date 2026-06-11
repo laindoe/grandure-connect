@@ -2594,6 +2594,16 @@ function bindCampaignPage(brandId, campId) {
   infoSheet.className = 'camp-form-sheet';
   infoSheet.id = 'campInfoSheet';
   infoSheet.innerHTML = `
+    <div class="camp-form-picker" id="campInfoPicker" style="display:none">
+      <div class="camp-form-picker-bg" id="campInfoPickerBg"></div>
+      <div class="camp-form-picker-panel">
+        <div class="camp-form-picker-handle"></div>
+        <button class="camp-form-picker-item" id="campInfoAishaBtn">
+          <div class="camp-form-picker-icon">✦</div>
+          <div>Ask Aisha to help fill this in</div>
+        </button>
+      </div>
+    </div>
     <div class="camp-form-sheet-topbar">
       <button class="camp-form-sheet-back" id="campInfoSheetClose">‹</button>
       <div class="camp-form-sheet-title">Campaign Overview</div>
@@ -2641,7 +2651,8 @@ function bindCampaignPage(brandId, campId) {
       </div>
     </div>
     <div class="camp-form-sheet-footer">
-      <button class="camp-save-btn" id="campInfoSheetSave">Save Overview</button>
+      <button class="camp-form-fab" id="campInfoSheetPlus">+</button>
+      <button class="camp-save-btn" style="flex:1" id="campInfoSheetSave">Save Overview</button>
     </div>`;
   document.body.appendChild(infoSheet);
 
@@ -2649,6 +2660,16 @@ function bindCampaignPage(brandId, campId) {
   planSheet.className = 'camp-form-sheet';
   planSheet.id = 'campPlanSheet';
   planSheet.innerHTML = `
+    <div class="camp-form-picker" id="campPlanPicker" style="display:none">
+      <div class="camp-form-picker-bg" id="campPlanPickerBg"></div>
+      <div class="camp-form-picker-panel">
+        <div class="camp-form-picker-handle"></div>
+        <button class="camp-form-picker-item" id="campPlanAishaBtn">
+          <div class="camp-form-picker-icon">✦</div>
+          <div>Ask Aisha to help fill this in</div>
+        </button>
+      </div>
+    </div>
     <div class="camp-form-sheet-topbar">
       <button class="camp-form-sheet-back" id="campPlanSheetClose">‹</button>
       <div class="camp-form-sheet-title">Content Plan</div>
@@ -2681,9 +2702,19 @@ function bindCampaignPage(brandId, campId) {
       </div>
     </div>
     <div class="camp-form-sheet-footer">
-      <button class="camp-save-btn" id="campPlanSheetSave">Save Content Plan</button>
+      <button class="camp-form-fab" id="campPlanSheetPlus">+</button>
+      <button class="camp-save-btn" style="flex:1" id="campPlanSheetSave">Save Content Plan</button>
     </div>`;
   document.body.appendChild(planSheet);
+
+  // Auto-resize all textareas in both sheets
+  const autoResize = ta => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
+  [infoSheet, planSheet].forEach(sheet => {
+    sheet.querySelectorAll('textarea').forEach(ta => {
+      autoResize(ta);
+      ta.addEventListener('input', () => autoResize(ta));
+    });
+  });
 
   // Open sheets when tapping cards
   document.getElementById('campInfoCard')?.addEventListener('click', e => {
@@ -2711,6 +2742,34 @@ function bindCampaignPage(brandId, campId) {
   });
   document.getElementById('campPlanSheetClose')?.addEventListener('click', () => {
     planSheet.classList.remove('open');
+  });
+
+  // + FAB → show picker
+  document.getElementById('campInfoSheetPlus')?.addEventListener('click', () => {
+    document.getElementById('campInfoPicker').style.display = 'flex';
+  });
+  document.getElementById('campPlanSheetPlus')?.addEventListener('click', () => {
+    document.getElementById('campPlanPicker').style.display = 'flex';
+  });
+
+  // Picker bg → dismiss
+  document.getElementById('campInfoPickerBg')?.addEventListener('click', () => {
+    document.getElementById('campInfoPicker').style.display = 'none';
+  });
+  document.getElementById('campPlanPickerBg')?.addEventListener('click', () => {
+    document.getElementById('campPlanPicker').style.display = 'none';
+  });
+
+  // Ask Aisha → close picker, close form sheet, open Aisha sheet
+  document.getElementById('campInfoAishaBtn')?.addEventListener('click', () => {
+    document.getElementById('campInfoPicker').style.display = 'none';
+    infoSheet.classList.remove('open');
+    document.getElementById('aishaSheet').style.display = 'flex';
+  });
+  document.getElementById('campPlanAishaBtn')?.addEventListener('click', () => {
+    document.getElementById('campPlanPicker').style.display = 'none';
+    planSheet.classList.remove('open');
+    document.getElementById('aishaSheet').style.display = 'flex';
   });
 
   // Open Doc from inside sheets (auto-save first)
