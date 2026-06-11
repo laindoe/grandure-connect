@@ -2280,15 +2280,16 @@ function injectCampaignNav(brandId, campId, activeTab, onAisha) {
 
   const wrap = document.createElement('div');
   wrap.id = 'campaignBottomNav';
+  wrap.className = 'campaign-dock';
   wrap.innerHTML = `
-    <nav class="bottom-nav">
+    <nav class="bottom-nav campaign-nav">
       <button class="nav-btn${activeTab === 'doc'    ? ' nav-active' : ''}" id="campNavDoc">${docSVG}</button>
       <button class="nav-btn${activeTab === 'ideas'  ? ' nav-active' : ''}" id="campNavIdeas">${ideaSVG}</button>
       <button class="nav-btn nav-btn-center" id="campNavAisha">${aishaSVG}</button>
       <button class="nav-btn${activeTab === 'visual' ? ' nav-active' : ''}" id="campNavVisual">${visualSVG}</button>
       <button class="nav-btn${activeTab === 'cal'    ? ' nav-active' : ''}" id="campNavCal">${calSVG}</button>
     </nav>`;
-  document.body.appendChild(wrap);
+  document.getElementById('app').appendChild(wrap);
 
   document.getElementById('campNavDoc')?.addEventListener('click',    () => navigate(`#/campaign?brandId=${brandId}&id=${campId}`));
   document.getElementById('campNavIdeas')?.addEventListener('click',  () => navigate(`#/vault?id=${brandId}&campId=${campId}`));
@@ -2424,7 +2425,7 @@ function pageCampaign(brandId, campId) {
   const heroImgStyle = campaign.heroImage ? `background-image:url(${campaign.heroImage})` : '';
 
   return `
-    <div class="page" style="padding-bottom:110px">
+    <div class="page">
 
       <!-- Back header -->
       <div class="back-header">

@@ -540,6 +540,21 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 }
 
 /* ── Bottom Nav ── */
+/* campaign dock wrapper — flex sibling to .page, avoids iOS position:fixed bug */
+.campaign-dock {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0 calc(28px + env(safe-area-inset-bottom, 0px));
+}
+.campaign-nav {
+  position: static !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: none !important;
+}
+
 .bottom-nav {
   position: fixed;
   bottom: 28px;
