@@ -2081,16 +2081,14 @@ ${voice || 'Authentic, grounded, on-brand'}`.trim();
 function aishaBlockHTML() {
   const sendSVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
   return `
-    <div class="aisha-fs-header">
-      <button class="aisha-fs-back" id="aishaBackBtn" type="button">‹</button>
-      <div class="aisha-fs-identity">
-        <div class="aisha-avatar">✦</div>
-        <div class="aisha-info">
-          <div class="aisha-name">Aisha</div>
-          <div class="aisha-role">Campaign Strategist · AI</div>
-        </div>
-      </div>
-      <button class="aisha-wizard-btn" id="aishaWizardBtn" type="button">Start Wizard</button>
+    <div class="aisha-topbar">
+      <button class="aisha-back-btn" id="aishaBackBtn" type="button">‹</button>
+    </div>
+    <div class="aisha-mode-row">
+      <button class="aisha-mode-btn aisha-mode-active" id="aishaChatModeBtn" type="button">
+        <span class="aisha-mode-icon">✦</span>Ask Aisha
+      </button>
+      <button class="aisha-mode-btn" id="aishaWizardBtn" type="button">Start Wizard</button>
     </div>
     <div class="aisha-chat" id="aishaChat"></div>
     <div class="aisha-opts-wrap" id="aishaOptsWrap" style="display:none">
@@ -2235,7 +2233,18 @@ function bindAisha(brand, campaign, brandId, campId) {
     showAishaOptions(_aishaWizardStep);
   }
 
+  const setActiveMode = id => {
+    ['aishaChatModeBtn','aishaWizardBtn'].forEach(btnId => {
+      document.getElementById(btnId)?.classList.toggle('aisha-mode-active', btnId === id);
+    });
+  };
+
+  document.getElementById('aishaChatModeBtn')?.addEventListener('click', () => {
+    setActiveMode('aishaChatModeBtn');
+  });
+
   document.getElementById('aishaWizardBtn')?.addEventListener('click', () => {
+    setActiveMode('aishaWizardBtn');
     _aishaWizardStep = 0;
     _aishaAnswers = {};
     _aishaGenerated = null;
