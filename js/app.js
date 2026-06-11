@@ -86,7 +86,7 @@ function render() {
   const app = document.getElementById('app');
 
   // Remove campaign nav + doc picker sheets when leaving campaign context
-  if (path !== '/campaign' && path !== '/doc') {
+  if (path !== '/campaign') {
     document.getElementById('campaignBottomNav')?.remove();
     document.getElementById('campMoreSheet')?.remove();
     document.getElementById('aishaSheet')?.remove();
@@ -3210,9 +3210,6 @@ function bindDoc(brandId, campId, docType) {
 
   bindBlockEvents();
   document.getElementById('docAddBtn')?.addEventListener('click', showSectionPicker);
-
-  // Same campaign nav as the campaign page (Aisha opens campaign page on doc page)
-  injectCampaignNav(brandId, campId, 'doc', () => navigate(`#/campaign?brandId=${brandId}&id=${campId}`));
 }
 
 /* ── Global settings button delegation (runs once on load) ── */
