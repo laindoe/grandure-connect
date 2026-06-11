@@ -2460,7 +2460,7 @@ function pageCampaign(brandId, campId) {
 
         <!-- CAMPAIGN OVERVIEW -->
         <div class="section-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
-          <div class="section-card-header" style="display:flex;align-items:center;gap:8px">
+          <div class="section-card-header" style="display:flex;align-items:center;gap:8px;margin-bottom:0">
             <div class="section-card-title" style="flex:1">CAMPAIGN OVERVIEW</div>
             <button class="doc-open-btn" id="campInfoDocBtn">Open Doc</button>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
@@ -2469,7 +2469,7 @@ function pageCampaign(brandId, campId) {
 
         <!-- CONTENT PLAN -->
         <div class="section-card" id="campPlanCard" style="cursor:pointer;margin-bottom:10px">
-          <div class="section-card-header" style="display:flex;align-items:center;gap:8px">
+          <div class="section-card-header" style="display:flex;align-items:center;gap:8px;margin-bottom:0">
             <div class="section-card-title" style="flex:1">CONTENT PLAN</div>
             <button class="doc-open-btn" id="campPlanDocBtn">Open Doc</button>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
