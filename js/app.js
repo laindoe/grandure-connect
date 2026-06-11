@@ -2651,8 +2651,8 @@ function bindCampaignPage(brandId, campId) {
       </div>
     </div>
     <div class="camp-form-sheet-footer">
-      <button class="camp-form-fab" id="campInfoSheetPlus">+</button>
       <button class="camp-save-btn" style="flex:1" id="campInfoSheetSave">Save Overview</button>
+      <button class="camp-form-fab" id="campInfoSheetPlus">+</button>
     </div>`;
   document.body.appendChild(infoSheet);
 
@@ -2702,8 +2702,8 @@ function bindCampaignPage(brandId, campId) {
       </div>
     </div>
     <div class="camp-form-sheet-footer">
-      <button class="camp-form-fab" id="campPlanSheetPlus">+</button>
       <button class="camp-save-btn" style="flex:1" id="campPlanSheetSave">Save Content Plan</button>
+      <button class="camp-form-fab" id="campPlanSheetPlus">+</button>
     </div>`;
   document.body.appendChild(planSheet);
 
@@ -2804,41 +2804,59 @@ function bindCampaignPage(brandId, campId) {
 
   // Save buttons inside sheets
   document.getElementById('campInfoSheetSave')?.addEventListener('click', () => {
-    const updatedCampaigns = brand.campaigns.map(c =>
-      c.id === campId ? { ...c,
-        name: getVal('campEditName') || c.name,
-        startDate: getVal('campEditStart') || c.startDate,
-        endDate: getVal('campEditEnd') || c.endDate,
-        ov_objective: getVal('ov_objective'),
-        ov_audience:  getVal('ov_audience'),
-        ov_message:   getVal('ov_message'),
-        ov_platforms: getVal('ov_platforms'),
-        ov_cta:       getVal('ov_cta'),
-        ov_timeline:  getVal('ov_timeline'),
-        ov_notes:     getVal('ov_notes'),
-      } : c
-    );
+    const patch = {
+      name:         getVal('campEditName') || campaign.name,
+      startDate:    getVal('campEditStart') || campaign.startDate,
+      endDate:      getVal('campEditEnd')   || campaign.endDate,
+      ov_objective: getVal('ov_objective'),
+      ov_audience:  getVal('ov_audience'),
+      ov_message:   getVal('ov_message'),
+      ov_platforms: getVal('ov_platforms'),
+      ov_cta:       getVal('ov_cta'),
+      ov_timeline:  getVal('ov_timeline'),
+      ov_notes:     getVal('ov_notes'),
+    };
+    const updatedCampaigns = brand.campaigns.map(c => c.id === campId ? { ...c, ...patch } : c);
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
     infoSheet.classList.remove('open');
-    document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
-    bindCampaignPage(brandId, campId);
+    // Update card preview in-place without full re-render
+    const previewEl = document.querySelector('#campInfoCard .camp-card-preview');
+    if (previewEl) {
+      const val = patch.ov_objective;
+      if (val) {
+        previewEl.classList.remove('camp-card-preview-empty');
+        previewEl.textContent = val.slice(0, 72) + (val.length > 72 ? '…' : '');
+      } else {
+        previewEl.classList.add('camp-card-preview-empty');
+        previewEl.textContent = 'Tap to add overview details';
+      }
+    }
   });
   document.getElementById('campPlanSheetSave')?.addEventListener('click', () => {
-    const updatedCampaigns = brand.campaigns.map(c =>
-      c.id === campId ? { ...c,
-        cp_formats:     getVal('cp_formats'),
-        cp_cadence:     getVal('cp_cadence'),
-        cp_pillars:     getVal('cp_pillars'),
-        cp_mix:         getVal('cp_mix'),
-        cp_repurposing: getVal('cp_repurposing'),
-        cp_notes:       getVal('cp_notes'),
-        contentPlan:    [getVal('cp_formats'), getVal('cp_cadence'), getVal('cp_pillars')].filter(Boolean).join('\n\n'),
-      } : c
-    );
+    const patch = {
+      cp_formats:     getVal('cp_formats'),
+      cp_cadence:     getVal('cp_cadence'),
+      cp_pillars:     getVal('cp_pillars'),
+      cp_mix:         getVal('cp_mix'),
+      cp_repurposing: getVal('cp_repurposing'),
+      cp_notes:       getVal('cp_notes'),
+      contentPlan:    [getVal('cp_formats'), getVal('cp_cadence'), getVal('cp_pillars')].filter(Boolean).join('\n\n'),
+    };
+    const updatedCampaigns = brand.campaigns.map(c => c.id === campId ? { ...c, ...patch } : c);
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
     planSheet.classList.remove('open');
-    document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
-    bindCampaignPage(brandId, campId);
+    // Update card preview in-place without full re-render
+    const previewEl = document.querySelector('#campPlanCard .camp-card-preview');
+    if (previewEl) {
+      const val = patch.cp_formats;
+      if (val) {
+        previewEl.classList.remove('camp-card-preview-empty');
+        previewEl.textContent = val.slice(0, 72) + (val.length > 72 ? '…' : '');
+      } else {
+        previewEl.classList.add('camp-card-preview-empty');
+        previewEl.textContent = 'Tap to add content plan';
+      }
+    }
   });
 
   // BRAND SNAPSHOT toggle
