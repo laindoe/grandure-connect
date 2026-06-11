@@ -2635,7 +2635,12 @@ function bindCampaignPage(brandId, campId) {
       </div>
       <div class="notion-field">
         <div class="notion-label">PLATFORMS</div>
-        <input class="notion-input" id="ov_platforms" value="${campaign.ov_platforms || ''}" placeholder="Instagram, TikTok, Email…">
+        <input type="hidden" id="ov_platforms" value="${campaign.ov_platforms || ''}">
+        <div class="platform-pills" id="ovPlatformPills">
+          ${['Instagram','TikTok','Facebook','YouTube','X','LinkedIn','Pinterest','Threads','Snapchat','Email'].map(p =>
+            `<button type="button" class="platform-pill${(campaign.ov_platforms||'').split(',').map(s=>s.trim()).includes(p) ? ' active' : ''}" data-platform="${p}">${p}</button>`
+          ).join('')}
+        </div>
       </div>
       <div class="notion-field">
         <div class="notion-label">CALL TO ACTION</div>
@@ -2713,6 +2718,16 @@ function bindCampaignPage(brandId, campId) {
     sheet.querySelectorAll('textarea').forEach(ta => {
       autoResize(ta);
       ta.addEventListener('input', () => autoResize(ta));
+    });
+  });
+
+  // Platform pill toggles — keep hidden input in sync so getVal() still works
+  infoSheet.querySelectorAll('#ovPlatformPills .platform-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      pill.classList.toggle('active');
+      const selected = Array.from(infoSheet.querySelectorAll('#ovPlatformPills .platform-pill.active'))
+        .map(p => p.dataset.platform).join(', ');
+      document.getElementById('ov_platforms').value = selected;
     });
   });
 
