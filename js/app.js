@@ -2081,24 +2081,25 @@ ${voice || 'Authentic, grounded, on-brand'}`.trim();
 function aishaBlockHTML() {
   const sendSVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
   return `
-    <div class="aisha-block">
-      <div class="aisha-header">
+    <div class="aisha-fs-header">
+      <button class="aisha-fs-back" id="aishaBackBtn" type="button">‹</button>
+      <div class="aisha-fs-identity">
         <div class="aisha-avatar">✦</div>
         <div class="aisha-info">
-          <div class="aisha-name">Ask Aisha</div>
+          <div class="aisha-name">Aisha</div>
           <div class="aisha-role">Campaign Strategist · AI</div>
         </div>
-        <button class="aisha-wizard-btn" id="aishaWizardBtn">Start Wizard</button>
       </div>
-      <div class="aisha-chat" id="aishaChat"></div>
-      <div class="aisha-opts-wrap" id="aishaOptsWrap" style="display:none">
-        <div class="aisha-opts-grid" id="aishaOptsGrid"></div>
-        <button class="aisha-opts-done" id="aishaOptsDone" style="display:none">Done ›</button>
-      </div>
-      <div class="aisha-input-row">
-        <input class="aisha-input" id="aishaInput" type="text" placeholder="Ask Aisha about this campaign…">
-        <button class="aisha-send" id="aishaSendBtn">${sendSVG}</button>
-      </div>
+      <button class="aisha-wizard-btn" id="aishaWizardBtn" type="button">Start Wizard</button>
+    </div>
+    <div class="aisha-chat" id="aishaChat"></div>
+    <div class="aisha-opts-wrap" id="aishaOptsWrap" style="display:none">
+      <div class="aisha-opts-grid" id="aishaOptsGrid"></div>
+      <button class="aisha-opts-done" id="aishaOptsDone" style="display:none">Done ›</button>
+    </div>
+    <div class="aisha-input-row">
+      <input class="aisha-input" id="aishaInput" type="text" placeholder="Ask Aisha about this campaign…" style="font-size:16px">
+      <button class="aisha-send" id="aishaSendBtn" type="button">${sendSVG}</button>
     </div>
   `;
 }
@@ -2197,6 +2198,7 @@ function bindAisha(brand, campaign, brandId, campId) {
           setVal('ov_cta',       a.cta);
           setVal('ov_timeline',  a.milestones !== 'Skip for now' ? a.milestones : '');
 
+          document.getElementById('aishaSheet')?.classList.remove('open');
           document.getElementById('campInfoSheet')?.classList.add('open');
 
           _aishaMessages.push({ role: 'aisha', text: `I've filled in your Campaign Overview for ${campaign.name} — it's open now. Review, edit, and hit Save.\n\nNow building your Content Plan…` });
@@ -2533,14 +2535,11 @@ function bindCampaignPage(brandId, campId) {
   const aishaEl = document.createElement('div');
   aishaEl.className = 'aisha-sheet';
   aishaEl.id = 'aishaSheet';
-  aishaEl.style.display = 'none';
-  aishaEl.innerHTML = `
-    <div class="aisha-sheet-bg" id="aishaSheetBg"></div>
-    <div class="aisha-sheet-panel">
-      <div class="aisha-sheet-bar"></div>
-      ${aishaBlockHTML()}
-    </div>`;
+  aishaEl.innerHTML = aishaBlockHTML();
   document.body.appendChild(aishaEl);
+  bindAisha(brand, campaign, brandId, campId);
+
+  let aishaReturnSheet = null;
 
   // ··· sheet bindings
   document.getElementById('campMoreBtn')?.addEventListener('click', () => {
@@ -2555,11 +2554,12 @@ function bindCampaignPage(brandId, campId) {
   });
 
   // Campaign nav (body-level so position:fixed works correctly on iOS)
-  injectCampaignNav(brandId, campId, 'doc', () => { aishaEl.style.display = 'flex'; });
+  injectCampaignNav(brandId, campId, 'doc', () => { aishaReturnSheet = null; aishaEl.classList.add('open'); });
 
-  // Aisha sheet close via backdrop
-  document.getElementById('aishaSheetBg')?.addEventListener('click', () => {
-    aishaEl.style.display = 'none';
+  // Aisha back button
+  document.getElementById('aishaBackBtn')?.addEventListener('click', () => {
+    aishaEl.classList.remove('open');
+    if (aishaReturnSheet) { aishaReturnSheet.classList.add('open'); aishaReturnSheet = null; }
   });
 
   // Stage tracker
@@ -2588,19 +2588,6 @@ function bindCampaignPage(brandId, campId) {
   infoSheet.className = 'camp-form-sheet';
   infoSheet.id = 'campInfoSheet';
   infoSheet.innerHTML = `
-    <div class="camp-form-picker" id="campInfoPicker" style="display:none">
-      <div class="camp-form-picker-bg" id="campInfoPickerBg"></div>
-      <div class="camp-form-picker-panel">
-        <div class="camp-form-picker-handle"></div>
-        <div class="camp-form-picker-section-label">QUICK FILL</div>
-        <div class="camp-form-aisha-card">
-          <div class="camp-form-aisha-icon">✦</div>
-          <div class="camp-form-aisha-title">Ask Aisha</div>
-          <div class="camp-form-aisha-desc">Let Aisha fill out your Campaign Overview based on your brand strategy, audience, and goals.</div>
-          <button class="camp-form-aisha-btn" id="campInfoAishaBtn" type="button">Start with Aisha</button>
-        </div>
-      </div>
-    </div>
     <div class="camp-form-sheet-topbar">
       <button class="camp-form-sheet-back" id="campInfoSheetClose">‹</button>
       <div class="camp-form-sheet-title">Campaign Overview</div>
@@ -2654,7 +2641,7 @@ function bindCampaignPage(brandId, campId) {
     </div>
     <div class="camp-form-sheet-footer">
       <button class="camp-save-btn" style="flex:1" id="campInfoSheetSave">Save Overview</button>
-      <button class="camp-form-fab" id="campInfoSheetPlus">+</button>
+      <button class="camp-form-fab" id="campInfoSheetPlus" title="Ask Aisha">✦</button>
     </div>`;
   document.body.appendChild(infoSheet);
 
@@ -2662,19 +2649,6 @@ function bindCampaignPage(brandId, campId) {
   planSheet.className = 'camp-form-sheet';
   planSheet.id = 'campPlanSheet';
   planSheet.innerHTML = `
-    <div class="camp-form-picker" id="campPlanPicker" style="display:none">
-      <div class="camp-form-picker-bg" id="campPlanPickerBg"></div>
-      <div class="camp-form-picker-panel">
-        <div class="camp-form-picker-handle"></div>
-        <div class="camp-form-picker-section-label">QUICK FILL</div>
-        <div class="camp-form-aisha-card">
-          <div class="camp-form-aisha-icon">✦</div>
-          <div class="camp-form-aisha-title">Ask Aisha</div>
-          <div class="camp-form-aisha-desc">Let Aisha build your Content Plan based on your brand's formats, cadence, and pillars.</div>
-          <button class="camp-form-aisha-btn" id="campPlanAishaBtn" type="button">Start with Aisha</button>
-        </div>
-      </div>
-    </div>
     <div class="camp-form-sheet-topbar">
       <button class="camp-form-sheet-back" id="campPlanSheetClose">‹</button>
       <div class="camp-form-sheet-title">Content Plan</div>
@@ -2708,7 +2682,7 @@ function bindCampaignPage(brandId, campId) {
     </div>
     <div class="camp-form-sheet-footer">
       <button class="camp-save-btn" style="flex:1" id="campPlanSheetSave">Save Content Plan</button>
-      <button class="camp-form-fab" id="campPlanSheetPlus">+</button>
+      <button class="camp-form-fab" id="campPlanSheetPlus" title="Ask Aisha">✦</button>
     </div>`;
   document.body.appendChild(planSheet);
 
@@ -2760,31 +2734,16 @@ function bindCampaignPage(brandId, campId) {
   });
 
   // + FAB → show picker
+  // ✦ button → open Aisha full-screen modal, remember which sheet to return to
   document.getElementById('campInfoSheetPlus')?.addEventListener('click', () => {
-    document.getElementById('campInfoPicker').style.display = 'flex';
+    aishaReturnSheet = infoSheet;
+    infoSheet.classList.remove('open');
+    aishaEl.classList.add('open');
   });
   document.getElementById('campPlanSheetPlus')?.addEventListener('click', () => {
-    document.getElementById('campPlanPicker').style.display = 'flex';
-  });
-
-  // Picker bg → dismiss
-  document.getElementById('campInfoPickerBg')?.addEventListener('click', () => {
-    document.getElementById('campInfoPicker').style.display = 'none';
-  });
-  document.getElementById('campPlanPickerBg')?.addEventListener('click', () => {
-    document.getElementById('campPlanPicker').style.display = 'none';
-  });
-
-  // Ask Aisha → close picker, close form sheet, open Aisha sheet
-  document.getElementById('campInfoAishaBtn')?.addEventListener('click', () => {
-    document.getElementById('campInfoPicker').style.display = 'none';
-    infoSheet.classList.remove('open');
-    document.getElementById('aishaSheet').style.display = 'flex';
-  });
-  document.getElementById('campPlanAishaBtn')?.addEventListener('click', () => {
-    document.getElementById('campPlanPicker').style.display = 'none';
+    aishaReturnSheet = planSheet;
     planSheet.classList.remove('open');
-    document.getElementById('aishaSheet').style.display = 'flex';
+    aishaEl.classList.add('open');
   });
 
   // Open Doc from inside sheets (auto-save first)
@@ -2988,11 +2947,14 @@ function renderDocBlocks(blocks) {
         <div class="doc-media-tap" data-id="${id}">${src ? `<video class="doc-block-vid" src="${src}" controls playsinline></video>` : `<div class="doc-media-placeholder">${vidSVG}<span>Tap to add video</span></div>`}</div>
         </div>`;
     if (type === 'link') return `<div class="doc-block doc-block-link" data-id="${id}" data-type="link">
-        <div class="doc-link-icon">${linkSVG}</div>
-        <div class="doc-link-fields">
-          <input class="doc-link-label" value="${escHtml(label)}" placeholder="Label" style="font-size:16px">
-          <input class="doc-link-url" value="${escHtml(url)}" placeholder="https://…" type="url" style="font-size:16px">
+        <div class="doc-link-edit-row">
+          <div class="doc-link-icon">${linkSVG}</div>
+          <div class="doc-link-fields">
+            <input class="doc-link-label" value="${escHtml(label)}" placeholder="Label" style="font-size:16px">
+            <input class="doc-link-url" value="${escHtml(url)}" placeholder="https://…" type="url" style="font-size:16px">
+          </div>
         </div>
+        <div class="doc-link-preview-wrap"${url ? ` data-preview-url="${escHtml(url)}"` : ''}></div>
         </div>`;
     if (type === 'divider') return `<div class="doc-block doc-block-divider" data-id="${id}" data-type="divider">
         <hr class="doc-divider"></div>`;
@@ -3082,6 +3044,7 @@ function bindDoc(brandId, campId, docType) {
     blocks = newBlocks;
     document.getElementById('docContainer').innerHTML = renderDocBlocks(blocks);
     bindBlockEvents();
+    loadLinkPreviews();
   }
 
   function insertBlock(type, afterId, extra) {
@@ -3113,11 +3076,46 @@ function bindDoc(brandId, campId, docType) {
     });
   }
 
+  async function fetchAndRenderPreview(url, wrap) {
+    if (!url) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = '<div class="doc-link-preview-loading">Loading preview…</div>';
+    try {
+      const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        const d = data.data;
+        const imgSrc = d.image?.url;
+        let domain = '';
+        try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch(e) { domain = d.publisher || ''; }
+        wrap.innerHTML = `<div class="doc-link-preview-card">
+          ${imgSrc ? `<img class="doc-link-preview-img" src="${escHtml(imgSrc)}" alt="" loading="lazy">` : ''}
+          <div class="doc-link-preview-info">
+            ${domain ? `<div class="doc-link-preview-domain">${escHtml(domain)}</div>` : ''}
+            ${d.title ? `<div class="doc-link-preview-title">${escHtml(d.title)}</div>` : ''}
+            ${d.description ? `<div class="doc-link-preview-desc">${escHtml(d.description)}</div>` : ''}
+          </div>
+        </div>`;
+      } else { wrap.innerHTML = ''; }
+    } catch(e) { wrap.innerHTML = ''; }
+  }
+
+  async function loadLinkPreviews() {
+    document.querySelectorAll('#docContainer .doc-link-preview-wrap[data-preview-url]').forEach(wrap => {
+      fetchAndRenderPreview(wrap.dataset.previewUrl, wrap);
+    });
+  }
+
   function bindBlockEvents() {
     document.querySelectorAll('#docContainer .doc-block-content').forEach(el => el.addEventListener('input', schedSave));
     document.querySelectorAll('#docContainer .doc-media-tap').forEach(el => el.addEventListener('click', () => handleMediaTap(el.dataset.id)));
     document.querySelectorAll('#docContainer .doc-link-label, #docContainer .doc-link-url').forEach(inp => inp.addEventListener('input', schedSave));
     document.querySelectorAll('#docContainer .doc-block-caption').forEach(el => el.addEventListener('input', schedSave));
+    document.querySelectorAll('#docContainer .doc-link-url').forEach(inp => {
+      inp.addEventListener('blur', () => {
+        const wrap = inp.closest('.doc-block-link')?.querySelector('.doc-link-preview-wrap');
+        if (wrap) { wrap.dataset.previewUrl = inp.value.trim(); fetchAndRenderPreview(inp.value.trim(), wrap); }
+      });
+    });
   }
 
   // Block type picker sheet (step 2)
@@ -3219,6 +3217,7 @@ function bindDoc(brandId, campId, docType) {
   });
 
   bindBlockEvents();
+  loadLinkPreviews();
   document.getElementById('docAddBtn')?.addEventListener('click', showSectionPicker);
 }
 
