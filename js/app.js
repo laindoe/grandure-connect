@@ -2783,31 +2783,35 @@ function bindCampaignPage(brandId, campId) {
 
   // Open Doc from inside sheets (auto-save first)
   document.getElementById('campInfoSheetDoc')?.addEventListener('click', () => {
-    const upd = brand.campaigns.map(c => c.id === campId ? { ...c,
-      name: getVal('campEditName') || c.name,
-      startDate: getVal('campEditStart') || c.startDate,
-      endDate: getVal('campEditEnd') || c.endDate,
-      ov_objective: getVal('ov_objective'),
-      ov_audience:  getVal('ov_audience'),
-      ov_message:   getVal('ov_message'),
-      ov_platforms: getVal('ov_platforms'),
-      ov_cta:       getVal('ov_cta'),
-      ov_timeline:  getVal('ov_timeline'),
-      ov_notes:     getVal('ov_notes'),
-    } : c);
-    saveBrandOverride(brandId, { campaigns: upd });
+    try {
+      saveBrandOverride(brandId, { campaigns: brand.campaigns.map(c => c.id === campId ? { ...c,
+        name: getVal('campEditName') || c.name,
+        startDate: getVal('campEditStart') || c.startDate,
+        endDate: getVal('campEditEnd') || c.endDate,
+        ov_objective: getVal('ov_objective'),
+        ov_audience:  getVal('ov_audience'),
+        ov_message:   getVal('ov_message'),
+        ov_platforms: getVal('ov_platforms'),
+        ov_cta:       getVal('ov_cta'),
+        ov_timeline:  getVal('ov_timeline'),
+        ov_notes:     getVal('ov_notes'),
+      } : c) });
+    } catch(e) {}
+    document.activeElement?.blur();
     navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=overview`);
   });
   document.getElementById('campPlanSheetDoc')?.addEventListener('click', () => {
-    const upd = brand.campaigns.map(c => c.id === campId ? { ...c,
-      cp_formats:     getVal('cp_formats'),
-      cp_cadence:     getVal('cp_cadence'),
-      cp_pillars:     getVal('cp_pillars'),
-      cp_mix:         getVal('cp_mix'),
-      cp_repurposing: getVal('cp_repurposing'),
-      cp_notes:       getVal('cp_notes'),
-    } : c);
-    saveBrandOverride(brandId, { campaigns: upd });
+    try {
+      saveBrandOverride(brandId, { campaigns: brand.campaigns.map(c => c.id === campId ? { ...c,
+        cp_formats:     getVal('cp_formats'),
+        cp_cadence:     getVal('cp_cadence'),
+        cp_pillars:     getVal('cp_pillars'),
+        cp_mix:         getVal('cp_mix'),
+        cp_repurposing: getVal('cp_repurposing'),
+        cp_notes:       getVal('cp_notes'),
+      } : c) });
+    } catch(e) {}
+    document.activeElement?.blur();
     navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=plan`);
   });
 
