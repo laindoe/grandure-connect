@@ -1090,12 +1090,16 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-form-fab { width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);color:#fff;font-size:24px;font-weight:300;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer; }
 .camp-form-fab:active { background:rgba(255,255,255,0.14); }
 .camp-form-picker { position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;justify-content:flex-end; }
-.camp-form-picker-bg { position:absolute;inset:0;background:rgba(0,0,0,0.6); }
-.camp-form-picker-panel { position:relative;background:#1c1c1e;border-radius:20px 20px 0 0;border-top:1px solid rgba(255,255,255,0.1);padding:8px 0 calc(8px + env(safe-area-inset-bottom,0)); }
-.camp-form-picker-handle { width:36px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:8px auto 10px; }
-.camp-form-picker-item { display:flex;align-items:center;gap:14px;width:100%;padding:14px 20px;background:none;border:none;color:#fff;font-size:15px;font-weight:500;text-align:left;cursor:pointer; }
-.camp-form-picker-item:active { background:rgba(255,255,255,0.05); }
-.camp-form-picker-icon { width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0; }
+.camp-form-picker-bg { position:absolute;inset:0;background:rgba(0,0,0,0.65); }
+.camp-form-picker-panel { position:relative;background:#181818;border-radius:24px 24px 0 0;border-top:1px solid rgba(255,255,255,0.1);padding-bottom:calc(24px + env(safe-area-inset-bottom,0)); }
+.camp-form-picker-handle { width:36px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:12px auto 0; }
+.camp-form-picker-section-label { font-size:10px;font-weight:700;letter-spacing:1.5px;color:#3a3a3a;padding:18px 20px 10px; }
+.camp-form-aisha-card { margin:0 16px 16px;padding:20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:18px; }
+.camp-form-aisha-icon { width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px; }
+.camp-form-aisha-title { font-size:17px;font-weight:700;color:#fff;margin-bottom:5px; }
+.camp-form-aisha-desc { font-size:13px;color:rgba(255,255,255,0.42);line-height:1.55;margin-bottom:18px; }
+.camp-form-aisha-btn { width:100%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.14);border-radius:13px;padding:13px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;touch-action:manipulation; }
+.camp-form-aisha-btn:active { background:rgba(255,255,255,0.16); }
 .camp-card-preview { font-size:12px;color:rgba(255,255,255,0.3);margin-top:5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.4; }
 .camp-card-preview-empty { color:rgba(255,255,255,0.15);font-style:italic; }
 .platform-pills { display:flex;flex-wrap:wrap;gap:8px;padding:8px 0 4px; }

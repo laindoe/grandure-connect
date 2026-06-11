@@ -2592,10 +2592,13 @@ function bindCampaignPage(brandId, campId) {
       <div class="camp-form-picker-bg" id="campInfoPickerBg"></div>
       <div class="camp-form-picker-panel">
         <div class="camp-form-picker-handle"></div>
-        <button class="camp-form-picker-item" id="campInfoAishaBtn">
-          <div class="camp-form-picker-icon">✦</div>
-          <div>Ask Aisha to help fill this in</div>
-        </button>
+        <div class="camp-form-picker-section-label">QUICK FILL</div>
+        <div class="camp-form-aisha-card">
+          <div class="camp-form-aisha-icon">✦</div>
+          <div class="camp-form-aisha-title">Ask Aisha</div>
+          <div class="camp-form-aisha-desc">Let Aisha fill out your Campaign Overview based on your brand strategy, audience, and goals.</div>
+          <button class="camp-form-aisha-btn" id="campInfoAishaBtn" type="button">Start with Aisha</button>
+        </div>
       </div>
     </div>
     <div class="camp-form-sheet-topbar">
@@ -2663,10 +2666,13 @@ function bindCampaignPage(brandId, campId) {
       <div class="camp-form-picker-bg" id="campPlanPickerBg"></div>
       <div class="camp-form-picker-panel">
         <div class="camp-form-picker-handle"></div>
-        <button class="camp-form-picker-item" id="campPlanAishaBtn">
-          <div class="camp-form-picker-icon">✦</div>
-          <div>Ask Aisha to help fill this in</div>
-        </button>
+        <div class="camp-form-picker-section-label">QUICK FILL</div>
+        <div class="camp-form-aisha-card">
+          <div class="camp-form-aisha-icon">✦</div>
+          <div class="camp-form-aisha-title">Ask Aisha</div>
+          <div class="camp-form-aisha-desc">Let Aisha build your Content Plan based on your brand's formats, cadence, and pillars.</div>
+          <button class="camp-form-aisha-btn" id="campPlanAishaBtn" type="button">Start with Aisha</button>
+        </div>
       </div>
     </div>
     <div class="camp-form-sheet-topbar">
