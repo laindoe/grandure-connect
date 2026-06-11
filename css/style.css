@@ -1078,6 +1078,18 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .doc-open-btn { font-size:10px;font-weight:600;color:rgba(255,255,255,0.32);background:none;border:none;padding:4px 6px;cursor:pointer;letter-spacing:.3px;white-space:nowrap; }
 .doc-open-btn:active { color:rgba(255,255,255,0.7); }
 
+/* ─── Full-screen form sheet (Overview / Content Plan) ─────── */
+.camp-form-sheet { position:fixed;inset:0;z-index:250;background:#0f0f0f;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1); }
+.camp-form-sheet.open { transform:translateY(0); }
+.camp-form-sheet-topbar { display:flex;align-items:center;gap:8px;padding:14px 16px 12px;padding-top:calc(14px + env(safe-area-inset-top,0));border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0; }
+.camp-form-sheet-back { background:none;border:none;color:rgba(255,255,255,0.7);font-size:20px;line-height:1;padding:4px 10px 4px 0;cursor:pointer; }
+.camp-form-sheet-title { flex:1;font-size:13px;font-weight:700;color:#fff;letter-spacing:.6px;text-transform:uppercase; }
+.camp-form-sheet-doc { font-size:12px;font-weight:600;color:rgba(255,255,255,0.32);background:none;border:none;cursor:pointer;padding:4px 0 4px 8px;white-space:nowrap; }
+.camp-form-sheet-body { flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px 20px 0; }
+.camp-form-sheet-footer { flex-shrink:0;padding:12px 20px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));border-top:1px solid rgba(255,255,255,0.07);background:#0f0f0f; }
+.camp-card-preview { font-size:12px;color:rgba(255,255,255,0.3);margin-top:5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.4; }
+.camp-card-preview-empty { color:rgba(255,255,255,0.15);font-style:italic; }
+
 /* ─── Doc page ─────────────────────────────────────────────── */
 .doc-save-status { font-size:10px;color:rgba(255,255,255,0.3);min-width:48px;text-align:right;padding-right:4px; }
 .doc-container { padding:0 16px;display:flex;flex-direction:column; }

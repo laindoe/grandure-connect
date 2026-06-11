@@ -88,6 +88,10 @@ function render() {
   // Remove campaign nav + doc picker sheets when leaving campaign context
   if (path !== '/campaign' && path !== '/doc') {
     document.getElementById('campaignBottomNav')?.remove();
+    document.getElementById('campMoreSheet')?.remove();
+    document.getElementById('aishaSheet')?.remove();
+    document.getElementById('campInfoSheet')?.remove();
+    document.getElementById('campPlanSheet')?.remove();
   }
   if (path !== '/doc') {
     document.getElementById('docPickerSheet')?.remove();
@@ -2193,24 +2197,16 @@ function bindAisha(brand, campaign, brandId, campId) {
           setVal('ov_cta',       a.cta);
           setVal('ov_timeline',  a.milestones !== 'Skip for now' ? a.milestones : '');
 
-          const infoBody = document.getElementById('campInfoBody');
-          const infoChev = document.getElementById('campInfoChevron');
-          if (infoBody) infoBody.style.display = 'block';
-          if (infoChev) infoChev.style.transform = 'rotate(180deg)';
+          document.getElementById('campInfoSheet')?.classList.add('open');
 
-          _aishaMessages.push({ role: 'aisha', text: `I've filled in your Campaign Overview for ${campaign.name} — it's open below the hero card. Review and edit, then hit Save.\n\nNow building your Content Plan…` });
+          _aishaMessages.push({ role: 'aisha', text: `I've filled in your Campaign Overview for ${campaign.name} — it's open now. Review, edit, and hit Save.\n\nNow building your Content Plan…` });
           renderAishaChat();
           setTimeout(() => {
             // Populate Content Plan from wizard answers
             setVal('cp_formats', a.content);
             setVal('cp_mix', '40% Educational / value-driven\n30% Storytelling / behind the scenes\n20% Community engagement\n10% Promotional / offer-forward');
 
-            const planBody = document.getElementById('campPlanBody');
-            const planChev = document.getElementById('campPlanChevron');
-            if (planBody) planBody.style.display = 'block';
-            if (planChev) planChev.style.transform = 'rotate(180deg)';
-
-            _aishaMessages.push({ role: 'aisha', text: `Content Plan is ready too — open below. Fill in Pillars and Cadence, then Save both sections. ✦` });
+            _aishaMessages.push({ role: 'aisha', text: `Content Plan is ready too. Close this sheet, tap Content Plan to review and save it. ✦` });
             renderAishaChat();
           }, 1200);
         }, 1000);
@@ -2462,97 +2458,28 @@ function pageCampaign(brandId, campId) {
           <div class="camp-analytics-row">${analyticsItemsHTML}</div>
         </div>
 
-        <!-- CAMPAIGN OVERVIEW (Notion doc) -->
-        <div class="section-card dd-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
-          <div class="section-card-header" id="campInfoToggle" style="display:flex;align-items:center;gap:8px">
+        <!-- CAMPAIGN OVERVIEW -->
+        <div class="section-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
+          <div class="section-card-header" style="display:flex;align-items:center;gap:8px">
             <div class="section-card-title" style="flex:1">CAMPAIGN OVERVIEW</div>
             <button class="doc-open-btn" id="campInfoDocBtn">Open Doc</button>
-            <svg class="dd-chevron" id="campInfoChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="dd-body" id="campInfoBody" style="display:none;padding-top:16px">
-            <div class="notion-field">
-              <div class="notion-label">CAMPAIGN NAME</div>
-              <input class="notion-input" id="campEditName" value="${campaign.name}" placeholder="Campaign name">
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">DATES</div>
-              <div style="display:flex;gap:10px">
-                <input class="notion-input" id="campEditStart" value="${campaign.startDate}" placeholder="Start" style="flex:1">
-                <input class="notion-input" id="campEditEnd" value="${campaign.endDate}" placeholder="End" style="flex:1">
-              </div>
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">OBJECTIVE</div>
-              <textarea class="notion-textarea" id="ov_objective" placeholder="What's the goal of this campaign?">${campaign.ov_objective || ''}</textarea>
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">TARGET AUDIENCE</div>
-              <textarea class="notion-textarea" id="ov_audience" placeholder="Who are we speaking to?">${campaign.ov_audience || ''}</textarea>
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">CORE MESSAGE</div>
-              <textarea class="notion-textarea" id="ov_message" placeholder="Main theme or hook">${campaign.ov_message || ''}</textarea>
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">PLATFORMS</div>
-              <input class="notion-input" id="ov_platforms" value="${campaign.ov_platforms || ''}" placeholder="Instagram, TikTok, Email…">
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">CALL TO ACTION</div>
-              <input class="notion-input" id="ov_cta" value="${campaign.ov_cta || ''}" placeholder="What do you want people to do?">
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">TIMELINE & MILESTONES</div>
-              <textarea class="notion-textarea" id="ov_timeline" placeholder="Key dates, launch moments, deadlines">${campaign.ov_timeline || ''}</textarea>
-            </div>
-            <div class="notion-field" style="margin-bottom:20px">
-              <div class="notion-label">NOTES</div>
-              <textarea class="notion-textarea" id="ov_notes" placeholder="Anything else…">${campaign.ov_notes || ''}</textarea>
-            </div>
-            <div class="camp-doc-row">
-              <button class="camp-save-btn camp-doc-row-btn" id="campInfoSave">Save Overview</button>
-              <button class="camp-see-doc-btn camp-doc-row-btn" id="campInfoSeeDoc">Open Doc</button>
-            </div>
-          </div>
+          ${campaign.ov_objective
+            ? `<div class="camp-card-preview">${campaign.ov_objective.slice(0,72)}${campaign.ov_objective.length > 72 ? '…' : ''}</div>`
+            : `<div class="camp-card-preview camp-card-preview-empty">Tap to add overview details</div>`}
         </div>
 
-        <!-- CONTENT PLAN (Notion doc) -->
-        <div class="section-card dd-card" id="campPlanCard" style="cursor:pointer;margin-bottom:10px">
-          <div class="section-card-header" id="campPlanToggle" style="display:flex;align-items:center;gap:8px">
+        <!-- CONTENT PLAN -->
+        <div class="section-card" id="campPlanCard" style="cursor:pointer;margin-bottom:10px">
+          <div class="section-card-header" style="display:flex;align-items:center;gap:8px">
             <div class="section-card-title" style="flex:1">CONTENT PLAN</div>
             <button class="doc-open-btn" id="campPlanDocBtn">Open Doc</button>
-            <svg class="dd-chevron" id="campPlanChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="dd-body" id="campPlanBody" style="display:none;padding-top:16px">
-            <div class="notion-field">
-              <div class="notion-label">CONTENT FORMATS</div>
-              <input class="notion-input" id="cp_formats" value="${campaign.cp_formats || ''}" placeholder="Reels, Carousels, Stories, Email…">
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">POSTING CADENCE</div>
-              <textarea class="notion-textarea" id="cp_cadence" placeholder="How often, which days, which platforms">${campaign.cp_cadence || ''}</textarea>
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">CONTENT PILLARS</div>
-              <textarea class="notion-textarea" id="cp_pillars" placeholder="Main themes to hit across this campaign">${campaign.cp_pillars || ''}</textarea>
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">CONTENT MIX</div>
-              <textarea class="notion-textarea" id="cp_mix" placeholder="% breakdown — educational, storytelling, promotional…">${campaign.cp_mix || ''}</textarea>
-            </div>
-            <div class="notion-field">
-              <div class="notion-label">REPURPOSING STRATEGY</div>
-              <textarea class="notion-textarea" id="cp_repurposing" placeholder="How will content be reused across formats/platforms">${campaign.cp_repurposing || ''}</textarea>
-            </div>
-            <div class="notion-field" style="margin-bottom:20px">
-              <div class="notion-label">NOTES</div>
-              <textarea class="notion-textarea" id="cp_notes" placeholder="Anything else…">${campaign.cp_notes || ''}</textarea>
-            </div>
-            <div class="camp-doc-row">
-              <button class="camp-save-btn camp-doc-row-btn" id="campPlanSave">Save Content Plan</button>
-              <button class="camp-see-doc-btn camp-doc-row-btn" id="campPlanSeeDoc">Open Doc</button>
-            </div>
-          </div>
+          ${campaign.cp_formats
+            ? `<div class="camp-card-preview">${campaign.cp_formats.slice(0,72)}${campaign.cp_formats.length > 72 ? '…' : ''}</div>`
+            : `<div class="camp-card-preview camp-card-preview-empty">Tap to add content plan</div>`}
         </div>
 
         <!-- BRAND SNAPSHOT -->
@@ -2592,6 +2519,8 @@ function bindCampaignPage(brandId, campId) {
   // Remove any sheets left over from a previous campaign page visit
   document.getElementById('campMoreSheet')?.remove();
   document.getElementById('aishaSheet')?.remove();
+  document.getElementById('campInfoSheet')?.remove();
+  document.getElementById('campPlanSheet')?.remove();
 
   // Inject ··· more sheet
   const moreEl = document.createElement('div');
@@ -2656,7 +2585,117 @@ function bindCampaignPage(brandId, campId) {
   document.getElementById('docPickerSheet')?.remove();
   document.getElementById('docSectionPicker')?.remove();
 
-  // Open Doc buttons (stop prop so the card toggle doesn't also fire)
+  // ── Inject full-screen form sheets (body-level avoids iOS scroll bug) ──
+
+  document.getElementById('campInfoSheet')?.remove();
+  document.getElementById('campPlanSheet')?.remove();
+
+  const infoSheet = document.createElement('div');
+  infoSheet.className = 'camp-form-sheet';
+  infoSheet.id = 'campInfoSheet';
+  infoSheet.innerHTML = `
+    <div class="camp-form-sheet-topbar">
+      <button class="camp-form-sheet-back" id="campInfoSheetClose">‹</button>
+      <div class="camp-form-sheet-title">Campaign Overview</div>
+      <button class="camp-form-sheet-doc" id="campInfoSheetDoc">Open Doc</button>
+    </div>
+    <div class="camp-form-sheet-body">
+      <div class="notion-field">
+        <div class="notion-label">CAMPAIGN NAME</div>
+        <input class="notion-input" id="campEditName" value="${campaign.name}" placeholder="Campaign name">
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">DATES</div>
+        <div style="display:flex;gap:10px">
+          <input class="notion-input" id="campEditStart" value="${campaign.startDate}" placeholder="Start" style="flex:1">
+          <input class="notion-input" id="campEditEnd" value="${campaign.endDate}" placeholder="End" style="flex:1">
+        </div>
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">OBJECTIVE</div>
+        <textarea class="notion-textarea" id="ov_objective" placeholder="What's the goal of this campaign?">${campaign.ov_objective || ''}</textarea>
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">TARGET AUDIENCE</div>
+        <textarea class="notion-textarea" id="ov_audience" placeholder="Who are we speaking to?">${campaign.ov_audience || ''}</textarea>
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">CORE MESSAGE</div>
+        <textarea class="notion-textarea" id="ov_message" placeholder="Main theme or hook">${campaign.ov_message || ''}</textarea>
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">PLATFORMS</div>
+        <input class="notion-input" id="ov_platforms" value="${campaign.ov_platforms || ''}" placeholder="Instagram, TikTok, Email…">
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">CALL TO ACTION</div>
+        <input class="notion-input" id="ov_cta" value="${campaign.ov_cta || ''}" placeholder="What do you want people to do?">
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">TIMELINE & MILESTONES</div>
+        <textarea class="notion-textarea" id="ov_timeline" placeholder="Key dates, launch moments, deadlines">${campaign.ov_timeline || ''}</textarea>
+      </div>
+      <div class="notion-field" style="margin-bottom:20px">
+        <div class="notion-label">NOTES</div>
+        <textarea class="notion-textarea" id="ov_notes" placeholder="Anything else…">${campaign.ov_notes || ''}</textarea>
+      </div>
+    </div>
+    <div class="camp-form-sheet-footer">
+      <button class="camp-save-btn" id="campInfoSheetSave">Save Overview</button>
+    </div>`;
+  document.body.appendChild(infoSheet);
+
+  const planSheet = document.createElement('div');
+  planSheet.className = 'camp-form-sheet';
+  planSheet.id = 'campPlanSheet';
+  planSheet.innerHTML = `
+    <div class="camp-form-sheet-topbar">
+      <button class="camp-form-sheet-back" id="campPlanSheetClose">‹</button>
+      <div class="camp-form-sheet-title">Content Plan</div>
+      <button class="camp-form-sheet-doc" id="campPlanSheetDoc">Open Doc</button>
+    </div>
+    <div class="camp-form-sheet-body">
+      <div class="notion-field">
+        <div class="notion-label">CONTENT FORMATS</div>
+        <input class="notion-input" id="cp_formats" value="${campaign.cp_formats || ''}" placeholder="Reels, Carousels, Stories, Email…">
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">POSTING CADENCE</div>
+        <textarea class="notion-textarea" id="cp_cadence" placeholder="How often, which days, which platforms">${campaign.cp_cadence || ''}</textarea>
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">CONTENT PILLARS</div>
+        <textarea class="notion-textarea" id="cp_pillars" placeholder="Main themes to hit across this campaign">${campaign.cp_pillars || ''}</textarea>
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">CONTENT MIX</div>
+        <textarea class="notion-textarea" id="cp_mix" placeholder="% breakdown — educational, storytelling, promotional…">${campaign.cp_mix || ''}</textarea>
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">REPURPOSING STRATEGY</div>
+        <textarea class="notion-textarea" id="cp_repurposing" placeholder="How will content be reused across formats/platforms">${campaign.cp_repurposing || ''}</textarea>
+      </div>
+      <div class="notion-field" style="margin-bottom:20px">
+        <div class="notion-label">NOTES</div>
+        <textarea class="notion-textarea" id="cp_notes" placeholder="Anything else…">${campaign.cp_notes || ''}</textarea>
+      </div>
+    </div>
+    <div class="camp-form-sheet-footer">
+      <button class="camp-save-btn" id="campPlanSheetSave">Save Content Plan</button>
+    </div>`;
+  document.body.appendChild(planSheet);
+
+  // Open sheets when tapping cards
+  document.getElementById('campInfoCard')?.addEventListener('click', e => {
+    if (e.target.closest('#campInfoDocBtn')) return;
+    requestAnimationFrame(() => infoSheet.classList.add('open'));
+  });
+  document.getElementById('campPlanCard')?.addEventListener('click', e => {
+    if (e.target.closest('#campPlanDocBtn')) return;
+    requestAnimationFrame(() => planSheet.classList.add('open'));
+  });
+
+  // Open Doc buttons on cards (navigate without saving)
   document.getElementById('campInfoDocBtn')?.addEventListener('click', e => {
     e.stopPropagation();
     navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=overview`);
@@ -2665,7 +2704,17 @@ function bindCampaignPage(brandId, campId) {
     e.stopPropagation();
     navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=plan`);
   });
-  document.getElementById('campInfoSeeDoc')?.addEventListener('click', () => {
+
+  // Close buttons
+  document.getElementById('campInfoSheetClose')?.addEventListener('click', () => {
+    infoSheet.classList.remove('open');
+  });
+  document.getElementById('campPlanSheetClose')?.addEventListener('click', () => {
+    planSheet.classList.remove('open');
+  });
+
+  // Open Doc from inside sheets (auto-save first)
+  document.getElementById('campInfoSheetDoc')?.addEventListener('click', () => {
     const upd = brand.campaigns.map(c => c.id === campId ? { ...c,
       name: getVal('campEditName') || c.name,
       startDate: getVal('campEditStart') || c.startDate,
@@ -2681,7 +2730,7 @@ function bindCampaignPage(brandId, campId) {
     saveBrandOverride(brandId, { campaigns: upd });
     navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=overview`);
   });
-  document.getElementById('campPlanSeeDoc')?.addEventListener('click', () => {
+  document.getElementById('campPlanSheetDoc')?.addEventListener('click', () => {
     const upd = brand.campaigns.map(c => c.id === campId ? { ...c,
       cp_formats:     getVal('cp_formats'),
       cp_cadence:     getVal('cp_cadence'),
@@ -2694,21 +2743,8 @@ function bindCampaignPage(brandId, campId) {
     navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=plan`);
   });
 
-  // Bind Aisha
-  bindAisha(brand, campaign, brandId, campId);
-
-  // CAMPAIGN OVERVIEW toggle
-  const campInfoToggle  = document.getElementById('campInfoToggle');
-  const campInfoBody    = document.getElementById('campInfoBody');
-  const campInfoChevron = document.getElementById('campInfoChevron');
-  campInfoToggle?.addEventListener('click', () => {
-    const open = campInfoBody.style.display === 'none';
-    campInfoBody.style.display = open ? 'block' : 'none';
-    campInfoChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
-  });
-
-  // CAMPAIGN OVERVIEW Save
-  document.getElementById('campInfoSave')?.addEventListener('click', () => {
+  // Save buttons inside sheets
+  document.getElementById('campInfoSheetSave')?.addEventListener('click', () => {
     const updatedCampaigns = brand.campaigns.map(c =>
       c.id === campId ? { ...c,
         name: getVal('campEditName') || c.name,
@@ -2724,22 +2760,11 @@ function bindCampaignPage(brandId, campId) {
       } : c
     );
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
+    infoSheet.classList.remove('open');
     document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
     bindCampaignPage(brandId, campId);
   });
-
-  // CONTENT PLAN toggle
-  const campPlanToggle  = document.getElementById('campPlanToggle');
-  const campPlanBody    = document.getElementById('campPlanBody');
-  const campPlanChevron = document.getElementById('campPlanChevron');
-  campPlanToggle?.addEventListener('click', () => {
-    const open = campPlanBody.style.display === 'none';
-    campPlanBody.style.display = open ? 'block' : 'none';
-    campPlanChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
-  });
-
-  // CONTENT PLAN Save
-  document.getElementById('campPlanSave')?.addEventListener('click', () => {
+  document.getElementById('campPlanSheetSave')?.addEventListener('click', () => {
     const updatedCampaigns = brand.campaigns.map(c =>
       c.id === campId ? { ...c,
         cp_formats:     getVal('cp_formats'),
@@ -2752,8 +2777,9 @@ function bindCampaignPage(brandId, campId) {
       } : c
     );
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
-    const fresh = (getBrand(brandId)?.campaigns || []).find(c => c.id === campId);
-    if (fresh) Object.assign(fresh, updatedCampaigns.find(c => c.id === campId) || {});
+    planSheet.classList.remove('open');
+    document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+    bindCampaignPage(brandId, campId);
   });
 
   // BRAND SNAPSHOT toggle
