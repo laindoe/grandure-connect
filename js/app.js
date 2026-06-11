@@ -2466,7 +2466,7 @@ function pageCampaign(brandId, campId) {
         <div class="section-card dd-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
           <div class="section-card-header" id="campInfoToggle" style="display:flex;align-items:center;gap:8px">
             <div class="section-card-title" style="flex:1">CAMPAIGN OVERVIEW</div>
-            <button class="doc-open-btn" id="campInfoDocBtn">Open Doc ›</button>
+            <button class="doc-open-btn" id="campInfoDocBtn">Open Doc</button>
             <svg class="dd-chevron" id="campInfoChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-body" id="campInfoBody" style="display:none;padding-top:16px">
@@ -2520,7 +2520,7 @@ function pageCampaign(brandId, campId) {
         <div class="section-card dd-card" id="campPlanCard" style="cursor:pointer;margin-bottom:10px">
           <div class="section-card-header" id="campPlanToggle" style="display:flex;align-items:center;gap:8px">
             <div class="section-card-title" style="flex:1">CONTENT PLAN</div>
-            <button class="doc-open-btn" id="campPlanDocBtn">Open Doc ›</button>
+            <button class="doc-open-btn" id="campPlanDocBtn">Open Doc</button>
             <svg class="dd-chevron" id="campPlanChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
           <div class="dd-body" id="campPlanBody" style="display:none;padding-top:16px">
