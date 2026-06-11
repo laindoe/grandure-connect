@@ -2465,9 +2465,6 @@ function pageCampaign(brandId, campId) {
             <button class="doc-open-btn" id="campInfoDocBtn">Open Doc</button>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          ${campaign.ov_objective
-            ? `<div class="camp-card-preview">${campaign.ov_objective.slice(0,72)}${campaign.ov_objective.length > 72 ? '…' : ''}</div>`
-            : `<div class="camp-card-preview camp-card-preview-empty">Tap to add overview details</div>`}
         </div>
 
         <!-- CONTENT PLAN -->
@@ -2477,9 +2474,6 @@ function pageCampaign(brandId, campId) {
             <button class="doc-open-btn" id="campPlanDocBtn">Open Doc</button>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          ${campaign.cp_formats
-            ? `<div class="camp-card-preview">${campaign.cp_formats.slice(0,72)}${campaign.cp_formats.length > 72 ? '…' : ''}</div>`
-            : `<div class="camp-card-preview camp-card-preview-empty">Tap to add content plan</div>`}
         </div>
 
         <!-- BRAND SNAPSHOT -->
@@ -2834,18 +2828,6 @@ function bindCampaignPage(brandId, campId) {
     const updatedCampaigns = brand.campaigns.map(c => c.id === campId ? { ...c, ...patch } : c);
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
     infoSheet.classList.remove('open');
-    // Update card preview in-place without full re-render
-    const previewEl = document.querySelector('#campInfoCard .camp-card-preview');
-    if (previewEl) {
-      const val = patch.ov_objective;
-      if (val) {
-        previewEl.classList.remove('camp-card-preview-empty');
-        previewEl.textContent = val.slice(0, 72) + (val.length > 72 ? '…' : '');
-      } else {
-        previewEl.classList.add('camp-card-preview-empty');
-        previewEl.textContent = 'Tap to add overview details';
-      }
-    }
   });
   document.getElementById('campPlanSheetSave')?.addEventListener('click', () => {
     const patch = {
@@ -2860,18 +2842,6 @@ function bindCampaignPage(brandId, campId) {
     const updatedCampaigns = brand.campaigns.map(c => c.id === campId ? { ...c, ...patch } : c);
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
     planSheet.classList.remove('open');
-    // Update card preview in-place without full re-render
-    const previewEl = document.querySelector('#campPlanCard .camp-card-preview');
-    if (previewEl) {
-      const val = patch.cp_formats;
-      if (val) {
-        previewEl.classList.remove('camp-card-preview-empty');
-        previewEl.textContent = val.slice(0, 72) + (val.length > 72 ? '…' : '');
-      } else {
-        previewEl.classList.add('camp-card-preview-empty');
-        previewEl.textContent = 'Tap to add content plan';
-      }
-    }
   });
 
   // BRAND SNAPSHOT toggle
