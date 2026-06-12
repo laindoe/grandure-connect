@@ -3235,7 +3235,7 @@ function pageCampaign(brandId, campId) {
       <!-- Campaign hero card: full-width -->
       <div class="camp-hero-card" id="campHeroCard" style="${heroImgStyle}">
         <div class="camp-hero-top">
-          ${daysLeftLabel ? `<div class="home-camp-days-pill home-camp-days-${daysLeftLabel.cls}">${daysLeftLabel.label}</div>` : ''}
+          ${daysLeftLabel ? `<div class="camp-hero-days-pill camp-hero-days-${daysLeftLabel.cls}">${daysLeftLabel.label}</div>` : ''}
         </div>
         <div class="camp-hero-name">${campaign.name}</div>
         <div class="camp-hero-next">
