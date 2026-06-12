@@ -1058,7 +1058,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-card-label { font-size:10px;font-weight:700;letter-spacing:1.3px;color:rgba(255,255,255,0.3);margin-bottom:14px;text-transform:uppercase; }
 
 /* Campaign Overview card */
-.camp-ov-body { font-size:16px;line-height:1.65;color:rgba(255,255,255,0.8); }
+.camp-ov-body { font-size:18px;line-height:1.6;color:rgba(255,255,255,0.8); }
 .camp-ov-empty { color:rgba(255,255,255,0.28);font-style:italic; }
 .camp-kw-pills { display:flex;flex-wrap:wrap;gap:6px;margin-top:12px; }
 .camp-kw-pill { padding:5px 12px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);font-size:13px;color:rgba(255,255,255,0.5);letter-spacing:.15px; }
@@ -1096,7 +1096,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-mktg-empty-hint { font-size:13px;color:rgba(255,255,255,0.22);font-style:italic; }
 
 /* Brand Snapshot card */
-.camp-brand-snap-text { font-size:15px;line-height:1.65;color:rgba(255,255,255,0.65);margin-bottom:0; }
+.camp-brand-snap-text { font-size:18px;line-height:1.6;color:rgba(255,255,255,0.65);margin-bottom:0; }
 .camp-view-details-btn { display:inline-block;margin-top:16px;padding:0;background:none;border:none;color:rgba(255,255,255,0.4);font-size:14px;font-weight:600;cursor:pointer;touch-action:manipulation; }
 .camp-view-details-btn:active { opacity:.55; }
 
