@@ -1449,7 +1449,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .sched-title { font-size:15px;font-weight:700;color:#fff;margin-bottom:16px; }
 .sched-save { width:100%;padding:13px;border-radius:12px;background:#fff;color:#000;font-size:14px;font-weight:700;margin-top:14px; }
 /* Mile Markers (campaign page view) */
-.camp-mile-next { background:rgba(0,155,72,0.55);border:1px solid rgba(0,200,96,0.4);border-radius:12px;padding:12px 14px;margin-bottom:4px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px); }
+.camp-mile-next { background:#009B48;border:1px solid #00c860;border-radius:12px;padding:12px 14px;margin-bottom:4px;text-shadow:0 1px 3px rgba(0,0,0,0.3); }
 .camp-mile-next-label { font-size:9px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,0.65);margin-bottom:5px; }
 .camp-mile-next-text { font-size:15px;font-weight:600;color:#fff;margin-bottom:3px; }
 .camp-mile-next-eta { font-size:11px;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.3px; }
