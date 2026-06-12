@@ -3475,11 +3475,11 @@ function pageCampaign(brandId, campId) {
     : Object.keys(brand.platformStrategy || {});
   const globeSVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`;
   const allCard = `
-    <div class="camp-analytics-item" data-href="#/analytics?brandId=${brandId}&campId=${campId}&platform=all" style="cursor:pointer">
+    <div class="camp-analytics-item" id="campAnalyticsAllBtn" style="cursor:pointer">
       <div class="camp-analytics-icon">${globeSVG}</div>
       <div class="camp-analytics-count" style="font-size:11px;letter-spacing:0.5px">ALL</div>
     </div>`;
-  const analyticsItemsHTML = activePlatforms.length ? allCard + activePlatforms.map(p => {
+  const analyticsItemsHTML = activePlatforms.length ? activePlatforms.map(p => {
     const m    = MOCK_ANALYTICS[p] || { count:'—', delta:0 };
     const icon = PLATFORM_ICONS[p] || `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>`;
     const sign = m.delta > 0 ? '+' : '';
@@ -3490,7 +3490,7 @@ function pageCampaign(brandId, campId) {
         <div class="camp-analytics-count">${m.count}</div>
         <div class="camp-analytics-delta ${dCls}">${m.delta ? sign + m.delta : ''}</div>
       </div>`;
-  }).join('') : `<div style="color:#333;font-size:12px;padding:8px 0">Set platforms in Brand settings</div>`;
+  }).join('') + allCard : `<div style="color:#333;font-size:12px;padding:8px 0">Set platforms in Brand settings</div>`;
 
 
   // Brand overview for snapshot
@@ -3694,6 +3694,76 @@ function bindCampaignPage(brandId, campId) {
   if (!campaign) return;
 
   const getVal = id => document.getElementById(id)?.value || '';
+
+  // ── All-platforms grid overlay ──────────────────────────────────────────
+  document.getElementById('campAnalyticsAllBtn')?.addEventListener('click', () => {
+    document.getElementById('analyticsAllOverlay')?.remove();
+
+    const PLAT_ICONS = {
+      instagram: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>`,
+      tiktok:    `<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.38a8.26 8.26 0 004.83 1.55V7.48a4.85 4.85 0 01-1.06-.79z"/></svg>`,
+      youtube:   `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></svg>`,
+      threads:   `<svg width="28" height="28" viewBox="0 0 192 192" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M141.537 88.988a73.5 73.5 0 00-2.667-.617c-1.598-6.718-5.03-12.505-10.287-17.203C118.786 62.027 106.48 57.5 92 57.5c-18.42 0-30.4 7.12-38.387 21.887l14.84 10.107C74.13 80.127 81.78 75.6 92 75.6c9.247 0 15.44 2.573 18.78 5.953 1.898 1.927 3.254 4.204 4.073 6.674a68.5 68.5 0 00-15.64-.7c-24.28 1.4-39.9 15.587-39.9 35.187 0 11.38 6.013 22.1 16.52 28.207 8.307 4.827 18.74 5.547 27.747 1.893 10.673-4.267 17.247-13.16 19.38-26.587 2.18 1.313 3.993 2.887 5.373 4.693 3.347 4.373 3.26 11.52 3.26 11.52l16.207-.607s.16-9.413-4.293-17.487c-2.387-4.333-5.733-7.72-9.573-10.16zm-33.893 30.94c-3.68 7.427-10.367 11.733-20.107 11.64-8.88-.094-14.607-4.454-14.607-11.127 0-9.267 8.293-14.787 22.48-15.587 4.64-.267 9.14-.067 13.44.547-.5 6.573-1.24 10.813-1.24 14.5z"/></svg>`,
+      twitter:   `<svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+      email:     `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`,
+      linkedin:  `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="10" x2="8" y2="18"/><circle cx="8" cy="7" r="0.8" fill="currentColor" stroke="none"/><path d="M12 18v-5c0-1.1.9-2 2-2s2 .9 2 2v5"/><line x1="12" y1="10" x2="12" y2="18"/></svg>`,
+      patreon:   `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="14.5" cy="10" r="6"/><line x1="5" y1="2" x2="5" y2="22"/></svg>`,
+    };
+    const PLAT_COLORS = {
+      instagram: 'rgba(197,0,96,0.28)',  tiktok: 'rgba(0,155,149,0.28)',
+      youtube:   'rgba(204,0,0,0.28)',   threads: 'rgba(0,80,208,0.28)',
+      twitter:   'rgba(0,68,187,0.28)',  email:   'rgba(116,174,0,0.28)',
+      linkedin:  'rgba(0,61,181,0.28)',  patreon: 'rgba(224,48,0,0.28)',
+    };
+    const PLAT_NAMES = {
+      instagram:'Instagram', tiktok:'TikTok', youtube:'YouTube',
+      threads:'Threads', twitter:'X / Twitter', linkedin:'LinkedIn',
+      email:'Email', patreon:'Patreon',
+    };
+    const MOCK = {
+      instagram:{ count:'2.8K', delta:+127 }, tiktok:{ count:'8.9K', delta:-12 },
+      youtube:  { count:'1.2K', delta:+89  }, threads:{ count:'456',  delta:+67 },
+      twitter:  { count:'1.1K', delta:+34  }, email:  { count:'892',  delta:+45 },
+      linkedin: { count:'234',  delta:+11  }, patreon:{ count:'78',   delta:+3  },
+    };
+
+    const campPlatStr = (campaign.ov_platforms || '').trim();
+    const platList = campPlatStr
+      ? campPlatStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+      : Object.keys(brand.platformStrategy || {});
+
+    const gridCards = platList.map(p => {
+      const m = MOCK[p] || { count:'—', delta:0 };
+      const icon = PLAT_ICONS[p] || `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/></svg>`;
+      const bg = PLAT_COLORS[p] || 'rgba(255,255,255,0.06)';
+      const name = PLAT_NAMES[p] || p;
+      const sign = m.delta > 0 ? '+' : '';
+      const dColor = m.delta > 0 ? '#34c759' : m.delta < 0 ? '#ff3b30' : 'rgba(255,255,255,0.3)';
+      return `
+        <div style="aspect-ratio:1;border-radius:18px;background:${bg};border:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px">
+          <div style="color:rgba(255,255,255,0.75)">${icon}</div>
+          <div style="font-size:22px;font-weight:700;color:#fff;line-height:1">${m.count}</div>
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.8px;text-transform:uppercase;text-align:center">${name}</div>
+          ${m.delta ? `<div style="font-size:11px;font-weight:700;color:${dColor}">${sign}${m.delta}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'analyticsAllOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:350;background:#000;display:flex;flex-direction:column';
+    overlay.innerHTML = `
+      <div style="display:flex;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 14px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0">
+        <button id="analyticsAllBack" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:28px;line-height:1;padding:0;margin-right:16px;cursor:pointer">‹</button>
+        <div style="font-size:17px;font-weight:700;color:#fff">All Platforms</div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          ${gridCards}
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#analyticsAllBack').addEventListener('click', () => overlay.remove());
+  });
 
   // ── Body-level sheets (avoid iOS fixed-inside-scroll bug) ──────────────
   // Remove any sheets left over from a previous campaign page visit
