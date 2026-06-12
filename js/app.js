@@ -131,6 +131,9 @@ function render() {
     injectCampaignNav(params.brandId, params.campId || null, 'cal');
   } else if (path === '/campaign') {
     app.innerHTML = pageCampaign(params.brandId, params.id);
+  } else if (path === '/analytics') {
+    app.innerHTML = pageAnalytics(params.brandId, params.campId, params.platform);
+    injectCampaignNav(params.brandId, params.campId || null, null);
   } else if (path === '/doc') {
     app.innerHTML = pageDoc(params.brandId, params.campId, params.type);
   } else {
@@ -3120,7 +3123,7 @@ function pageCampaign(brandId, campId) {
     const sign = m.delta > 0 ? '+' : '';
     const dCls = m.delta > 0 ? 'pos' : m.delta < 0 ? 'neg' : '';
     return `
-      <div class="camp-analytics-item">
+      <div class="camp-analytics-item" data-href="#/analytics?brandId=${brandId}&campId=${campId}&platform=${p}" style="cursor:pointer">
         <div class="camp-analytics-icon">${icon}</div>
         <div class="camp-analytics-count">${m.count}</div>
         <div class="camp-analytics-delta ${dCls}">${m.delta ? sign + m.delta : ''}</div>
@@ -3276,10 +3279,6 @@ function pageCampaign(brandId, campId) {
 
         <!-- Analytics bar -->
         <div class="camp-analytics">
-          <div class="camp-analytics-header">
-            <span class="camp-analytics-title">ANALYTICS</span>
-            <button class="camp-analytics-more" id="campAnalyticsMore">View More ›</button>
-          </div>
           <div class="camp-analytics-row">${analyticsItemsHTML}</div>
         </div>
 
@@ -3947,6 +3946,112 @@ function renderDocBlocks(blocks) {
         <hr class="doc-divider"></div>`;
     return '';
   }).join('');
+}
+
+/* ═══════════════════════════════════════
+   ANALYTICS PAGE
+═══════════════════════════════════════ */
+function pageAnalytics(brandId, campId, platform) {
+  const brand    = getBrand(brandId);
+  if (!brand) return pageHome();
+  const campaign = campId ? (brand.campaigns||[]).find(c=>c.id===campId) : null;
+  const backHref = campId ? `#/campaign?brandId=${brandId}&id=${campId}` : `#/brand?id=${brandId}`;
+
+  const PLAT_ICONS = {
+    instagram: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+    tiktok:    `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>`,
+    youtube:   `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><polygon points="10 9 15 12 10 15" fill="currentColor" stroke="none"/></svg>`,
+    threads:   `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c2 0 4-.6 5.5-1.7M12 7c2.8 0 5 2.2 5 5s-2.2 5-5 5-5-2.2-5-5 2.2-5 5-5"/><path d="M17 7c1.1 1.2 1.7 2.8 1.7 4.5"/></svg>`,
+    twitter:   `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16M4 20L20 4"/></svg>`,
+    linkedin:  `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="11" x2="8" y2="17"/><line x1="8" y1="7" x2="8" y2="8"/><path d="M12 17v-4c0-1.1.9-2 2-2s2 .9 2 2v4"/></svg>`,
+  };
+  const PLAT_COLORS = {
+    instagram:'#e040c8', tiktok:'#00c8bf', youtube:'#f03030',
+    threads:'#5580e0',   twitter:'#4488ee', linkedin:'#0a66c2',
+  };
+  const PLAT_NAMES = {
+    instagram:'Instagram', tiktok:'TikTok', youtube:'YouTube',
+    threads:'Threads',     twitter:'X / Twitter', linkedin:'LinkedIn',
+  };
+
+  const MOCK = {
+    instagram: { followers:'2.8K', followerDelta:'+127', engRate:'4.2%', reach:'11.4K', impressions:'28K', clicks:'342', posts:[
+      { title:'Energy intro reel',     likes:'1.2K', comments:'48', shares:'91' },
+      { title:'Founding homie CTA',    likes:'834',  comments:'29', shares:'44' },
+      { title:'BTS playground setup',  likes:'611',  comments:'17', shares:'23' },
+    ]},
+    tiktok:    { followers:'8.9K', followerDelta:'-12',  engRate:'6.8%', reach:'34K',  impressions:'89K', clicks:'203', posts:[
+      { title:'Playground tour',        likes:'3.1K', comments:'124', shares:'890' },
+      { title:'What is a homie?',       likes:'2.4K', comments:'96',  shares:'441' },
+      { title:'Beta lab preview',       likes:'1.8K', comments:'71',  shares:'330' },
+    ]},
+    youtube:   { followers:'1.2K', followerDelta:'+89',  engRate:'3.1%', reach:'5.6K', impressions:'12K', clicks:'189', posts:[
+      { title:'Full intro to the playground', likes:'312', comments:'34', shares:'18' },
+      { title:'Founding homie Q&A',           likes:'198', comments:'21', shares:'9'  },
+    ]},
+    threads:   { followers:'456',  followerDelta:'+67',  engRate:'2.9%', reach:'2.1K', impressions:'4.8K', clicks:'87', posts:[
+      { title:'Daily homie dispatch',   likes:'98',  comments:'14', shares:'7'  },
+      { title:'Playground philosophy',  likes:'74',  comments:'9',  shares:'4'  },
+    ]},
+    twitter:   { followers:'1.1K', followerDelta:'+34',  engRate:'1.8%', reach:'3.2K', impressions:'7.1K', clicks:'112', posts:[] },
+    linkedin:  { followers:'890',  followerDelta:'+22',  engRate:'3.4%', reach:'4.4K', impressions:'9.2K', clicks:'228', posts:[] },
+  };
+
+  const data  = MOCK[platform] || { followers:'—', followerDelta:'', engRate:'—', reach:'—', impressions:'—', clicks:'—', posts:[] };
+  const color = PLAT_COLORS[platform] || '#fff';
+  const icon  = PLAT_ICONS[platform]  || '';
+  const name  = PLAT_NAMES[platform]  || platform;
+
+  const statCards = [
+    { label:'Engagement Rate', value: data.engRate },
+    { label:'Reach',           value: data.reach   },
+    { label:'Impressions',     value: data.impressions },
+    { label:'Link Clicks',     value: data.clicks  },
+  ].map(s => `
+    <div class="analytics-stat-card">
+      <div class="analytics-stat-value">${s.value}</div>
+      <div class="analytics-stat-label">${s.label}</div>
+    </div>`).join('');
+
+  const postsHTML = data.posts.length ? data.posts.map(p => `
+    <div class="analytics-post-row">
+      <div class="analytics-post-title">${escHtml(p.title)}</div>
+      <div class="analytics-post-stats">
+        <span class="analytics-post-stat"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>${p.likes}</span>
+        <span class="analytics-post-stat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>${p.comments}</span>
+        <span class="analytics-post-stat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>${p.shares}</span>
+      </div>
+    </div>`).join('') : `<div style="color:#333;font-size:13px;padding:16px 0;text-align:center">No posts yet</div>`;
+
+  return `
+    <div class="page" style="padding-bottom:110px">
+      <div class="top-header">
+        <button class="icon-btn" data-href="${backHref}">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="top-header-title">${name}</div>
+        <div style="width:36px"></div>
+      </div>
+
+      <div style="padding:20px 16px 0">
+        <!-- Hero metric -->
+        <div class="analytics-hero" style="border-color:${color}22">
+          <div class="analytics-hero-icon" style="color:${color};background:${color}18">${icon}</div>
+          <div class="analytics-hero-right">
+            <div class="analytics-hero-count">${data.followers}</div>
+            <div class="analytics-hero-label">Followers</div>
+            ${data.followerDelta ? `<div class="analytics-hero-delta${data.followerDelta.startsWith('+') ? ' pos' : ' neg'}">${data.followerDelta} this month</div>` : ''}
+          </div>
+        </div>
+
+        <!-- Stat grid -->
+        <div class="analytics-stat-grid">${statCards}</div>
+
+        <!-- Post performance -->
+        <div class="analytics-section-label">POST PERFORMANCE</div>
+        <div class="analytics-posts">${postsHTML}</div>
+      </div>
+    </div>`;
 }
 
 /* ═══════════════════════════════════════
