@@ -2638,9 +2638,12 @@ function pageCampaign(brandId, campId) {
   const postsCompleted = isCurrentPhase ? brand.currentPhase?.postsCompleted || 0 : 0;
   const totalPosts     = isCurrentPhase ? brand.currentPhase?.totalPosts || 0 : 0;
   const postLabel = totalPosts > 0 ? `${postsCompleted} / ${totalPosts} posts` : '0 posts';
-  const upcomingVal = campaign.status === 'active'
-    ? (brand.board?.ready?.[0]?.title || brand.board?.drafting?.[0]?.title || '—')
-    : `Starts ${campaign.startDate}`;
+  const nextMarker  = (campaign.mileMarkers || []).find(m => !m.done);
+  const upcomingVal = nextMarker
+    ? escHtml(nextMarker.text) + (nextMarker.date ? ` · ${fromDateInputVal(nextMarker.date)}` : '')
+    : campaign.status === 'active'
+      ? (brand.board?.ready?.[0]?.title || brand.board?.drafting?.[0]?.title || '—')
+      : `Starts ${campaign.startDate}`;
   const stageName = stages[stageIndex] || 'Ideation';
 
   // Brand icon
@@ -2838,21 +2841,30 @@ function pageCampaign(brandId, campId) {
         <!-- MILE MARKERS -->
         ${(() => {
           const markers = campaign.mileMarkers || [];
-          if (!markers.length) return '';
+          const nextM   = markers.find(m => !m.done);
+          const checkSVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
           return `<div class="section-card" style="margin-bottom:10px">
             <div class="camp-card-label">MILE MARKERS</div>
-            <div class="camp-mile-list">
+            ${nextM ? `
+            <div class="camp-mile-next">
+              <div class="camp-mile-next-label">NEXT CHECKPOINT</div>
+              <div class="camp-mile-next-text">${escHtml(nextM.text)}</div>
+              ${nextM.date ? `<div class="camp-mile-next-eta">ETA ${fromDateInputVal(nextM.date)}</div>` : ''}
+            </div>` : ''}
+            ${markers.length ? `
+            <div class="camp-mile-list" style="${nextM ? 'margin-top:10px' : ''}">
               ${markers.map(m => `
                 <div class="camp-mile-item${m.done ? ' done' : ''}" data-marker-id="${m.id}">
                   <button type="button" class="camp-mile-check">
-                    ${m.done ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+                    ${m.done ? checkSVG : ''}
                   </button>
                   <div class="camp-mile-info">
                     <span class="camp-mile-text">${escHtml(m.text)}</span>
                     ${m.date ? `<span class="camp-mile-arrival">${fromDateInputVal(m.date)}</span>` : ''}
                   </div>
                 </div>`).join('')}
-            </div>
+            </div>` : `
+            <div style="font-size:12px;color:rgba(255,255,255,0.2);padding:12px 0;text-align:center">Add milestones via ··· Settings</div>`}
           </div>`;
         })()}
 
@@ -2946,7 +2958,7 @@ function bindCampaignPage(brandId, campId) {
         </div>
 
       </div>
-      <div style="padding:12px 20px;padding-bottom:max(96px,calc(env(safe-area-inset-bottom,0px) + 96px));border-top:1px solid rgba(255,255,255,0.06)">
+      <div style="padding:12px 20px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,0.06)">
         <button id="campSettingsSave" style="width:100%;padding:13px;border-radius:12px;background:#fff;color:#000;font-size:14px;font-weight:700">Save Settings</button>
       </div>
     </div>`;
