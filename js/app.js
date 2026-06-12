@@ -3209,14 +3209,14 @@ function pageCampaign(brandId, campId) {
 
   const daysLeftLabel = (() => {
     const iso = toDateInputVal(campaign.endDate);
-    if (!iso) return '';
+    if (!iso) return null;
     const [y, mo, d] = iso.split('-').map(Number);
-    const end = new Date(y, mo - 1, d);
     const today = new Date(); today.setHours(0,0,0,0);
-    const diff = Math.ceil((end - today) / 86400000);
-    if (diff < 0) return 'Campaign ended';
-    if (diff === 0) return 'Last day';
-    return `${diff} day${diff === 1 ? '' : 's'} left`;
+    const diff = Math.ceil((new Date(y, mo - 1, d) - today) / 86400000);
+    if (diff < 0) return { label: 'Campaign ended', cls: 'red' };
+    if (diff === 0) return { label: 'Last day', cls: 'red' };
+    const cls = diff > 100 ? 'green' : diff > 25 ? 'yellow' : 'red';
+    return { label: `${diff} day${diff === 1 ? '' : 's'} left`, cls };
   })();
 
   return `
@@ -3235,7 +3235,7 @@ function pageCampaign(brandId, campId) {
       <!-- Campaign hero card: full-width -->
       <div class="camp-hero-card" id="campHeroCard" style="${heroImgStyle}">
         <div class="camp-hero-top">
-          ${daysLeftLabel ? `<div class="camp-hero-days-left">${daysLeftLabel}</div>` : ''}
+          ${daysLeftLabel ? `<div class="home-camp-days-pill home-camp-days-${daysLeftLabel.cls}">${daysLeftLabel.label}</div>` : ''}
         </div>
         <div class="camp-hero-name">${campaign.name}</div>
         <div class="camp-hero-next">
