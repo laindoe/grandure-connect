@@ -3729,22 +3729,21 @@ function bindCampaignPage(brandId, campId) {
   document.getElementById('campInfoSheet')?.remove();
   document.getElementById('campPlanSheet')?.remove();
 
-  // Inject ··· settings sheet
+  // Inject settings full-screen page
   const moreEl = document.createElement('div');
-  moreEl.className = 'camp-more-sheet';
   moreEl.id = 'campMoreSheet';
-  moreEl.style.display = 'none';
+  moreEl.style.cssText = 'position:fixed;inset:0;z-index:300;background:#000;display:none;flex-direction:column';
 
   const ALL_PLATFORMS = ['Instagram','TikTok','Facebook','YouTube','X','LinkedIn','Pinterest','Threads','Snapchat','Email'];
   const activePlats = (campaign.ov_platforms || '').split(',').map(s => s.trim()).filter(Boolean);
 
   const existingMarkers = campaign.mileMarkers || [];
   const mileRowsHTML = existingMarkers.map(m => `
-    <div class="info-mile-row" data-marker-id="${m.id}">
+    <div class="info-mile-row" data-marker-id="${m.id}" style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
       <div class="info-mile-fields" style="flex:1;display:flex;flex-direction:column;gap:6px">
         <input class="notion-input info-mile-text" value="${escHtml(m.text||'')}" placeholder="Milestone name" style="font-size:15px">
-        <div class="info-mile-arrival-wrap" style="display:flex;align-items:center;gap:8px">
-          <span class="info-mile-arrival-label" style="font-size:10px;font-weight:700;letter-spacing:0.6px;color:rgba(255,255,255,0.3);white-space:nowrap">ARRIVAL TIME</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:10px;font-weight:700;letter-spacing:0.6px;color:rgba(255,255,255,0.3);white-space:nowrap">ARRIVAL TIME</span>
           <input type="date" class="notion-input notion-date info-mile-date" value="${m.date||''}" style="flex:1;color-scheme:dark">
         </div>
       </div>
@@ -3752,42 +3751,40 @@ function bindCampaignPage(brandId, campId) {
     </div>`).join('');
 
   moreEl.innerHTML = `
-    <div class="camp-more-sheet-bg" id="campMoreSheetBg"></div>
-    <div class="camp-settings-panel" style="position:relative;background:#1c1c1e;border-radius:20px 20px 0 0;border-top:1px solid rgba(255,255,255,0.1);max-height:88dvh;display:flex;flex-direction:column">
-      <div style="padding:12px 20px 0;text-align:center">
-        <div style="width:40px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:0 auto 8px"></div>
-        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);padding-bottom:14px">Campaign Settings</div>
+    <!-- Top nav bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 14px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0">
+      <button id="campSettingsCancel" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:16px;font-weight:500;padding:0;min-width:64px;text-align:left">Cancel</button>
+      <div style="font-size:16px;font-weight:700;color:#fff;letter-spacing:-0.3px">Settings</div>
+      <button id="campSettingsSave" style="background:none;border:none;color:#fff;font-size:16px;font-weight:700;padding:0;min-width:64px;text-align:right">Done</button>
+    </div>
+
+    <!-- Scrollable content -->
+    <div style="flex:1;overflow-y:auto;padding:0 20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))">
+
+      <!-- COVER PHOTO -->
+      <div style="padding:20px 0 16px;border-bottom:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">COVER PHOTO</div>
+        <button id="campMoreChangeCover" style="width:100%;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,0.06);border:none;color:#fff;font-size:15px;font-weight:500;text-align:left">Change Cover Photo</button>
       </div>
-      <div style="flex:1;overflow-y:auto;padding:0 20px 8px">
 
-        <!-- COVER PHOTO -->
-        <div style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06)">
-          <div style="font-size:9px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">COVER PHOTO</div>
-          <button class="camp-more-item" id="campMoreChangeCover" style="border:none;border-radius:10px;background:rgba(255,255,255,0.06);padding:12px 16px;font-size:14px;text-align:left;width:100%">Change Cover Photo</button>
+      <!-- SOCIAL MEDIA -->
+      <div style="padding:20px 0 16px;border-bottom:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">SOCIAL MEDIA</div>
+        <input type="hidden" id="settingsPlatforms" value="${campaign.ov_platforms||''}">
+        <div id="settingsPlatformPills" style="display:flex;flex-wrap:wrap;gap:8px">
+          ${ALL_PLATFORMS.map(p => `
+            <button type="button" class="platform-pill${activePlats.includes(p)?' active':''}" data-platform="${p}">${p}</button>
+          `).join('')}
         </div>
-
-        <!-- SOCIAL MEDIA -->
-        <div style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06)">
-          <div style="font-size:9px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">SOCIAL MEDIA</div>
-          <input type="hidden" id="settingsPlatforms" value="${campaign.ov_platforms||''}">
-          <div id="settingsPlatformPills" style="display:flex;flex-wrap:wrap;gap:8px">
-            ${ALL_PLATFORMS.map(p => `
-              <button type="button" class="platform-pill${activePlats.includes(p)?' active':''}" data-platform="${p}">${p}</button>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- MILE MARKERS -->
-        <div style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06)">
-          <div style="font-size:9px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">MILE MARKERS</div>
-          <div id="settingsMileList" style="display:flex;flex-direction:column;gap:0">${mileRowsHTML}</div>
-          <button type="button" id="settingsMileAddBtn" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);font-size:13px;font-weight:600;margin-top:8px">+ Add Marker</button>
-        </div>
-
       </div>
-      <div style="padding:12px 20px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,0.06)">
-        <button id="campSettingsSave" style="width:100%;padding:13px;border-radius:12px;background:#fff;color:#000;font-size:14px;font-weight:700">Save Settings</button>
+
+      <!-- MILE MARKERS -->
+      <div style="padding:20px 0 16px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">MILE MARKERS</div>
+        <div id="settingsMileList" style="display:flex;flex-direction:column">${mileRowsHTML}</div>
+        <button type="button" id="settingsMileAddBtn" style="width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);font-size:13px;font-weight:600;margin-top:10px">+ Add Marker</button>
       </div>
+
     </div>`;
   document.body.appendChild(moreEl);
 
@@ -3865,14 +3862,14 @@ function bindCampaignPage(brandId, campId) {
 
   let aishaReturnSheet = null;
 
-  // ··· settings sheet bindings
+  // Settings page open / close
   document.getElementById('campMoreBtn')?.addEventListener('click', () => {
     moreEl.style.display = 'flex';
   });
-  document.getElementById('campMoreSheetBg')?.addEventListener('click', () => {
+  moreEl.querySelector('#campSettingsCancel')?.addEventListener('click', () => {
     moreEl.style.display = 'none';
   });
-  document.getElementById('campMoreChangeCover')?.addEventListener('click', () => {
+  moreEl.querySelector('#campMoreChangeCover')?.addEventListener('click', () => {
     moreEl.style.display = 'none';
     openEditHeroPhoto(brandId, campId);
   });
