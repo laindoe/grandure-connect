@@ -1073,7 +1073,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
   -webkit-backdrop-filter: blur(16px) saturate(1.8);
   box-shadow: 0 2px 12px rgba(0,0,0,0.25);
 }
-.camp-hero-days-green  { background: rgba(52,199,89,0.72);  color: #e6fff0; border-color: rgba(52,199,89,0.9); }
+.camp-hero-days-green  { background: #1ad15e; color: #fff; border-color: #4dffa0; text-shadow: 0 1px 4px rgba(0,0,0,0.25); }
 .camp-hero-days-yellow { background: rgba(255,204,0,0.72);  color: #fff8d6; border-color: rgba(255,204,0,0.9); }
 .camp-hero-days-red    { background: rgba(255,69,58,0.72);  color: #ffe8e6; border-color: rgba(255,69,58,0.9); }
 .camp-hero-name { font-size:24px;font-weight:700;color:#fff;margin-bottom:14px;line-height:1.2; }
