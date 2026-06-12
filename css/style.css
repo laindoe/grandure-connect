@@ -1448,3 +1448,29 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .sched-sheet { background:#1c1c1e;border-radius:20px 20px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));width:100%;max-width:430px; }
 .sched-title { font-size:15px;font-weight:700;color:#fff;margin-bottom:16px; }
 .sched-save { width:100%;padding:13px;border-radius:12px;background:#fff;color:#000;font-size:14px;font-weight:700;margin-top:14px; }
+/* Mile Markers (campaign page view) */
+.camp-mile-next { background:rgba(52,199,89,0.08);border:1px solid rgba(52,199,89,0.18);border-radius:12px;padding:12px 14px;margin-bottom:4px; }
+.camp-mile-next-label { font-size:9px;font-weight:700;letter-spacing:1.2px;color:rgba(52,199,89,0.6);margin-bottom:5px; }
+.camp-mile-next-text { font-size:15px;font-weight:600;color:#fff;margin-bottom:3px; }
+.camp-mile-next-eta { font-size:11px;font-weight:600;color:rgba(52,199,89,0.7);letter-spacing:0.3px; }
+.camp-mile-list { display:flex;flex-direction:column;gap:0; }
+.camp-mile-item { display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05); }
+.camp-mile-item:last-child { border-bottom:none; }
+.camp-mile-item.done .camp-mile-text { color:rgba(255,255,255,0.3);text-decoration:line-through; }
+.camp-mile-check { width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#34c759;cursor:pointer; }
+.camp-mile-item.done .camp-mile-check { background:rgba(52,199,89,0.15);border-color:rgba(52,199,89,0.4); }
+.camp-mile-info { display:flex;flex-direction:column;gap:2px;flex:1; }
+.camp-mile-text { font-size:14px;font-weight:500;color:rgba(255,255,255,0.85); }
+.camp-mile-arrival { font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);letter-spacing:0.3px; }
+/* Idea Detail Sheet */
+.idea-link-row { display:flex;gap:6px;margin-bottom:6px;align-items:center; }
+.idea-media-item { display:flex;align-items:center;gap:8px;padding:6px 0; }
+
+/* Analytics — All Platforms view */
+.analytics-all-list { display:flex;flex-direction:column; }
+.analytics-all-row { display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer; }
+.analytics-all-row:last-child { border-bottom:none; }
+.analytics-all-icon { width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.analytics-all-info { flex:1;min-width:0; }
+.analytics-all-name { font-size:14px;font-weight:600;color:#fff;margin-bottom:3px; }
+.analytics-all-stats { font-size:11px;color:rgba(255,255,255,0.35); }

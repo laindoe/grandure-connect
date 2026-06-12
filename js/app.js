@@ -78,6 +78,25 @@ function parseHash() {
 
 function getBrand(id) { return BRANDS.find(b => b.id === id); }
 
+function uid() { return Math.random().toString(36).slice(2, 9); }
+
+function toDateInputVal(str) {
+  if (!str) return '';
+  const months = { Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12 };
+  const m = str.match(/^([A-Za-z]{3})\s+(\d{1,2}),?\s+(\d{4})$/);
+  if (!m) return str.includes('-') ? str : '';
+  const mo = String(months[m[1]] || 1).padStart(2,'0');
+  return `${m[3]}-${mo}-${String(m[2]).padStart(2,'0')}`;
+}
+
+function fromDateInputVal(val) {
+  if (!val) return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const [y, mo, d] = val.split('-').map(Number);
+  if (!y) return val;
+  return `${months[mo-1]} ${d}, ${y}`;
+}
+
 window.addEventListener('hashchange', render);
 window.addEventListener('load', render);
 
@@ -119,7 +138,9 @@ function render() {
     injectCampaignNav(params.id, params.campId || null, null);
   } else if (path === '/vault') {
     app.innerHTML = pageIdeaVault(params.id);
-    injectCampaignNav(params.id, params.campId || null, 'ideas');
+    bindVaultPage(params.id);
+  } else if (path === '/analytics') {
+    app.innerHTML = pageAnalytics(params.brandId, params.campId, params.platform);
   } else if (path === '/inspiration') {
     app.innerHTML = pageInspiration(params.id);
     injectCampaignNav(params.id, params.campId || null, null);
@@ -428,44 +449,55 @@ function _populateSettings() {
 }
 
 /* ── Idea Capture Modal ── */
-let captureState = { platform: '', format: '', brandId: '', campaignId: '' };
+let captureState = { platforms: [], formats: [], brandId: '', campaignId: '' };
+
+const CAPTURE_PLATFORMS = [
+  'instagram','tiktok','youtube','threads','twitter','linkedin','facebook','pinterest','podcast','email','patreon'
+];
+const CAPTURE_PLAT_LABELS = {
+  instagram:'Instagram', tiktok:'TikTok', youtube:'YouTube', threads:'Threads',
+  twitter:'X', linkedin:'LinkedIn', facebook:'Facebook', pinterest:'Pinterest',
+  podcast:'Podcast', email:'Email', patreon:'Patreon',
+};
 
 function captureModalHTML() {
-  const brandOpts = BRANDS.map((b, i) =>
-    `<option value="${b.id}"${i === 0 ? ' selected' : ''}>${escHtml(b.name)}</option>`
+  const brandOptions = BRANDS.map(b =>
+    `<option value="${b.id}">${escHtml(b.name)}</option>`
   ).join('');
-  const firstBrand = BRANDS[0];
-  const campOpts = firstBrand
-    ? (firstBrand.campaigns||[]).map((c, i) =>
-        `<option value="${c.id}"${i === 0 ? ' selected' : ''}>${escHtml(c.name)}</option>`
-      ).join('')
-    : '';
-
   return `
     <div class="capture-overlay" id="captureOverlay" style="display:none">
-      <div class="capture-sheet">
-        <div class="capture-handle"></div>
-        <div class="capture-title">New Idea</div>
-        <textarea class="capture-textarea" id="captureText" placeholder="What's the idea?"></textarea>
-        <div class="capture-section-label">BRAND</div>
-        <select class="capture-select" id="captureBrandSelect">${brandOpts}</select>
-        <div class="capture-section-label" id="captureCampLabel">CAMPAIGN</div>
-        <select class="capture-select" id="captureCampSelect">${campOpts}</select>
-        <div class="capture-section-label">PLATFORM</div>
-        <div class="capture-chips" id="capturePlatformChips">
-          ${['instagram','threads','youtube','tiktok'].map(p =>
-            `<button class="capture-chip" data-platform="${p}">${PLATFORM_LABELS[p]}</button>`
-          ).join('')}
+      <div class="capture-sheet" style="padding:0;display:flex;flex-direction:column;max-height:88dvh">
+        <div style="padding:20px 24px 12px;flex-shrink:0">
+          <div class="capture-handle"></div>
+          <div class="capture-title">New Idea</div>
         </div>
-        <div class="capture-section-label">FORMAT</div>
-        <div class="capture-chips" id="captureFormatChips">
-          ${['Reel','Carousel','Thread','Long-form','Short','Live'].map(f =>
-            `<button class="capture-chip" data-format="${f}">${f}</button>`
-          ).join('')}
+        <div style="flex:1;overflow-y:auto;padding:0 24px 8px">
+          <textarea class="capture-textarea" id="captureText" placeholder="What's the idea?" style="margin-bottom:16px"></textarea>
+          <div class="capture-section-label">BRAND</div>
+          <select id="captureBrandSel" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;margin-bottom:14px;outline:none;color-scheme:dark">
+            <option value="">— Select brand —</option>
+            ${brandOptions}
+          </select>
+          <div class="capture-section-label">CAMPAIGN</div>
+          <select id="captureCampSel" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;margin-bottom:14px;outline:none;color-scheme:dark">
+            <option value="">— Select campaign —</option>
+          </select>
+          <div class="capture-section-label">PLATFORM <span style="color:rgba(255,255,255,0.25);font-size:9px;font-weight:400;letter-spacing:0">select all that apply</span></div>
+          <div class="capture-chips" id="capturePlatformChips">
+            ${CAPTURE_PLATFORMS.map(p =>
+              `<button class="capture-chip" data-platform="${p}">${CAPTURE_PLAT_LABELS[p]}</button>`
+            ).join('')}
+          </div>
+          <div class="capture-section-label">FORMAT <span style="color:rgba(255,255,255,0.25);font-size:9px;font-weight:400;letter-spacing:0">select all that apply</span></div>
+          <div class="capture-chips" id="captureFormatChips">
+            <span style="color:rgba(255,255,255,0.2);font-size:12px">Pick a platform first</span>
+          </div>
         </div>
-        <div class="capture-actions">
-          <button class="capture-cancel" id="captureCancel">Cancel</button>
-          <button class="capture-save" id="captureSave">Save Idea</button>
+        <div style="padding:12px 24px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0">
+          <div class="capture-actions" style="margin-top:0">
+            <button class="capture-cancel" id="captureCancel">Cancel</button>
+            <button class="capture-save" id="captureSave">Save Idea</button>
+          </div>
         </div>
       </div>
     </div>
@@ -507,89 +539,113 @@ function bindCapture() {
   const overlay = document.getElementById('captureOverlay');
   if (!overlay) return;
 
+  const reset = () => {
+    captureState = { platforms: [], formats: [], brandId: '', campaignId: '' };
+    overlay.querySelector('#captureText').value = '';
+    overlay.querySelector('#captureBrandSel').value = '';
+    overlay.querySelector('#captureCampSel').innerHTML = '<option value="">— Select campaign —</option>';
+    overlay.querySelectorAll('.capture-chip').forEach(c => c.classList.remove('active'));
+    overlay.querySelector('#captureFormatChips').innerHTML = '<span style="color:rgba(255,255,255,0.2);font-size:12px">Pick a platform first</span>';
+  };
+
   const open = () => {
-    // Reset state to first brand/campaign
-    const brandSel = document.getElementById('captureBrandSelect');
-    if (brandSel && BRANDS.length) {
-      brandSel.value = BRANDS[0].id;
-      captureState.brandId = BRANDS[0].id;
-      populateCampSelect(BRANDS[0].id);
-    }
+    // Refresh brand options in case new brands were added
+    const brandSel = overlay.querySelector('#captureBrandSel');
+    const currentVal = brandSel.value;
+    brandSel.innerHTML = '<option value="">— Select brand —</option>' +
+      BRANDS.map(b => `<option value="${b.id}"${b.id===currentVal?' selected':''}>${escHtml(b.name)}</option>`).join('');
     overlay.style.display = 'flex';
   };
   const close = () => { overlay.style.display = 'none'; };
 
   document.getElementById('navCapture')?.addEventListener('click', open);
   document.getElementById('dockCapture')?.addEventListener('click', open);
-  document.getElementById('captureCancel')?.addEventListener('click', close);
-
+  document.getElementById('captureCancel')?.addEventListener('click', () => { reset(); close(); });
   document.getElementById('navHome')?.addEventListener('click', () => navigate('/'));
+  overlay.addEventListener('click', e => { if (e.target === overlay) { reset(); close(); } });
 
-  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-
-  function populateCampSelect(brandId) {
-    const sel = document.getElementById('captureCampSelect');
-    if (!sel) return;
-    const brand = getBrand(brandId);
-    const camps = brand?.campaigns || [];
-    sel.innerHTML = camps.length
-      ? camps.map((c, i) => `<option value="${c.id}"${i===0?' selected':''}>${escHtml(c.name)}</option>`).join('')
-      : `<option value="">No campaigns</option>`;
-    captureState.campaignId = camps[0]?.id || '';
-  }
-
-  document.getElementById('captureBrandSelect')?.addEventListener('change', e => {
-    captureState.brandId = e.target.value;
-    populateCampSelect(e.target.value);
-  });
-  document.getElementById('captureCampSelect')?.addEventListener('change', e => {
-    captureState.campaignId = e.target.value;
+  // Brand → populate campaign dropdown
+  overlay.querySelector('#captureBrandSel')?.addEventListener('change', function() {
+    captureState.brandId = this.value;
+    captureState.campaignId = '';
+    const campSel = overlay.querySelector('#captureCampSel');
+    const brand = getBrand(this.value);
+    campSel.innerHTML = '<option value="">— Select campaign —</option>' +
+      (brand?.campaigns || []).map(c =>
+        `<option value="${c.id}">${escHtml(c.name)}</option>`
+      ).join('');
   });
 
-  // Init state from selects
-  const brandSel = document.getElementById('captureBrandSelect');
-  if (brandSel) {
-    captureState.brandId = brandSel.value;
-    populateCampSelect(brandSel.value);
-  }
-
-  overlay.querySelectorAll('[data-platform]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      overlay.querySelectorAll('[data-platform]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      captureState.platform = btn.dataset.platform;
-    });
+  overlay.querySelector('#captureCampSel')?.addEventListener('change', function() {
+    captureState.campaignId = this.value;
   });
 
-  overlay.querySelectorAll('[data-format]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      overlay.querySelectorAll('[data-format]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      captureState.format = btn.dataset.format;
-    });
-  });
-
-  document.getElementById('captureSave')?.addEventListener('click', () => {
-    const text = document.getElementById('captureText')?.value.trim();
-    if (!text) return;
-    const brandId    = document.getElementById('captureBrandSelect')?.value;
-    const campaignId = document.getElementById('captureCampSelect')?.value;
-    const brand = getBrand(brandId);
-    if (brand) {
-      const campaign = (brand.campaigns||[]).find(c=>c.id===campaignId);
-      const newIdea = {
-        id:       uid(),
-        title:    text,
-        platform: captureState.platform || 'instagram',
-        format:   captureState.format   || 'Reel',
-        campaign: campaign?.name || '',
-        campaignId: campaignId || '',
-      };
-      saveBrandOverride(brandId, { ideas: [...(brand.ideas||[]), newIdea] });
+  // Rebuild format chips from all currently selected platforms
+  function rebuildFormats() {
+    const fmtChips = overlay.querySelector('#captureFormatChips');
+    const plats = captureState.platforms;
+    if (!plats.length) {
+      fmtChips.innerHTML = '<span style="color:rgba(255,255,255,0.2);font-size:12px">Pick a platform first</span>';
+      captureState.formats = [];
+      return;
     }
-    document.getElementById('captureText').value = '';
-    overlay.querySelectorAll('[data-platform],[data-format]').forEach(b=>b.classList.remove('active'));
-    captureState.platform = ''; captureState.format = '';
+    const seen = new Set();
+    const formats = [];
+    plats.forEach(p => {
+      (PLATFORM_FORMATS[p] || []).forEach(f => {
+        if (!seen.has(f)) { seen.add(f); formats.push(f); }
+      });
+    });
+    fmtChips.innerHTML = formats.map(f =>
+      `<button class="capture-chip${captureState.formats.includes(f) ? ' active' : ''}" data-format="${f}">${f}</button>`
+    ).join('');
+    // Re-bind format toggle
+    fmtChips.querySelectorAll('[data-format]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        const f = btn.dataset.format;
+        captureState.formats = btn.classList.contains('active')
+          ? [...captureState.formats, f]
+          : captureState.formats.filter(x => x !== f);
+      });
+    });
+  }
+
+  // Platform multi-select
+  overlay.querySelectorAll('#capturePlatformChips [data-platform]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active');
+      const p = btn.dataset.platform;
+      captureState.platforms = btn.classList.contains('active')
+        ? [...captureState.platforms, p]
+        : captureState.platforms.filter(x => x !== p);
+      rebuildFormats();
+    });
+  });
+
+  // Save — actually persist to brand ideas
+  overlay.querySelector('#captureSave')?.addEventListener('click', () => {
+    const text = overlay.querySelector('#captureText')?.value.trim();
+    if (!text) { overlay.querySelector('#captureText').focus(); return; }
+
+    const brand = getBrand(captureState.brandId);
+    if (brand) {
+      const campaign = (brand.campaigns || []).find(c => c.id === captureState.campaignId);
+      const idea = {
+        id: uid(),
+        title: text,
+        platform: captureState.platforms[0] || '',
+        platforms: captureState.platforms,
+        format: captureState.formats[0] || '',
+        formats: captureState.formats,
+        campaign: campaign?.name || '',
+        campaignId: captureState.campaignId || '',
+        notes: '', references: '', links: [],
+      };
+      const updatedIdeas = [...(brand.ideas || []), idea];
+      saveBrandOverride(captureState.brandId, { ideas: updatedIdeas });
+    }
+    reset();
     close();
   });
 }
@@ -1093,20 +1149,46 @@ function openEditCampaignPhoto(brandId, campId) {
 }
 
 function openEditHeroPhoto(brandId, campId) {
-  const mount = document.getElementById('editPhotoMount');
-  if (!mount) return;
-  mount.innerHTML = editPhotoCropSheetHTML();
+  // Remove any existing instance
+  document.getElementById('editHeroPhotoOverlay')?.remove();
 
-  const overlay     = document.getElementById('editPhotoOverlay');
-  const cropWin     = document.getElementById('cropWindow');
-  const cropImg     = document.getElementById('cropImg');
-  const placeholder = document.getElementById('cropPlaceholder');
-  const fileInput   = document.getElementById('cropFileInput');
+  // Remove the campaign nav from the compositor entirely (visibility:hidden leaves the
+  // backdrop-filter layer visible on iOS; display:none is the only reliable fix)
+  const campNav = document.getElementById('campaignBottomNav');
+  if (campNav) campNav.style.display = 'none';
 
-  // Use landscape crop ratio for the hero card
-  if (cropWin) cropWin.style.aspectRatio = '16/9';
+  // Mount directly on document.body at z-index:500 — above all nav bars and iOS stacking contexts
+  const wrapper = document.createElement('div');
+  wrapper.id = 'editHeroPhotoOverlay';
+  wrapper.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
+  wrapper.innerHTML = `
+    <div style="background:rgba(18,18,18,0.97);border-radius:20px;width:calc(100% - 32px);max-width:398px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
+      <div style="padding:18px 22px 10px">
+        <div class="capture-title" style="margin-bottom:4px">Edit Cover Photo</div>
+        <div style="color:#555;font-size:12px;letter-spacing:.5px">Drag to position · Pinch to zoom</div>
+      </div>
+      <div class="crop-window" id="cropWindow" style="aspect-ratio:16/9">
+        <img id="cropImg" style="position:absolute;touch-action:none;user-select:none;-webkit-user-select:none;pointer-events:none;display:none">
+        <div id="cropPlaceholder" class="crop-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Tap to choose photo</span>
+        </div>
+      </div>
+      <div style="padding:14px 22px 24px">
+        <input type="file" id="cropFileInput" accept="image/*" style="display:none">
+        <button id="cropPickBtn" class="capture-cancel" style="width:100%;margin-bottom:10px">Change Image</button>
+        <div class="capture-actions">
+          <button class="capture-cancel" id="editPhotoCancel">Cancel</button>
+          <button class="capture-save" id="editPhotoSave">Save</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(wrapper);
 
-  overlay.style.display = 'flex';
+  const cropWin     = wrapper.querySelector('#cropWindow');
+  const cropImg     = wrapper.querySelector('#cropImg');
+  const placeholder = wrapper.querySelector('#cropPlaceholder');
+  const fileInput   = wrapper.querySelector('#cropFileInput');
 
   const brand    = getBrand(brandId);
   const campaign = brand?.campaigns.find(c => c.id === campId);
@@ -1129,20 +1211,30 @@ function openEditHeroPhoto(brandId, campId) {
     reader.readAsDataURL(file);
   };
 
-  document.getElementById('cropPickBtn').addEventListener('click', () => fileInput.click());
+  wrapper.querySelector('#cropPickBtn').addEventListener('click', () => fileInput.click());
   placeholder.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
-  document.getElementById('editPhotoCancel').addEventListener('click', () => { overlay.style.display = 'none'; });
 
-  document.getElementById('editPhotoSave').addEventListener('click', () => {
+  const closeOverlay = () => {
+    wrapper.remove();
+    if (campNav) campNav.style.display = '';
+  };
+
+  wrapper.querySelector('#editPhotoCancel').addEventListener('click', closeOverlay);
+
+  // Tap the dim backdrop (wrapper itself, outside the card) to dismiss
+  wrapper.addEventListener('click', e => { if (e.target === wrapper) closeOverlay(); });
+
+  wrapper.querySelector('#editPhotoSave').addEventListener('click', () => {
     const dataUrl = _exportCrop();
     if (dataUrl && brand) {
       const campaigns = brand.campaigns.map(c => c.id === campId ? { ...c, heroImage: dataUrl } : c);
       saveBrandOverride(brandId, { campaigns });
+      closeOverlay();
       document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
       bindCampaignPage(brandId, campId);
     } else {
-      overlay.style.display = 'none';
+      closeOverlay();
     }
   });
 
@@ -1307,8 +1399,8 @@ function openEditIconPhoto(sourceDataUrl, onSave) {
 /* ── Edit Photo / Crop Sheet ── */
 function editPhotoCropSheetHTML() {
   return `
-    <div class="capture-overlay" id="editPhotoOverlay" style="display:none">
-      <div class="capture-sheet" style="padding:0;overflow:hidden;border-radius:28px 28px 0 0">
+    <div class="capture-overlay" id="editPhotoOverlay" style="display:none;align-items:center;justify-content:center;z-index:300">
+      <div class="capture-sheet" style="padding:0;overflow:hidden;border-radius:20px;width:calc(100% - 32px);max-width:398px;margin:0 16px">
         <div style="padding:20px 24px 12px">
           <div class="capture-handle"></div>
           <div class="capture-title" style="margin-bottom:4px">Edit Photo</div>
@@ -2175,188 +2267,246 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
 window.vaultFilter = function(id, platform, format) {
   const { params } = parseHash();
   document.getElementById('app').innerHTML = pageIdeaVault(id, platform, format);
-  injectCampaignNav(id, params.campId || null, 'ideas');
-  bindCapture(); bindNav(); bindVaultPage(id, params.campId || null);
+  bindCapture(); bindNav();
+  bindVaultPage(id);
 };
 
-function bindVaultPage(brandId, campId) {
+const PLATFORM_FORMATS = {
+  instagram: ['Reel','Carousel','Story','Static Post','DM Note','Live','Guide'],
+  tiktok:    ['Short Video','Duet','Stitch','Series','Live','Photo Mode'],
+  youtube:   ['Long Video','Short','Live','Podcast','Community Post'],
+  threads:   ['Thread','Reply','Quote','Image Post'],
+  twitter:   ['Tweet','Thread','Space','Poll','Image Post'],
+  linkedin:  ['Post','Article','Newsletter','Poll','Document'],
+  facebook:  ['Post','Reel','Story','Live','Event'],
+  pinterest: ['Pin','Idea Pin','Board'],
+  podcast:   ['Episode','Teaser','Interview','Roundtable'],
+  email:     ['Newsletter','Promotional','Drip','Announcement'],
+  patreon:   ['Post','Exclusive','Tier Update','Live'],
+};
+
+function buildFormatOptions(platform, current) {
+  const fmts = PLATFORM_FORMATS[platform] || [];
+  if (!fmts.length) return `<option value="${current||''}">${current||'—'}</option>`;
+  return fmts.map(f => `<option value="${f}" ${f===current?'selected':''}>${f}</option>`).join('');
+}
+
+function bindVaultPage(brandId) {
   document.querySelectorAll('.idea-card[data-idea-id]').forEach(card => {
-    card.addEventListener('click', () => {
-      const ideaId = card.dataset.ideaId;
-      const bId    = card.dataset.brandId;
-      openIdeaDetail(bId, ideaId, campId);
-    });
+    card.addEventListener('click', () => openIdeaDetail(card.dataset.brandId, card.dataset.ideaId));
   });
 }
 
-function openIdeaDetail(brandId, ideaId, campId) {
+function openIdeaDetail(brandId, ideaId) {
+  const brand = getBrand(brandId);
+  if (!brand) return;
+  const idea = (brand.ideas || []).find(i => i.id === ideaId) || {};
+  const platform = idea.platform || '';
+
   document.getElementById('ideaDetailSheet')?.remove();
 
-  const brand = getBrand(brandId);
-  const idea  = (brand?.ideas||[]).find(i=>i.id===ideaId);
-  if (!idea) return;
+  const sheetEl = document.createElement('div');
+  sheetEl.id = 'ideaDetailSheet';
+  sheetEl.style.cssText = 'position:fixed;inset:0;z-index:250;display:flex;flex-direction:column;justify-content:flex-end;align-items:center';
 
-  const links = idea.links || [];
-  const linksHTML = links.map((l,i) => `
-    <div class="idea-link-row" data-idx="${i}">
-      <div class="idea-link-fields">
-        <input class="notion-input idea-link-label" value="${escHtml(l.label||'')}" placeholder="Label (optional)" style="font-size:14px">
-        <input class="notion-input idea-link-url" value="${escHtml(l.url||'')}" placeholder="https://…" style="font-size:13px;color:rgba(255,255,255,0.5)">
-      </div>
-      <button type="button" class="info-mile-del idea-link-del">×</button>
+  const fmtOpts = buildFormatOptions(platform, idea.format);
+  const linksHTML = (idea.links || []).map((lk, i) => `
+    <div class="idea-link-row" data-link-idx="${i}">
+      <input class="notion-input idea-link-label" value="${escHtml(lk.label||'')}" placeholder="Label" style="flex:1;min-width:0">
+      <input class="notion-input idea-link-url" value="${escHtml(lk.url||'')}" placeholder="URL" style="flex:2;min-width:0">
+      <button type="button" class="idea-link-del" style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;padding:0 4px">×</button>
     </div>`).join('');
 
-  const campOpts = (brand.campaigns||[]).map(c=>
-    `<option value="${c.id}">${escHtml(c.name)}</option>`
-  ).join('');
+  const mediaFiles = idea.mediaFiles || [];
+  const mediaListHTML = mediaFiles.length ? mediaFiles.map((m, i) => `
+    <div class="idea-media-item" data-media-idx="${i}">
+      <span class="idea-media-icon">${m.type==='audio'?'🎵':m.type==='video'?'🎬':'🖼'}</span>
+      <span class="idea-media-name" style="flex:1;font-size:12px;color:rgba(255,255,255,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(m.name||'File')}</span>
+      <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;padding:0 4px">×</button>
+    </div>`).join('') : '';
 
-  const sheet = document.createElement('div');
-  sheet.className = 'camp-more-sheet';
-  sheet.id = 'ideaDetailSheet';
-  sheet.innerHTML = `
-    <div class="camp-more-sheet-bg" id="ideaDetailBg"></div>
-    <div class="camp-more-sheet-panel camp-settings-panel">
-      <div class="camp-more-sheet-bar"></div>
-      <div class="idea-detail-topbar">
-        <div class="camp-settings-title" style="flex:1;text-align:left;padding:0">Idea Details</div>
-        <button class="idea-detail-add-btn" id="ideaAddToCamp" title="Add to campaign">+</button>
+  sheetEl.innerHTML = `
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6)" id="ideaDetailBg"></div>
+    <div style="position:relative;background:#1c1c1e;border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:92dvh;display:flex;flex-direction:column">
+      <div class="idea-detail-topbar" style="display:flex;align-items:center;padding:16px 20px 12px;gap:10px">
+        <button id="ideaDetailClose" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:18px;flex-shrink:0">×</button>
+        <div style="flex:1;font-size:16px;font-weight:700;color:#fff">Idea Details</div>
+        <button id="ideaDetailAdd" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
       </div>
-      <div class="camp-settings-body">
-
-        <div class="camp-settings-section" style="padding-top:0;border-top:none">
-          <div class="camp-settings-label">TITLE</div>
-          <input class="notion-input" id="ideaDetailTitle" value="${escHtml(idea.title)}" placeholder="Idea title" style="font-size:16px;font-weight:600">
+      <div style="flex:1;overflow-y:auto;padding:0 20px 8px">
+        <div class="notion-field">
+          <div class="notion-label">TITLE</div>
+          <input class="notion-input" id="ideaEditTitle" value="${escHtml(idea.title||'')}" placeholder="Idea title">
         </div>
-
-        <div class="camp-settings-section">
-          <div class="camp-settings-label">PLATFORM & FORMAT</div>
-          <div style="display:flex;gap:8px">
-            <select class="capture-select" id="ideaDetailPlatform" style="flex:1">
-              ${['instagram','tiktok','youtube','threads','twitter','linkedin','facebook'].map(p=>
-                `<option value="${p}"${idea.platform===p?' selected':''}>${PLAT_DISPLAY_NAMES[p]||p}</option>`
+        <div class="notion-field" style="display:flex;gap:10px">
+          <div style="flex:1">
+            <div class="notion-label">PLATFORM</div>
+            <select class="notion-input" id="ideaEditPlatform" style="color:#fff;background:#2c2c2e">
+              <option value="">— Select —</option>
+              ${['instagram','tiktok','youtube','threads','twitter','linkedin','facebook','pinterest','podcast','email','patreon'].map(p =>
+                `<option value="${p}" ${p===platform?'selected':''}>${PLATFORM_SHORT[p]||p.charAt(0).toUpperCase()+p.slice(1)}</option>`
               ).join('')}
             </select>
-            <input class="notion-input" id="ideaDetailFormat" value="${escHtml(idea.format||'')}" placeholder="Format" style="flex:1;font-size:14px">
+          </div>
+          <div style="flex:1">
+            <div class="notion-label">FORMAT</div>
+            <select class="notion-input" id="ideaEditFormat" style="color:#fff;background:#2c2c2e">${fmtOpts}</select>
           </div>
         </div>
-
-        <div class="camp-settings-section">
-          <div class="camp-settings-label">NOTES</div>
-          <textarea class="notion-textarea" id="ideaDetailNotes" placeholder="Details, angles, inspiration…" style="min-height:90px">${escHtml(idea.notes||'')}</textarea>
+        <!-- Media Uploads -->
+        <div class="notion-field">
+          <div class="notion-label">MEDIA</div>
+          <div id="ideaMediaList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">${mediaListHTML}</div>
+          <div style="display:flex;gap:8px">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> Image
+              <input type="file" accept="image/*" id="ideaUploadImage" style="display:none">
+            </label>
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> Video
+              <input type="file" accept="video/*" id="ideaUploadVideo" style="display:none">
+            </label>
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> Audio
+              <input type="file" accept="audio/*" id="ideaUploadAudio" style="display:none">
+            </label>
+          </div>
         </div>
-
-        <div class="camp-settings-section">
-          <div class="camp-settings-label">REFERENCES</div>
-          <textarea class="notion-textarea" id="ideaDetailRefs" placeholder="Creators, posts, or content to reference…" style="min-height:60px">${escHtml(idea.references||'')}</textarea>
+        <div class="notion-field">
+          <div class="notion-label">NOTES</div>
+          <textarea class="notion-input" id="ideaEditNotes" rows="3" style="resize:none">${escHtml(idea.notes||'')}</textarea>
         </div>
-
-        <div class="camp-settings-section">
-          <div class="camp-settings-label">LINKS</div>
-          <div id="ideaLinkList">${linksHTML}</div>
-          <button type="button" class="offer-add-btn" id="ideaAddLinkBtn">+ Add Link</button>
+        <div class="notion-field">
+          <div class="notion-label">REFERENCES</div>
+          <textarea class="notion-input" id="ideaEditRefs" rows="2" style="resize:none">${escHtml(idea.references||'')}</textarea>
         </div>
-
+        <div class="notion-field">
+          <div class="notion-label">LINKS</div>
+          <div id="ideaLinksList">${linksHTML}</div>
+          <button type="button" id="ideaAddLink" style="width:100%;padding:9px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);font-size:12px;font-weight:600;margin-top:6px">+ Add Link</button>
+        </div>
       </div>
-      <div class="camp-settings-footer">
-        <button class="camp-save-btn" id="ideaDetailSave">Save</button>
+      <div style="padding:12px 20px;padding-bottom:max(28px,env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,0.06)">
+        <button id="ideaDetailSave" style="width:100%;padding:13px;border-radius:12px;background:#fff;color:#000;font-size:14px;font-weight:700">Save</button>
       </div>
     </div>`;
-  document.body.appendChild(sheet);
 
-  document.getElementById('ideaDetailBg')?.addEventListener('click', () => sheet.remove());
+  document.body.appendChild(sheetEl);
 
-  // Delete link rows
-  sheet.querySelectorAll('.idea-link-del').forEach(btn => {
-    btn.addEventListener('click', () => btn.closest('.idea-link-row').remove());
+  const mediaList = sheetEl.querySelector('#ideaMediaList');
+  let currentMediaFiles = [...mediaFiles];
+
+  function addMediaItem(file, type) {
+    currentMediaFiles.push({ name: file.name, type, size: file.size });
+    const item = document.createElement('div');
+    item.className = 'idea-media-item';
+    item.dataset.mediaIdx = currentMediaFiles.length - 1;
+    item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0';
+    item.innerHTML = `
+      <span class="idea-media-icon" style="font-size:16px">${type==='audio'?'🎵':type==='video'?'🎬':'🖼'}</span>
+      <span style="flex:1;font-size:12px;color:rgba(255,255,255,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(file.name)}</span>
+      <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;padding:0 4px">×</button>`;
+    item.querySelector('.idea-media-del').addEventListener('click', () => {
+      currentMediaFiles.splice(parseInt(item.dataset.mediaIdx), 1);
+      item.remove();
+    });
+    mediaList.appendChild(item);
+  }
+
+  sheetEl.querySelector('#ideaUploadImage').addEventListener('change', e => { if(e.target.files[0]) addMediaItem(e.target.files[0], 'image'); });
+  sheetEl.querySelector('#ideaUploadVideo').addEventListener('change', e => { if(e.target.files[0]) addMediaItem(e.target.files[0], 'video'); });
+  sheetEl.querySelector('#ideaUploadAudio').addEventListener('change', e => { if(e.target.files[0]) addMediaItem(e.target.files[0], 'audio'); });
+
+  // Delete existing media items
+  mediaList.querySelectorAll('.idea-media-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.closest('.idea-media-item').dataset.mediaIdx);
+      currentMediaFiles.splice(idx, 1);
+      btn.closest('.idea-media-item').remove();
+    });
+  });
+
+  // Platform change → repopulate format dropdown
+  const platSel = sheetEl.querySelector('#ideaEditPlatform');
+  const fmtSel  = sheetEl.querySelector('#ideaEditFormat');
+  platSel.addEventListener('change', () => {
+    fmtSel.innerHTML = buildFormatOptions(platSel.value, '');
   });
 
   // Add link row
-  document.getElementById('ideaAddLinkBtn')?.addEventListener('click', () => {
+  const linksList = sheetEl.querySelector('#ideaLinksList');
+  sheetEl.querySelector('#ideaAddLink').addEventListener('click', () => {
     const row = document.createElement('div');
     row.className = 'idea-link-row';
+    row.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center';
     row.innerHTML = `
-      <div class="idea-link-fields">
-        <input class="notion-input idea-link-label" value="" placeholder="Label (optional)" style="font-size:14px">
-        <input class="notion-input idea-link-url" value="" placeholder="https://…" style="font-size:13px;color:rgba(255,255,255,0.5)">
-      </div>
-      <button type="button" class="info-mile-del idea-link-del">×</button>`;
+      <input class="notion-input idea-link-label" placeholder="Label" style="flex:1;min-width:0">
+      <input class="notion-input idea-link-url" placeholder="URL" style="flex:2;min-width:0">
+      <button type="button" class="idea-link-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;padding:0 4px">×</button>`;
     row.querySelector('.idea-link-del').addEventListener('click', () => row.remove());
-    document.getElementById('ideaLinkList')?.appendChild(row);
+    linksList.appendChild(row);
+  });
+  linksList.querySelectorAll('.idea-link-del').forEach(btn => btn.addEventListener('click', () => btn.closest('.idea-link-row').remove()));
+
+  // Close / backdrop
+  const closeSheet = () => sheetEl.remove();
+  sheetEl.querySelector('#ideaDetailClose').addEventListener('click', closeSheet);
+  sheetEl.querySelector('#ideaDetailBg').addEventListener('click', closeSheet);
+
+  // Add to campaign "+" button
+  sheetEl.querySelector('#ideaDetailAdd').addEventListener('click', () => {
+    const campaigns = (brand.campaigns || []);
+    if (!campaigns.length) return;
+    const destEl = document.createElement('div');
+    destEl.style.cssText = 'position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;justify-content:flex-end;align-items:center';
+    destEl.innerHTML = `
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5)" id="ideaDestBg"></div>
+      <div style="position:relative;background:#1c1c1e;border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:20px 20px calc(28px + env(safe-area-inset-bottom,0px))">
+        <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:14px">Add to Campaign</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${campaigns.map(c => `
+            <button type="button" class="idea-dest-camp-btn" data-camp-id="${c.id}" style="text-align:left;padding:13px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-size:13px;font-weight:600">${escHtml(c.name)}</button>
+          `).join('')}
+        </div>
+      </div>`;
+    document.body.appendChild(destEl);
+    destEl.querySelector('#ideaDestBg').addEventListener('click', () => destEl.remove());
+    destEl.querySelectorAll('.idea-dest-camp-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const campId = btn.dataset.campId;
+        const campaign = campaigns.find(c => c.id === campId);
+        const updatedIdeas = (brand.ideas || []).map(i =>
+          i.id === ideaId ? { ...i, campaignId: campId, campaign: campaign?.name || '' } : i
+        );
+        saveBrandOverride(brandId, { ideas: updatedIdeas });
+        destEl.remove();
+        closeSheet();
+      });
+    });
   });
 
   // Save
-  document.getElementById('ideaDetailSave')?.addEventListener('click', () => {
-    const links = Array.from(sheet.querySelectorAll('.idea-link-row')).map(row => ({
-      label: row.querySelector('.idea-link-label')?.value.trim() || '',
-      url:   row.querySelector('.idea-link-url')?.value.trim()   || '',
-    })).filter(l => l.url);
-    const patch = {
-      title:      document.getElementById('ideaDetailTitle')?.value.trim() || idea.title,
-      platform:   document.getElementById('ideaDetailPlatform')?.value || idea.platform,
-      format:     document.getElementById('ideaDetailFormat')?.value.trim() || idea.format,
-      notes:      document.getElementById('ideaDetailNotes')?.value.trim()  || '',
-      references: document.getElementById('ideaDetailRefs')?.value.trim()   || '',
+  sheetEl.querySelector('#ideaDetailSave').addEventListener('click', () => {
+    const links = [];
+    sheetEl.querySelectorAll('.idea-link-row').forEach(row => {
+      const label = row.querySelector('.idea-link-label')?.value.trim() || '';
+      const url   = row.querySelector('.idea-link-url')?.value.trim() || '';
+      if (label || url) links.push({ label, url });
+    });
+    const updated = {
+      ...(idea),
+      id: idea.id || uid(),
+      title: sheetEl.querySelector('#ideaEditTitle').value.trim() || idea.title || '',
+      platform: platSel.value,
+      format: fmtSel.value,
+      notes: sheetEl.querySelector('#ideaEditNotes').value,
+      references: sheetEl.querySelector('#ideaEditRefs').value,
       links,
+      mediaFiles: currentMediaFiles,
     };
-    const updatedIdeas = (getBrand(brandId)?.ideas||[]).map(i => i.id===ideaId ? {...i,...patch} : i);
-    saveBrandOverride(brandId, { ideas: updatedIdeas });
-    sheet.remove();
-    // Refresh vault page in place
-    const app = document.getElementById('app');
-    const { params } = parseHash();
-    app.innerHTML = pageIdeaVault(brandId, params.fp || null, params.ff || null);
-    injectCampaignNav(brandId, campId, 'ideas');
-    bindCapture(); bindNav(); bindVaultPage(brandId, campId);
-  });
-
-  // + Add to campaign
-  document.getElementById('ideaAddToCamp')?.addEventListener('click', () => {
-    document.getElementById('ideaAddCampPicker')?.remove();
-    const picker = document.createElement('div');
-    picker.id = 'ideaAddCampPicker';
-    picker.className = 'stage-picker-sheet';
-    picker.innerHTML = `
-      <div class="stage-picker-bg" id="ideaPickerBg"></div>
-      <div class="stage-picker-panel">
-        <div class="stage-picker-bar"></div>
-        <div class="stage-picker-title">Add to Campaign</div>
-        <div style="padding:0 20px 12px">
-          <div class="camp-settings-label" style="margin-bottom:8px">CAMPAIGN</div>
-          <select class="capture-select" id="ideaPickerCamp">${campOpts}</select>
-          <div class="camp-settings-label" style="margin:14px 0 8px">ADD TO</div>
-          <div style="display:flex;gap:8px">
-            <button class="idea-dest-btn" id="ideaToPlanner">Visual Planner</button>
-            <button class="idea-dest-btn" id="ideaToSchedule">Scheduled List</button>
-          </div>
-        </div>
-      </div>`;
-    document.body.appendChild(picker);
-
-    document.getElementById('ideaPickerBg')?.addEventListener('click', () => picker.remove());
-
-    const addToDestination = (dest) => {
-      const selCampId = document.getElementById('ideaPickerCamp')?.value;
-      const b2 = getBrand(brandId);
-      const title = document.getElementById('ideaDetailTitle')?.value.trim() || idea.title;
-      const platform = document.getElementById('ideaDetailPlatform')?.value || idea.platform;
-      const format   = document.getElementById('ideaDetailFormat')?.value.trim() || idea.format;
-      const newPost = {
-        id: uid(), title, platform, format,
-        scheduledDate: '', campaignId: selCampId || '',
-        thumbnail: null, order: (b2?.scheduledPosts||[]).length,
-      };
-      saveBrandOverride(brandId, { scheduledPosts: [...(b2?.scheduledPosts||[]), newPost] });
-      picker.remove();
-      sheet.remove();
-      if (dest === 'planner') {
-        navigate(`#/planner?brandId=${brandId}&campId=${selCampId||''}`);
-      } else {
-        navigate(`#/calendar?brandId=${brandId}&campId=${selCampId||''}`);
-      }
-    };
-
-    document.getElementById('ideaToPlanner')?.addEventListener('click',  () => addToDestination('planner'));
-    document.getElementById('ideaToSchedule')?.addEventListener('click', () => addToDestination('schedule'));
+    const ideas = brand.ideas.map(i => i.id === ideaId ? updated : i);
+    saveBrandOverride(brandId, { ideas });
+    closeSheet();
   });
 }
 
@@ -3263,9 +3413,12 @@ function pageCampaign(brandId, campId) {
   const postsCompleted = isCurrentPhase ? brand.currentPhase?.postsCompleted || 0 : 0;
   const totalPosts     = isCurrentPhase ? brand.currentPhase?.totalPosts || 0 : 0;
   const postLabel = totalPosts > 0 ? `${postsCompleted} / ${totalPosts} posts` : '0 posts';
-  const upcomingVal = campaign.status === 'active'
-    ? (brand.board?.ready?.[0]?.title || brand.board?.drafting?.[0]?.title || '—')
-    : `Starts ${campaign.startDate}`;
+  const nextMarker  = (campaign.mileMarkers || []).find(m => !m.done);
+  const upcomingVal = nextMarker
+    ? escHtml(nextMarker.text) + (nextMarker.date ? ` · ${fromDateInputVal(nextMarker.date)}` : '')
+    : campaign.status === 'active'
+      ? (brand.board?.ready?.[0]?.title || brand.board?.drafting?.[0]?.title || '—')
+      : `Starts ${campaign.startDate}`;
   const stageName = stages[stageIndex] || 'Ideation';
 
   // Brand icon
@@ -3322,10 +3475,15 @@ function pageCampaign(brandId, campId) {
   const activePlatforms = campPlatformStr
     ? campPlatformStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
     : Object.keys(brand.platformStrategy || {});
-  const analyticsItemsHTML = activePlatforms.length ? activePlatforms.map(p => {
+  const globeSVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`;
+  const allCard = `
+    <div class="camp-analytics-item" data-href="#/analytics?brandId=${brandId}&campId=${campId}&platform=all" style="cursor:pointer">
+      <div class="camp-analytics-icon">${globeSVG}</div>
+      <div class="camp-analytics-count" style="font-size:11px;letter-spacing:0.5px">ALL</div>
+    </div>`;
+  const analyticsItemsHTML = activePlatforms.length ? allCard + activePlatforms.map(p => {
     const m    = MOCK_ANALYTICS[p] || { count:'—', delta:0 };
     const icon = PLATFORM_ICONS[p] || `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>`;
-    const bg   = PLATFORM_COLORS[p] || '#2a2a2a';
     const sign = m.delta > 0 ? '+' : '';
     const dCls = m.delta > 0 ? 'pos' : m.delta < 0 ? 'neg' : '';
     return `
@@ -3507,6 +3665,36 @@ function pageCampaign(brandId, campId) {
           <div id="campMktgPlatforms">${mktgSnapshotHTML}</div>
         </div>
 
+        <!-- MILE MARKERS -->
+        ${(() => {
+          const markers = campaign.mileMarkers || [];
+          const nextM   = markers.find(m => !m.done);
+          const checkSVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+          return `<div class="section-card" style="margin-bottom:10px">
+            <div class="camp-card-label">MILE MARKERS</div>
+            ${nextM ? `
+            <div class="camp-mile-next">
+              <div class="camp-mile-next-label">NEXT CHECKPOINT</div>
+              <div class="camp-mile-next-text">${escHtml(nextM.text)}</div>
+              ${nextM.date ? `<div class="camp-mile-next-eta">ETA ${fromDateInputVal(nextM.date)}</div>` : ''}
+            </div>` : ''}
+            ${markers.length ? `
+            <div class="camp-mile-list" style="${nextM ? 'margin-top:10px' : ''}">
+              ${markers.map(m => `
+                <div class="camp-mile-item${m.done ? ' done' : ''}" data-marker-id="${m.id}">
+                  <button type="button" class="camp-mile-check">
+                    ${m.done ? checkSVG : ''}
+                  </button>
+                  <div class="camp-mile-info">
+                    <span class="camp-mile-text">${escHtml(m.text)}</span>
+                    ${m.date ? `<span class="camp-mile-arrival">${fromDateInputVal(m.date)}</span>` : ''}
+                  </div>
+                </div>`).join('')}
+            </div>` : `
+            <div style="font-size:12px;color:rgba(255,255,255,0.2);padding:12px 0;text-align:center">Add milestones via ··· Settings</div>`}
+          </div>`;
+        })()}
+
         <!-- BRAND SNAPSHOT -->
         <div class="section-card" style="margin-bottom:10px">
           <div class="camp-card-label">BRAND SNAPSHOT</div>
@@ -3542,59 +3730,130 @@ function bindCampaignPage(brandId, campId) {
   document.getElementById('campPlanSheet')?.remove();
 
   // Inject ··· settings sheet
-  const activePlatformList = (campaign.ov_platforms || '').split(',').map(s => s.trim()).filter(Boolean);
-  const allPlatforms = ['Instagram','TikTok','Facebook','YouTube','X','LinkedIn','Pinterest','Threads','Snapchat','Email'];
-  const platPillsHTML = allPlatforms.map(p =>
-    `<button type="button" class="platform-pill${activePlatformList.includes(p) ? ' active' : ''}" data-platform="${p}">${p}</button>`
-  ).join('');
-  const mileRowHTML = m => `
-    <div class="info-mile-row" data-marker-id="${m.id}">
-      <div class="info-mile-fields">
-        <input class="notion-input info-mile-text" value="${escHtml(m.text)}" placeholder="Milestone name" style="font-size:15px">
-        <div class="info-mile-arrival-wrap">
-          <span class="info-mile-arrival-label">Arrival Time</span>
-          <input type="date" class="notion-input notion-date info-mile-date" value="${m.date || ''}">
-        </div>
-      </div>
-      <button type="button" class="info-mile-del">×</button>
-    </div>`;
-
   const moreEl = document.createElement('div');
   moreEl.className = 'camp-more-sheet';
   moreEl.id = 'campMoreSheet';
   moreEl.style.display = 'none';
+
+  const ALL_PLATFORMS = ['Instagram','TikTok','Facebook','YouTube','X','LinkedIn','Pinterest','Threads','Snapchat','Email'];
+  const activePlats = (campaign.ov_platforms || '').split(',').map(s => s.trim()).filter(Boolean);
+
+  const existingMarkers = campaign.mileMarkers || [];
+  const mileRowsHTML = existingMarkers.map(m => `
+    <div class="info-mile-row" data-marker-id="${m.id}">
+      <div class="info-mile-fields" style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <input class="notion-input info-mile-text" value="${escHtml(m.text||'')}" placeholder="Milestone name" style="font-size:15px">
+        <div class="info-mile-arrival-wrap" style="display:flex;align-items:center;gap:8px">
+          <span class="info-mile-arrival-label" style="font-size:10px;font-weight:700;letter-spacing:0.6px;color:rgba(255,255,255,0.3);white-space:nowrap">ARRIVAL TIME</span>
+          <input type="date" class="notion-input notion-date info-mile-date" value="${m.date||''}" style="flex:1;color-scheme:dark">
+        </div>
+      </div>
+      <button type="button" class="info-mile-del" style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.3);font-size:22px;padding:0 4px 0 8px;line-height:1">×</button>
+    </div>`).join('');
+
   moreEl.innerHTML = `
     <div class="camp-more-sheet-bg" id="campMoreSheetBg"></div>
-    <div class="camp-more-sheet-panel camp-settings-panel">
-      <div class="camp-more-sheet-bar"></div>
-      <div class="camp-settings-title">Campaign Settings</div>
-      <div class="camp-settings-body">
+    <div class="camp-settings-panel" style="position:relative;background:#1c1c1e;border-radius:20px 20px 0 0;border-top:1px solid rgba(255,255,255,0.1);max-height:88dvh;display:flex;flex-direction:column">
+      <div style="padding:12px 20px 0;text-align:center">
+        <div style="width:40px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:0 auto 8px"></div>
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);padding-bottom:14px">Campaign Settings</div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 20px 8px">
 
-        <div class="camp-settings-section">
-          <div class="camp-settings-label">COVER PHOTO</div>
-          <button class="camp-settings-action-btn" id="campMoreChangeCover">Change Cover Photo</button>
+        <!-- COVER PHOTO -->
+        <div style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">COVER PHOTO</div>
+          <button class="camp-more-item" id="campMoreChangeCover" style="border:none;border-radius:10px;background:rgba(255,255,255,0.06);padding:12px 16px;font-size:14px;text-align:left;width:100%">Change Cover Photo</button>
         </div>
 
-        <div class="camp-settings-section">
-          <div class="camp-settings-label">SOCIAL MEDIA</div>
-          <input type="hidden" id="settingsPlatforms" value="${escHtml(campaign.ov_platforms || '')}">
-          <div class="platform-pills" id="settingsPlatformPills">${platPillsHTML}</div>
-        </div>
-
-        <div class="camp-settings-section">
-          <div class="camp-settings-label">MILE MARKERS</div>
-          <div id="settingsMileList">
-            ${(campaign.mileMarkers || []).map(mileRowHTML).join('')}
+        <!-- SOCIAL MEDIA -->
+        <div style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">SOCIAL MEDIA</div>
+          <input type="hidden" id="settingsPlatforms" value="${campaign.ov_platforms||''}">
+          <div id="settingsPlatformPills" style="display:flex;flex-wrap:wrap;gap:8px">
+            ${ALL_PLATFORMS.map(p => `
+              <button type="button" class="platform-pill${activePlats.includes(p)?' active':''}" data-platform="${p}">${p}</button>
+            `).join('')}
           </div>
-          <button type="button" class="offer-add-btn" id="settingsMileAddBtn">+ Add Marker</button>
+        </div>
+
+        <!-- MILE MARKERS -->
+        <div style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">MILE MARKERS</div>
+          <div id="settingsMileList" style="display:flex;flex-direction:column;gap:0">${mileRowsHTML}</div>
+          <button type="button" id="settingsMileAddBtn" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);font-size:13px;font-weight:600;margin-top:8px">+ Add Marker</button>
         </div>
 
       </div>
-      <div class="camp-settings-footer">
-        <button class="camp-save-btn" id="campSettingsSave">Save</button>
+      <div style="padding:12px 20px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,0.06)">
+        <button id="campSettingsSave" style="width:100%;padding:13px;border-radius:12px;background:#fff;color:#000;font-size:14px;font-weight:700">Save Settings</button>
       </div>
     </div>`;
   document.body.appendChild(moreEl);
+
+  // ── Settings sheet bindings ──
+  const settingsMileList = moreEl.querySelector('#settingsMileList');
+  const settingsAddBtn   = moreEl.querySelector('#settingsMileAddBtn');
+  const settingsSaveBtn  = moreEl.querySelector('#campSettingsSave');
+  const settingsPlatHidden = moreEl.querySelector('#settingsPlatforms');
+
+  function addSettingsMileRow(text, date, markerId) {
+    const row = document.createElement('div');
+    row.className = 'info-mile-row';
+    row.dataset.markerId = markerId || uid();
+    row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)';
+    row.innerHTML = `
+      <div class="info-mile-fields" style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <input class="notion-input info-mile-text" value="${escHtml(text||'')}" placeholder="Milestone name" style="font-size:15px">
+        <div class="info-mile-arrival-wrap" style="display:flex;align-items:center;gap:8px">
+          <span class="info-mile-arrival-label" style="font-size:10px;font-weight:700;letter-spacing:0.6px;color:rgba(255,255,255,0.3);white-space:nowrap">ARRIVAL TIME</span>
+          <input type="date" class="notion-input notion-date info-mile-date" value="${date||''}" style="flex:1;color-scheme:dark">
+        </div>
+      </div>
+      <button type="button" class="info-mile-del" style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.3);font-size:22px;padding:0 4px 0 8px;line-height:1">×</button>`;
+    row.querySelector('.info-mile-del').addEventListener('click', () => row.remove());
+    settingsMileList.appendChild(row);
+    row.querySelector('.info-mile-text').focus();
+  }
+
+  // Wire up delete for existing rows
+  settingsMileList.querySelectorAll('.info-mile-del').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('.info-mile-row').remove());
+  });
+
+  settingsAddBtn.addEventListener('click', () => addSettingsMileRow());
+
+  // Platform pill toggles
+  moreEl.querySelectorAll('#settingsPlatformPills .platform-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      pill.classList.toggle('active');
+      const selected = Array.from(moreEl.querySelectorAll('#settingsPlatformPills .platform-pill.active'))
+        .map(p => p.dataset.platform).join(', ');
+      settingsPlatHidden.value = selected;
+    });
+  });
+
+  // Save settings
+  settingsSaveBtn.addEventListener('click', () => {
+    const newPlatforms = settingsPlatHidden.value;
+    const newMarkers = Array.from(settingsMileList.querySelectorAll('.info-mile-row')).map(row => {
+      const existing = existingMarkers.find(m => m.id === row.dataset.markerId);
+      return {
+        id: row.dataset.markerId,
+        text: row.querySelector('.info-mile-text')?.value.trim() || '',
+        date: row.querySelector('.info-mile-date')?.value || '',
+        done: existing?.done || false,
+      };
+    }).filter(m => m.text);
+
+    const updatedCampaigns = brand.campaigns.map(c =>
+      c.id === campId ? { ...c, ov_platforms: newPlatforms, mileMarkers: newMarkers } : c
+    );
+    saveBrandOverride(brandId, { campaigns: updatedCampaigns });
+    moreEl.style.display = 'none';
+    document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+    bindCampaignPage(brandId, campId);
+  });
 
   // Inject Aisha sheet
   const aishaEl = document.createElement('div');
@@ -3616,73 +3875,6 @@ function bindCampaignPage(brandId, campId) {
   document.getElementById('campMoreChangeCover')?.addEventListener('click', () => {
     moreEl.style.display = 'none';
     openEditHeroPhoto(brandId, campId);
-  });
-
-  const settingsMileList   = moreEl.querySelector('#settingsMileList');
-  const settingsAddBtn     = moreEl.querySelector('#settingsMileAddBtn');
-  const settingsSaveBtn    = moreEl.querySelector('#campSettingsSave');
-  const settingsPlatHidden = moreEl.querySelector('#settingsPlatforms');
-
-  // Platform pills toggle
-  moreEl.querySelectorAll('#settingsPlatformPills .platform-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      pill.classList.toggle('active');
-      const selected = Array.from(moreEl.querySelectorAll('#settingsPlatformPills .platform-pill.active'))
-        .map(p => p.dataset.platform).join(', ');
-      if (settingsPlatHidden) settingsPlatHidden.value = selected;
-    });
-  });
-
-  // Bind delete on existing marker rows
-  function bindSettingsMileDel() {
-    settingsMileList?.querySelectorAll('.info-mile-del').forEach(btn => {
-      btn.addEventListener('click', () => btn.closest('.info-mile-row').remove());
-    });
-  }
-  bindSettingsMileDel();
-
-  // Add new marker row
-  function addSettingsMileRow() {
-    const row = document.createElement('div');
-    row.className = 'info-mile-row';
-    row.dataset.markerId = uid();
-    row.innerHTML = `
-      <div class="info-mile-fields">
-        <input class="notion-input info-mile-text" value="" placeholder="Milestone name" style="font-size:15px">
-        <div class="info-mile-arrival-wrap">
-          <span class="info-mile-arrival-label">Arrival Time</span>
-          <input type="date" class="notion-input notion-date info-mile-date" value="">
-        </div>
-      </div>
-      <button type="button" class="info-mile-del">×</button>`;
-    row.querySelector('.info-mile-del').addEventListener('click', () => row.remove());
-    settingsMileList?.appendChild(row);
-    row.querySelector('.info-mile-text')?.focus();
-  }
-  settingsAddBtn?.addEventListener('click', addSettingsMileRow);
-
-  // Save settings
-  settingsSaveBtn?.addEventListener('click', () => {
-    const existingMarkers = (getBrand(brandId)?.campaigns||[]).find(c=>c.id===campId)?.mileMarkers || [];
-    const mileMarkers = Array.from(settingsMileList?.querySelectorAll('.info-mile-row') || []).map(row => {
-      const id = row.dataset.markerId;
-      const existing = existingMarkers.find(m => m.id === id);
-      return {
-        id,
-        text: row.querySelector('.info-mile-text')?.value.trim() || '',
-        date: row.querySelector('.info-mile-date')?.value || '',
-        done: existing?.done || false,
-      };
-    }).filter(m => m.text);
-    const patch = {
-      ov_platforms: settingsPlatHidden?.value || campaign.ov_platforms || '',
-      mileMarkers,
-    };
-    const updated = brand.campaigns.map(c => c.id === campId ? { ...c, ...patch } : c);
-    saveBrandOverride(brandId, { campaigns: updated });
-    moreEl.style.display = 'none';
-    document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
-    bindCampaignPage(brandId, campId);
   });
 
   // Campaign nav (body-level so position:fixed works correctly on iOS)
@@ -3989,6 +4181,20 @@ function bindCampaignPage(brandId, campId) {
           if (preview) preview.style.display = 'none';
         }
       });
+    });
+  });
+
+  // Mile marker done-toggle
+  document.querySelectorAll('.camp-mile-item').forEach(item => {
+    item.querySelector('.camp-mile-check')?.addEventListener('click', () => {
+      const mid = item.dataset.markerId;
+      const updatedCampaigns = brand.campaigns.map(c => c.id === campId ? {
+        ...c,
+        mileMarkers: (c.mileMarkers || []).map(m => m.id === mid ? { ...m, done: !m.done } : m)
+      } : c);
+      saveBrandOverride(brandId, { campaigns: updatedCampaigns });
+      document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+      bindCampaignPage(brandId, campId);
     });
   });
 
@@ -4312,12 +4518,26 @@ function pageAnalytics(brandId, campId, platform) {
     linkedin:  { followers:'890',  followerDelta:'+22',  engRate:'3.4%', reach:'4.4K', impressions:'9.2K', clicks:'228', posts:[] },
   };
 
-  const data  = MOCK[platform] || { followers:'—', followerDelta:'', engRate:'—', reach:'—', impressions:'—', clicks:'—', posts:[] };
-  const color = PLAT_COLORS[platform] || '#fff';
-  const icon  = PLAT_ICONS[platform]  || '';
-  const name  = PLAT_NAMES[platform]  || platform;
+  const globeSVG22 = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`;
 
-  const statCards = [
+  const isAll = platform === 'all';
+  const data  = isAll ? null : (MOCK[platform] || { followers:'—', followerDelta:'', engRate:'—', reach:'—', impressions:'—', clicks:'—', posts:[] });
+  const color = isAll ? '#aaa' : (PLAT_COLORS[platform] || '#fff');
+  const icon  = isAll ? globeSVG22 : (PLAT_ICONS[platform] || '');
+  const name  = isAll ? 'All Platforms' : (PLAT_NAMES[platform] || platform);
+
+  // All-platforms combined view
+  const allPlatformRowsHTML = isAll ? Object.entries(MOCK).map(([p, d]) => `
+    <div class="analytics-all-row" data-href="#/analytics?brandId=${brandId}&campId=${campId}&platform=${p}" style="cursor:pointer">
+      <div class="analytics-all-icon" style="color:${PLAT_COLORS[p]||'#aaa'}">${PLAT_ICONS[p]||''}</div>
+      <div class="analytics-all-info">
+        <div class="analytics-all-name">${PLAT_NAMES[p]||p}</div>
+        <div class="analytics-all-stats">${d.followers} followers · ${d.engRate} eng · ${d.reach} reach</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`).join('') : '';
+
+  const statCards = isAll ? '' : [
     { label:'Engagement Rate', value: data.engRate },
     { label:'Reach',           value: data.reach   },
     { label:'Impressions',     value: data.impressions },
@@ -4328,7 +4548,7 @@ function pageAnalytics(brandId, campId, platform) {
       <div class="analytics-stat-label">${s.label}</div>
     </div>`).join('');
 
-  const postsHTML = data.posts.length ? data.posts.map(p => `
+  const postsHTML = isAll ? '' : (data.posts.length ? data.posts.map(p => `
     <div class="analytics-post-row">
       <div class="analytics-post-title">${escHtml(p.title)}</div>
       <div class="analytics-post-stats">
@@ -4336,7 +4556,7 @@ function pageAnalytics(brandId, campId, platform) {
         <span class="analytics-post-stat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>${p.comments}</span>
         <span class="analytics-post-stat"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>${p.shares}</span>
       </div>
-    </div>`).join('') : `<div style="color:#333;font-size:13px;padding:16px 0;text-align:center">No posts yet</div>`;
+    </div>`).join('') : `<div style="color:#333;font-size:13px;padding:16px 0;text-align:center">No posts yet</div>`);
 
   return `
     <div class="page" style="padding-bottom:110px">
@@ -4349,6 +4569,11 @@ function pageAnalytics(brandId, campId, platform) {
       </div>
 
       <div style="padding:20px 16px 0">
+        ${isAll ? `
+        <!-- All platforms list -->
+        <div class="analytics-section-label" style="margin-bottom:12px">PLATFORMS</div>
+        <div class="analytics-all-list">${allPlatformRowsHTML}</div>
+        ` : `
         <!-- Hero metric -->
         <div class="analytics-hero" style="border-color:${color}22">
           <div class="analytics-hero-icon" style="color:${color};background:${color}18">${icon}</div>
@@ -4358,13 +4583,11 @@ function pageAnalytics(brandId, campId, platform) {
             ${data.followerDelta ? `<div class="analytics-hero-delta${data.followerDelta.startsWith('+') ? ' pos' : ' neg'}">${data.followerDelta} this month</div>` : ''}
           </div>
         </div>
-
         <!-- Stat grid -->
         <div class="analytics-stat-grid">${statCards}</div>
-
         <!-- Post performance -->
         <div class="analytics-section-label">POST PERFORMANCE</div>
-        <div class="analytics-posts">${postsHTML}</div>
+        <div class="analytics-posts">${postsHTML}</div>`}
       </div>
     </div>`;
 }
