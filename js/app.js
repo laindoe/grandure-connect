@@ -944,20 +944,41 @@ function openEditCampaignPhoto(brandId, campId) {
 }
 
 function openEditHeroPhoto(brandId, campId) {
-  const mount = document.getElementById('editPhotoMount');
-  if (!mount) return;
-  mount.innerHTML = editPhotoCropSheetHTML();
+  // Remove any existing instance
+  document.getElementById('editHeroPhotoOverlay')?.remove();
 
-  const overlay     = document.getElementById('editPhotoOverlay');
-  const cropWin     = document.getElementById('cropWindow');
-  const cropImg     = document.getElementById('cropImg');
-  const placeholder = document.getElementById('cropPlaceholder');
-  const fileInput   = document.getElementById('cropFileInput');
+  // Mount directly on document.body at z-index:500 — above all nav bars and iOS stacking contexts
+  const wrapper = document.createElement('div');
+  wrapper.id = 'editHeroPhotoOverlay';
+  wrapper.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)';
+  wrapper.innerHTML = `
+    <div style="background:rgba(18,18,18,0.97);border-radius:20px;width:calc(100% - 32px);max-width:398px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
+      <div style="padding:18px 22px 10px">
+        <div class="capture-title" style="margin-bottom:4px">Edit Cover Photo</div>
+        <div style="color:#555;font-size:12px;letter-spacing:.5px">Drag to position · Pinch to zoom</div>
+      </div>
+      <div class="crop-window" id="cropWindow" style="aspect-ratio:16/9">
+        <img id="cropImg" style="position:absolute;touch-action:none;user-select:none;-webkit-user-select:none;pointer-events:none;display:none">
+        <div id="cropPlaceholder" class="crop-placeholder">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          <span>Tap to choose photo</span>
+        </div>
+      </div>
+      <div style="padding:14px 22px 24px">
+        <input type="file" id="cropFileInput" accept="image/*" style="display:none">
+        <button id="cropPickBtn" class="capture-cancel" style="width:100%;margin-bottom:10px">Change Image</button>
+        <div class="capture-actions">
+          <button class="capture-cancel" id="editPhotoCancel">Cancel</button>
+          <button class="capture-save" id="editPhotoSave">Save</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(wrapper);
 
-  // Use landscape crop ratio for the hero card
-  if (cropWin) cropWin.style.aspectRatio = '16/9';
-
-  overlay.style.display = 'flex';
+  const cropWin     = wrapper.querySelector('#cropWindow');
+  const cropImg     = wrapper.querySelector('#cropImg');
+  const placeholder = wrapper.querySelector('#cropPlaceholder');
+  const fileInput   = wrapper.querySelector('#cropFileInput');
 
   const brand    = getBrand(brandId);
   const campaign = brand?.campaigns.find(c => c.id === campId);
@@ -980,20 +1001,27 @@ function openEditHeroPhoto(brandId, campId) {
     reader.readAsDataURL(file);
   };
 
-  document.getElementById('cropPickBtn').addEventListener('click', () => fileInput.click());
+  wrapper.querySelector('#cropPickBtn').addEventListener('click', () => fileInput.click());
   placeholder.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
-  document.getElementById('editPhotoCancel').addEventListener('click', () => { overlay.style.display = 'none'; });
 
-  document.getElementById('editPhotoSave').addEventListener('click', () => {
+  const closeOverlay = () => wrapper.remove();
+
+  wrapper.querySelector('#editPhotoCancel').addEventListener('click', closeOverlay);
+
+  // Tap the dim backdrop (wrapper itself, outside the card) to dismiss
+  wrapper.addEventListener('click', e => { if (e.target === wrapper) closeOverlay(); });
+
+  wrapper.querySelector('#editPhotoSave').addEventListener('click', () => {
     const dataUrl = _exportCrop();
     if (dataUrl && brand) {
       const campaigns = brand.campaigns.map(c => c.id === campId ? { ...c, heroImage: dataUrl } : c);
       saveBrandOverride(brandId, { campaigns });
+      closeOverlay();
       document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
       bindCampaignPage(brandId, campId);
     } else {
-      overlay.style.display = 'none';
+      closeOverlay();
     }
   });
 
