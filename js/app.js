@@ -85,9 +85,8 @@ function render() {
   const { path, params } = parseHash();
   const app = document.getElementById('app');
 
-  // Remove campaign nav + doc picker sheets when leaving campaign context
+  // Remove sheets that belong only to campaign/doc contexts
   if (path !== '/campaign') {
-    document.getElementById('campaignBottomNav')?.remove();
     document.getElementById('campMoreSheet')?.remove();
     document.getElementById('aishaSheet')?.remove();
     document.getElementById('campInfoSheet')?.remove();
@@ -97,24 +96,33 @@ function render() {
     document.getElementById('docPickerSheet')?.remove();
     document.getElementById('docSectionPicker')?.remove();
   }
+  // Always clear old nav so each page re-injects a fresh one
+  document.getElementById('campaignBottomNav')?.remove();
 
   if (path === '/' || path === '') {
     app.innerHTML = pageHome();
     bindHomeDock();
   } else if (path === '/brand') {
     app.innerHTML = pageBrandWorkspace(params.id);
+    injectCampaignNav(params.id, params.campId || null, 'visual');
   } else if (path === '/phase') {
     app.innerHTML = pageCurrentPhase(params.id);
+    injectCampaignNav(params.id, params.campId || null, null);
   } else if (path === '/overview') {
     app.innerHTML = pageOverview(params.id);
+    injectCampaignNav(params.id, params.campId || null, null);
   } else if (path === '/platform') {
     app.innerHTML = pagePlatformStrategy(params.id);
+    injectCampaignNav(params.id, params.campId || null, null);
   } else if (path === '/season') {
     app.innerHTML = pageSeason(params.id);
+    injectCampaignNav(params.id, params.campId || null, null);
   } else if (path === '/vault') {
     app.innerHTML = pageIdeaVault(params.id);
+    injectCampaignNav(params.id, params.campId || null, 'ideas');
   } else if (path === '/inspiration') {
     app.innerHTML = pageInspiration(params.id);
+    injectCampaignNav(params.id, params.campId || null, null);
   } else if (path === '/campaign') {
     app.innerHTML = pageCampaign(params.brandId, params.id);
   } else if (path === '/doc') {
@@ -1625,7 +1633,7 @@ function pageBrandWorkspace(id) {
   const sectionCards = phaseCard + dropdownCards;
 
   return `
-    <div class="page">
+    <div class="page" style="padding-bottom:120px">
       <div class="back-header">
         <button class="back-btn" data-href="#/">‹</button>
         <div class="back-header-center">
@@ -1734,7 +1742,7 @@ function pageCurrentPhase(id, tab) {
   const tabLabels = { timeline: 'Timeline', board: 'Board', calendar: 'Calendar' };
 
   return `
-    <div class="page">
+    <div class="page" style="padding-bottom:120px">
       <div class="gradient-header" style="background:${brand.banner}">
         <div class="gradient-header-top">
           <button class="gradient-back" data-href="#/brand?id=${id}">‹</button>
@@ -1793,7 +1801,7 @@ function pageOverview(id) {
   `).join('');
 
   return `
-    <div class="page">
+    <div class="page" style="padding-bottom:120px">
       <div class="back-header">
         <button class="back-btn" data-href="#/brand?id=${id}">‹</button>
         <div class="back-header-center">
@@ -1845,7 +1853,7 @@ function pagePlatformStrategy(id, activePlatform) {
   `;
 
   return `
-    <div class="page">
+    <div class="page" style="padding-bottom:120px">
       <div class="back-header">
         <button class="back-btn" data-href="#/brand?id=${id}">‹</button>
         <div class="back-header-center">
@@ -1913,7 +1921,7 @@ function pageSeason(id) {
   }).join('');
 
   return `
-    <div class="page">
+    <div class="page" style="padding-bottom:120px">
       <div class="gradient-header" style="background:${brand.banner}">
         <div class="gradient-header-top">
           <button class="gradient-back" data-href="#/brand?id=${id}">‹</button>
@@ -1969,7 +1977,7 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
   `).join('') : '<div class="empty-card" style="margin-top:20px">No ideas match this filter</div>';
 
   return `
-    <div class="page">
+    <div class="page" style="padding-bottom:120px">
       <div class="back-header">
         <button class="back-btn" data-href="#/brand?id=${id}">‹</button>
         <div class="back-header-center">
@@ -2291,10 +2299,13 @@ function injectCampaignNav(brandId, campId, activeTab, onAisha) {
     </nav>`;
   document.getElementById('app').appendChild(wrap);
 
-  document.getElementById('campNavDoc')?.addEventListener('click',    () => navigate(`#/campaign?brandId=${brandId}&id=${campId}`));
-  document.getElementById('campNavIdeas')?.addEventListener('click',  () => navigate(`#/vault?id=${brandId}&campId=${campId}`));
+  const docHref   = campId ? `#/campaign?brandId=${brandId}&id=${campId}` : null;
+  const ideasHref = campId ? `#/vault?id=${brandId}&campId=${campId}` : `#/vault?id=${brandId}`;
+
+  if (docHref) document.getElementById('campNavDoc')?.addEventListener('click', () => navigate(docHref));
+  document.getElementById('campNavIdeas')?.addEventListener('click',  () => navigate(ideasHref));
   document.getElementById('campNavVisual')?.addEventListener('click', () => navigate(`#/brand?id=${brandId}`));
-  document.getElementById('campNavCal')?.addEventListener('click',    () => {}); // future: campaign calendar
+  document.getElementById('campNavCal')?.addEventListener('click',    () => {});
   document.getElementById('campNavAisha')?.addEventListener('click',  () => { if (onAisha) onAisha(); });
 }
 
@@ -2977,7 +2988,7 @@ function pageInspiration(id) {
   `).join('');
 
   return `
-    <div class="page">
+    <div class="page" style="padding-bottom:120px">
       <div class="back-header">
         <button class="back-btn" data-href="#/brand?id=${id}">‹</button>
         <div class="back-header-center">
