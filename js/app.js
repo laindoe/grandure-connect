@@ -3618,27 +3618,31 @@ function bindCampaignPage(brandId, campId) {
     openEditHeroPhoto(brandId, campId);
   });
 
+  const settingsMileList   = moreEl.querySelector('#settingsMileList');
+  const settingsAddBtn     = moreEl.querySelector('#settingsMileAddBtn');
+  const settingsSaveBtn    = moreEl.querySelector('#campSettingsSave');
+  const settingsPlatHidden = moreEl.querySelector('#settingsPlatforms');
+
   // Platform pills toggle
   moreEl.querySelectorAll('#settingsPlatformPills .platform-pill').forEach(pill => {
     pill.addEventListener('click', () => {
       pill.classList.toggle('active');
       const selected = Array.from(moreEl.querySelectorAll('#settingsPlatformPills .platform-pill.active'))
         .map(p => p.dataset.platform).join(', ');
-      const hidden = document.getElementById('settingsPlatforms');
-      if (hidden) hidden.value = selected;
+      if (settingsPlatHidden) settingsPlatHidden.value = selected;
     });
   });
 
-  // Mile marker rows — delete
+  // Bind delete on existing marker rows
   function bindSettingsMileDel() {
-    moreEl.querySelectorAll('#settingsMileList .info-mile-del').forEach(btn => {
+    settingsMileList?.querySelectorAll('.info-mile-del').forEach(btn => {
       btn.addEventListener('click', () => btn.closest('.info-mile-row').remove());
     });
   }
   bindSettingsMileDel();
 
-  // Mile marker — add new row
-  document.getElementById('settingsMileAddBtn')?.addEventListener('click', () => {
+  // Add new marker row
+  function addSettingsMileRow() {
     const row = document.createElement('div');
     row.className = 'info-mile-row';
     row.dataset.markerId = uid();
@@ -3652,13 +3656,15 @@ function bindCampaignPage(brandId, campId) {
       </div>
       <button type="button" class="info-mile-del">×</button>`;
     row.querySelector('.info-mile-del').addEventListener('click', () => row.remove());
-    document.getElementById('settingsMileList')?.appendChild(row);
-  });
+    settingsMileList?.appendChild(row);
+    row.querySelector('.info-mile-text')?.focus();
+  }
+  settingsAddBtn?.addEventListener('click', addSettingsMileRow);
 
   // Save settings
-  document.getElementById('campSettingsSave')?.addEventListener('click', () => {
+  settingsSaveBtn?.addEventListener('click', () => {
     const existingMarkers = (getBrand(brandId)?.campaigns||[]).find(c=>c.id===campId)?.mileMarkers || [];
-    const mileMarkers = Array.from(moreEl.querySelectorAll('#settingsMileList .info-mile-row')).map(row => {
+    const mileMarkers = Array.from(settingsMileList?.querySelectorAll('.info-mile-row') || []).map(row => {
       const id = row.dataset.markerId;
       const existing = existingMarkers.find(m => m.id === id);
       return {
@@ -3669,7 +3675,7 @@ function bindCampaignPage(brandId, campId) {
       };
     }).filter(m => m.text);
     const patch = {
-      ov_platforms: document.getElementById('settingsPlatforms')?.value || campaign.ov_platforms || '',
+      ov_platforms: settingsPlatHidden?.value || campaign.ov_platforms || '',
       mileMarkers,
     };
     const updated = brand.campaigns.map(c => c.id === campId ? { ...c, ...patch } : c);
