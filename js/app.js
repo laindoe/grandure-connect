@@ -3796,9 +3796,14 @@ function bindCampaignPage(brandId, campId) {
   const existingMarkers = campaign.mileMarkers || [];
   const mileRowsHTML = existingMarkers.map(m => `
     <div class="settings-mile-row" data-marker-id="${m.id}" data-text="${escHtml(m.text||'')}" data-date="${m.date||''}">
-      <span class="settings-mile-name">${escHtml(m.text||'')}</span>
-      <span class="settings-mile-eta">${m.date ? fromDateInputVal(m.date) : '—'}</span>
-      <button type="button" class="info-mile-del" style="background:none;border:none;color:rgba(255,255,255,0.25);font-size:18px;padding:0;line-height:1;cursor:pointer">×</button>
+      <div class="mile-swipe-actions">
+        <button type="button" class="mile-edit-btn">Edit</button>
+        <button type="button" class="mile-del-btn">Delete</button>
+      </div>
+      <div class="mile-swipe-content">
+        <span class="settings-mile-name">${escHtml(m.text||'')}</span>
+        <span class="settings-mile-eta">${m.date ? fromDateInputVal(m.date) : '—'}</span>
+      </div>
     </div>`).join('');
 
   moreEl.innerHTML = `
@@ -3832,10 +3837,9 @@ function bindCampaignPage(brandId, campId) {
       <!-- MILE MARKERS -->
       <div style="padding:20px 0 16px">
         <div style="font-size:10px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">MILE MARKERS</div>
-        <div style="display:grid;grid-template-columns:1fr auto 28px;gap:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:2px">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:2px">
           <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.22);letter-spacing:0.8px">NAME</span>
           <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.22);letter-spacing:0.8px">ETA</span>
-          <span></span>
         </div>
         <div id="settingsMileList">${mileRowsHTML}</div>
         <button type="button" id="settingsMileAddBtn" style="width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);font-size:13px;font-weight:600;margin-top:10px;cursor:pointer">+ Add Marker</button>
@@ -3850,14 +3854,7 @@ function bindCampaignPage(brandId, campId) {
   const settingsSaveBtn    = moreEl.querySelector('#campSettingsSave');
   const settingsPlatHidden = moreEl.querySelector('#settingsPlatforms');
 
-  function bindMileDelBtns() {
-    settingsMileList.querySelectorAll('.info-mile-del').forEach(btn => {
-      btn.onclick = () => btn.closest('.settings-mile-row').remove();
-    });
-  }
-  bindMileDelBtns();
-
-  settingsAddBtn.addEventListener('click', () => {
+  function openMileModal(prefillName, prefillDate, onSave) {
     const modal = document.createElement('div');
     modal.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
     modal.innerHTML = `
@@ -3865,11 +3862,11 @@ function bindCampaignPage(brandId, campId) {
         <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:20px">Enter Mile Marker</div>
         <div style="margin-bottom:14px">
           <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.8px;margin-bottom:6px">NAME</div>
-          <input id="mileModalName" type="text" placeholder="Milestone name" class="notion-input" style="width:100%;font-size:15px;box-sizing:border-box">
+          <input id="mileModalName" type="text" placeholder="Milestone name" class="notion-input" style="width:100%;font-size:15px;box-sizing:border-box" value="${escHtml(prefillName||'')}">
         </div>
         <div style="margin-bottom:20px">
           <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.8px;margin-bottom:6px">ETA</div>
-          <input id="mileModalDate" type="date" class="notion-input notion-date" style="width:100%;color-scheme:dark;box-sizing:border-box">
+          <input id="mileModalDate" type="date" class="notion-input notion-date" style="width:100%;color-scheme:dark;box-sizing:border-box" value="${prefillDate||''}">
         </div>
         <div style="display:flex;gap:10px">
           <button id="mileModalCancel" style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.6);font-size:15px;font-weight:600;cursor:pointer">Cancel</button>
@@ -3878,24 +3875,93 @@ function bindCampaignPage(brandId, campId) {
       </div>`;
     document.body.appendChild(modal);
     setTimeout(() => modal.querySelector('#mileModalName').focus(), 50);
-
     modal.querySelector('#mileModalCancel').addEventListener('click', () => modal.remove());
     modal.querySelector('#mileModalSave').addEventListener('click', () => {
       const name = modal.querySelector('#mileModalName').value.trim();
       const date = modal.querySelector('#mileModalDate').value;
       if (!name) return;
-      const row = document.createElement('div');
-      row.className = 'settings-mile-row';
-      row.dataset.markerId = uid();
-      row.dataset.text = name;
-      row.dataset.date = date;
-      row.innerHTML = `
+      modal.remove();
+      onSave(name, date);
+    });
+  }
+
+  function buildMileRow(id, name, date) {
+    const row = document.createElement('div');
+    row.className = 'settings-mile-row';
+    row.dataset.markerId = id;
+    row.dataset.text = name;
+    row.dataset.date = date;
+    row.innerHTML = `
+      <div class="mile-swipe-actions">
+        <button type="button" class="mile-edit-btn">Edit</button>
+        <button type="button" class="mile-del-btn">Delete</button>
+      </div>
+      <div class="mile-swipe-content">
         <span class="settings-mile-name">${escHtml(name)}</span>
         <span class="settings-mile-eta">${date ? fromDateInputVal(date) : '—'}</span>
-        <button type="button" class="info-mile-del" style="background:none;border:none;color:rgba(255,255,255,0.25);font-size:18px;padding:0;line-height:1;cursor:pointer">×</button>`;
-      row.querySelector('.info-mile-del').addEventListener('click', () => row.remove());
-      settingsMileList.appendChild(row);
-      modal.remove();
+      </div>`;
+    bindMileSwipe(row);
+    return row;
+  }
+
+  function bindMileSwipe(row) {
+    const content = row.querySelector('.mile-swipe-content');
+    const ACTIONS_W = 120;
+    let startX = 0, startY = 0, revealed = false, dragging = false;
+
+    content.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dragging = true;
+      content.style.transition = 'none';
+    }, { passive: true });
+
+    content.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (!revealed && Math.abs(dy) > Math.abs(dx)) return;
+      const base = revealed ? -ACTIONS_W : 0;
+      const offset = Math.min(0, Math.max(-ACTIONS_W, base + dx));
+      content.style.transform = `translateX(${offset}px)`;
+    }, { passive: true });
+
+    content.addEventListener('touchend', e => {
+      if (!dragging) return;
+      dragging = false;
+      content.style.transition = 'transform 0.22s ease';
+      const dx = e.changedTouches[0].clientX - startX;
+      if (!revealed && dx < -50) {
+        content.style.transform = `translateX(-${ACTIONS_W}px)`;
+        revealed = true;
+      } else if (revealed && dx > 50) {
+        content.style.transform = 'translateX(0)';
+        revealed = false;
+      } else {
+        content.style.transform = revealed ? `translateX(-${ACTIONS_W}px)` : 'translateX(0)';
+      }
+    }, { passive: true });
+
+    row.querySelector('.mile-edit-btn')?.addEventListener('click', () => {
+      content.style.transition = 'transform 0.22s ease';
+      content.style.transform = 'translateX(0)';
+      revealed = false;
+      openMileModal(row.dataset.text, row.dataset.date, (name, date) => {
+        row.dataset.text = name;
+        row.dataset.date = date;
+        row.querySelector('.settings-mile-name').textContent = name;
+        row.querySelector('.settings-mile-eta').textContent = date ? fromDateInputVal(date) : '—';
+      });
+    });
+
+    row.querySelector('.mile-del-btn')?.addEventListener('click', () => row.remove());
+  }
+
+  settingsMileList.querySelectorAll('.settings-mile-row').forEach(row => bindMileSwipe(row));
+
+  settingsAddBtn.addEventListener('click', () => {
+    openMileModal('', '', (name, date) => {
+      settingsMileList.appendChild(buildMileRow(uid(), name, date));
     });
   });
 
