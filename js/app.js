@@ -2523,7 +2523,7 @@ function pageCampaign(brandId, campId) {
         <div class="section-card" style="margin-bottom:10px">
           <div class="camp-card-label">CAMPAIGN OVERVIEW</div>
           <div class="camp-ov-body${campaign.ov_objective ? '' : ' camp-ov-empty'}">${escHtml(campaign.ov_objective || 'No objective set yet. Tap Edit Document to fill in the details.')}</div>
-          ${campaign.ov_offer ? `<div class="camp-ov-offer-row"><span class="camp-ov-offer-label">OFFER</span><span class="camp-ov-offer-title">${escHtml(campaign.ov_offer)}</span></div>` : ''}
+          ${(campaign.ov_offers || []).length ? `<div class="camp-ov-offer-row"><span class="camp-ov-offer-label">OFFERS</span><div class="camp-ov-offer-list">${(campaign.ov_offers || []).map(o => `<div class="camp-ov-offer-item">· ${escHtml(o)}</div>`).join('')}</div></div>` : ''}
           ${campaign.ov_cta ? `<div class="camp-ov-cta-row"><span class="camp-ov-cta-label">CTA</span><span class="camp-ov-cta-val">${escHtml(campaign.ov_cta)}</span></div>` : ''}
           <div class="camp-ov-btns">
             <button class="camp-ov-btn-out" id="campInfoDocBtn">Open Document</button>
@@ -2680,8 +2680,15 @@ function bindCampaignPage(brandId, campId) {
         </div>
       </div>
       <div class="notion-field">
-        <div class="notion-label">OFFER TITLE</div>
-        <input class="notion-input" id="ov_offer" value="${campaign.ov_offer || ''}" placeholder="What offer is this campaign promoting?">
+        <div class="notion-label">OFFERS</div>
+        <div id="ovOffersContainer">
+          ${(campaign.ov_offers || []).map(o => `
+            <div class="offer-input-row">
+              <input class="notion-input offer-input" value="${escHtml(o)}" placeholder="Offer name" style="font-size:16px">
+              <button type="button" class="offer-remove-btn">×</button>
+            </div>`).join('')}
+        </div>
+        <button type="button" class="offer-add-btn" id="addOfferBtn">+ Add Offer</button>
       </div>
       <div class="notion-field">
         <div class="notion-label">CALL TO ACTION</div>
@@ -2762,6 +2769,19 @@ function bindCampaignPage(brandId, campId) {
     });
   });
 
+  // Offers — add / remove rows
+  function addOfferRow(value = '') {
+    const row = document.createElement('div');
+    row.className = 'offer-input-row';
+    row.innerHTML = `<input class="notion-input offer-input" value="${escHtml(value)}" placeholder="Offer name" style="font-size:16px"><button type="button" class="offer-remove-btn">×</button>`;
+    row.querySelector('.offer-remove-btn').addEventListener('click', () => row.remove());
+    document.getElementById('ovOffersContainer')?.appendChild(row);
+  }
+  infoSheet.querySelectorAll('.offer-remove-btn').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('.offer-input-row').remove());
+  });
+  document.getElementById('addOfferBtn')?.addEventListener('click', () => addOfferRow());
+
   // Campaign Overview card buttons
   document.getElementById('campEditDocBtn')?.addEventListener('click', () => {
     requestAnimationFrame(() => infoSheet.classList.add('open'));
@@ -2819,7 +2839,7 @@ function bindCampaignPage(brandId, campId) {
         ov_audience:  getVal('ov_audience'),
         ov_message:   getVal('ov_message'),
         ov_platforms: getVal('ov_platforms'),
-        ov_offer:     getVal('ov_offer'),
+        ov_offers:    Array.from(infoSheet.querySelectorAll('.offer-input')).map(i => i.value.trim()).filter(Boolean),
         ov_cta:       getVal('ov_cta'),
         ov_timeline:  getVal('ov_timeline'),
         ov_notes:     getVal('ov_notes'),
@@ -2853,7 +2873,7 @@ function bindCampaignPage(brandId, campId) {
       ov_audience:  getVal('ov_audience'),
       ov_message:   getVal('ov_message'),
       ov_platforms: getVal('ov_platforms'),
-      ov_offer:     getVal('ov_offer'),
+      ov_offers:    Array.from(infoSheet.querySelectorAll('.offer-input')).map(i => i.value.trim()).filter(Boolean),
       ov_cta:       getVal('ov_cta'),
       ov_timeline:  getVal('ov_timeline'),
       ov_notes:     getVal('ov_notes'),
@@ -2935,11 +2955,13 @@ function getDefaultOvBlocks(campaign) {
   const uid = () => 'b' + Math.random().toString(36).slice(2,8);
   const blocks = [{ id: uid(), type: 'h1', text: campaign.name || 'Campaign Overview', generated: true }];
   [['ov_objective','Objective'],['ov_audience','Target Audience'],['ov_message','Core Message'],
-   ['ov_platforms','Platforms'],['ov_offer','Offer Title'],['ov_cta','Call to Action'],['ov_timeline','Timeline'],['ov_notes','Notes']
+   ['ov_platforms','Platforms'],['ov_cta','Call to Action'],['ov_timeline','Timeline'],['ov_notes','Notes']
   ].forEach(([k,l]) => {
     blocks.push({ id: uid(), type: 'h2', text: l, generated: true });
     blocks.push({ id: uid(), type: 'text', text: campaign[k] || '', generated: true });
   });
+  blocks.push({ id: uid(), type: 'h2', text: 'Offers', generated: true });
+  blocks.push({ id: uid(), type: 'text', text: (campaign.ov_offers || []).map(o => `• ${o}`).join('\n') || '', generated: true });
   return blocks;
 }
 
