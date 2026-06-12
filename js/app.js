@@ -2497,6 +2497,18 @@ function pageCampaign(brandId, campId) {
 
   const heroImgStyle = campaign.heroImage ? `background-image:url(${campaign.heroImage})` : '';
 
+  const daysLeftLabel = (() => {
+    const iso = toDateInputVal(campaign.endDate);
+    if (!iso) return '';
+    const [y, mo, d] = iso.split('-').map(Number);
+    const end = new Date(y, mo - 1, d);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const diff = Math.ceil((end - today) / 86400000);
+    if (diff < 0) return 'Campaign ended';
+    if (diff === 0) return 'Last day';
+    return `${diff} day${diff === 1 ? '' : 's'} left`;
+  })();
+
   return `
     <div class="page" style="padding-bottom:120px">
 
@@ -2513,7 +2525,7 @@ function pageCampaign(brandId, campId) {
       <!-- Campaign hero card: full-width -->
       <div class="camp-hero-card" id="campHeroCard" style="${heroImgStyle}">
         <div class="camp-hero-top">
-          <div class="camp-hero-dates">${campaign.startDate} – ${campaign.endDate}</div>
+          ${daysLeftLabel ? `<div class="camp-hero-days-left">${daysLeftLabel}</div>` : ''}
         </div>
         <div class="camp-hero-name">${campaign.name}</div>
         <div class="camp-hero-next">

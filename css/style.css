@@ -1020,7 +1020,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-hero-card::before { content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0.55) 40%,rgba(0,0,0,0.82) 100%);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:0; }
 .camp-hero-card > * { position:relative;z-index:1; }
 .camp-hero-top { display:flex;align-items:center;margin-bottom:10px; }
-.camp-hero-dates { font-size:11px;color:rgba(255,255,255,0.45); }
+.camp-hero-days-left { font-size:11px;font-weight:700;letter-spacing:0.5px;color:rgba(255,255,255,0.5); }
 .camp-hero-name { font-size:24px;font-weight:700;color:#fff;margin-bottom:14px;line-height:1.2; }
 .camp-hero-next { display:flex;flex-direction:column;gap:3px;margin-bottom:14px; }
 .camp-hero-next-label { font-size:8px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,0.35); }
