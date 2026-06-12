@@ -1055,49 +1055,49 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-analytics-delta { display:none; }
 
 /* ─── Campaign Page: Redesigned Cards ─────────────────────────────────────── */
-.camp-card-label { font-size:9px;font-weight:700;letter-spacing:1.3px;color:rgba(255,255,255,0.3);margin-bottom:12px;text-transform:uppercase; }
+.camp-card-label { font-size:10px;font-weight:700;letter-spacing:1.3px;color:rgba(255,255,255,0.3);margin-bottom:14px;text-transform:uppercase; }
 
 /* Campaign Overview card */
-.camp-ov-body { font-size:14px;line-height:1.65;color:rgba(255,255,255,0.75); }
+.camp-ov-body { font-size:16px;line-height:1.65;color:rgba(255,255,255,0.8); }
 .camp-ov-empty { color:rgba(255,255,255,0.28);font-style:italic; }
 .camp-kw-pills { display:flex;flex-wrap:wrap;gap:6px;margin-top:12px; }
-.camp-kw-pill { padding:5px 12px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:.15px; }
-.camp-ov-offer-row { margin-top:14px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.06); }
-.camp-ov-offer-label { display:block;font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:7px; }
-.camp-ov-offer-list { display:flex;flex-direction:column;gap:5px; }
-.camp-ov-offer-item { font-size:14px;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.3; }
+.camp-kw-pill { padding:5px 12px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);font-size:13px;color:rgba(255,255,255,0.5);letter-spacing:.15px; }
+.camp-ov-offer-row { margin-top:16px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid rgba(255,255,255,0.06); }
+.camp-ov-offer-label { display:block;font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:8px; }
+.camp-ov-offer-list { display:flex;flex-direction:column;gap:6px; }
+.camp-ov-offer-item { font-size:16px;font-weight:600;color:rgba(255,255,255,0.88);line-height:1.35; }
 /* offer form rows */
 .offer-input-row { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
 .offer-remove-btn { flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.4);font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation; }
 .offer-remove-btn:active { opacity:.6; }
 .offer-add-btn { display:inline-flex;align-items:center;gap:4px;margin-top:2px;padding:7px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.45);font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation; }
 .offer-add-btn:active { opacity:.65; }
-.camp-ov-cta-row { display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.06); }
-.camp-ov-cta-label { font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;flex-shrink:0; }
-.camp-ov-cta-val { font-size:13px;color:rgba(255,255,255,0.7);flex:1; }
-.camp-ov-btns { display:flex;gap:8px;margin-top:14px; }
-.camp-ov-btn-out { flex:1;padding:11px 0;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.55);font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation; }
-.camp-ov-btn-solid { flex:1;padding:11px 0;border-radius:10px;border:none;background:rgba(255,255,255,0.1);color:#fff;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation; }
+.camp-ov-cta-row { display:flex;align-items:center;gap:8px;margin-top:12px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid rgba(255,255,255,0.06); }
+.camp-ov-cta-label { font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;flex-shrink:0; }
+.camp-ov-cta-val { font-size:15px;color:rgba(255,255,255,0.75);flex:1; }
+.camp-ov-btns { display:flex;gap:8px;margin-top:16px; }
+.camp-ov-btn-out { flex:1;padding:13px 0;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:transparent;color:rgba(255,255,255,0.6);font-size:14px;font-weight:600;cursor:pointer;touch-action:manipulation; }
+.camp-ov-btn-solid { flex:1;padding:13px 0;border-radius:12px;border:none;background:rgba(255,255,255,0.1);color:#fff;font-size:14px;font-weight:600;cursor:pointer;touch-action:manipulation; }
 .camp-ov-btn-out:active,.camp-ov-btn-solid:active { opacity:.65; }
 
 /* Marketing Snapshot card */
 .camp-mktg-row { border-bottom:1px solid rgba(255,255,255,0.05); }
 .camp-mktg-row:last-child { border-bottom:none; }
-.camp-mktg-row-hd { display:flex;align-items:center;justify-content:space-between;padding:12px 0;cursor:pointer;touch-action:manipulation; }
-.camp-mktg-row-left { display:flex;align-items:center;gap:10px; }
-.camp-mktg-row-icon { width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);flex-shrink:0;line-height:0; }
-.camp-mktg-row-name { font-size:14px;font-weight:600;color:rgba(255,255,255,0.78); }
+.camp-mktg-row-hd { display:flex;align-items:center;justify-content:space-between;padding:14px 0;cursor:pointer;touch-action:manipulation; }
+.camp-mktg-row-left { display:flex;align-items:center;gap:12px; }
+.camp-mktg-row-icon { width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);flex-shrink:0;line-height:0; }
+.camp-mktg-row-name { font-size:16px;font-weight:600;color:rgba(255,255,255,0.85); }
 .camp-mktg-chev { flex-shrink:0; }
-.camp-mktg-row-body { padding:2px 0 14px 38px; }
+.camp-mktg-row-body { padding:2px 0 16px 42px; }
 .camp-mktg-fmts { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px; }
-.camp-mktg-fmt { padding:4px 10px;border-radius:6px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.58); }
-.camp-mktg-themes { display:flex;flex-direction:column;gap:5px; }
-.camp-mktg-theme { font-size:12px;color:rgba(255,255,255,0.38);line-height:1.4; }
-.camp-mktg-empty-hint { font-size:12px;color:rgba(255,255,255,0.22);font-style:italic; }
+.camp-mktg-fmt { padding:5px 12px;border-radius:8px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.08);font-size:13px;color:rgba(255,255,255,0.62); }
+.camp-mktg-themes { display:flex;flex-direction:column;gap:6px; }
+.camp-mktg-theme { font-size:13px;color:rgba(255,255,255,0.4);line-height:1.4; }
+.camp-mktg-empty-hint { font-size:13px;color:rgba(255,255,255,0.22);font-style:italic; }
 
 /* Brand Snapshot card */
-.camp-brand-snap-text { font-size:13px;line-height:1.65;color:rgba(255,255,255,0.58);margin-bottom:0; }
-.camp-view-details-btn { display:inline-block;margin-top:14px;padding:0;background:none;border:none;color:rgba(255,255,255,0.4);font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation; }
+.camp-brand-snap-text { font-size:15px;line-height:1.65;color:rgba(255,255,255,0.65);margin-bottom:0; }
+.camp-view-details-btn { display:inline-block;margin-top:16px;padding:0;background:none;border:none;color:rgba(255,255,255,0.4);font-size:14px;font-weight:600;cursor:pointer;touch-action:manipulation; }
 .camp-view-details-btn:active { opacity:.55; }
 
 /* Notion-style doc fields */
