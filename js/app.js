@@ -701,9 +701,10 @@ function pageHome() {
       const [y, mo, d] = iso.split('-').map(Number);
       const today = new Date(); today.setHours(0,0,0,0);
       const days = Math.ceil((new Date(y, mo - 1, d) - today) / 86400000);
-      if (days < 0) return 'ended';
-      if (days === 0) return 'last day';
-      return `${days}d left`;
+      if (days < 0) return { label: 'Ended', cls: 'red' };
+      if (days === 0) return { label: 'Last day', cls: 'red' };
+      const cls = days > 100 ? 'green' : days > 25 ? 'yellow' : 'red';
+      return { label: `${days} days left`, cls };
     })();
     const cb = campaign.banner;
     const campBannerStyle = cb
@@ -724,6 +725,7 @@ function pageHome() {
           <div class="home-camp-card" data-href="#/campaign?brandId=${brand.id}&id=${campaign.id}">
             <div class="home-camp-banner" style="${campBannerStyle}"></div>
             <div class="home-camp-body">
+              ${homeDaysLeft ? `<div class="home-camp-days-pill home-camp-days-${homeDaysLeft.cls}">${homeDaysLeft.label}</div>` : ''}
               <div class="home-camp-top">
                 <div class="home-camp-left">
                   <div class="home-camp-name">${campaign.name}</div>
@@ -738,7 +740,6 @@ function pageHome() {
               </div>
               <div class="home-camp-bottom">
                 <div class="home-camp-count">${postLabel}</div>
-                ${homeDaysLeft ? `<div class="home-camp-days">${homeDaysLeft}</div>` : ''}
                 <div class="home-camp-pct">${pct}%</div>
               </div>
             </div>
