@@ -424,15 +424,29 @@ function _populateSettings() {
 }
 
 /* ── Idea Capture Modal ── */
-let captureState = { platform: '', format: '', brandId: '' };
+let captureState = { platform: '', format: '', brandId: '', campaignId: '' };
 
 function captureModalHTML() {
+  const brandOpts = BRANDS.map((b, i) =>
+    `<option value="${b.id}"${i === 0 ? ' selected' : ''}>${escHtml(b.name)}</option>`
+  ).join('');
+  const firstBrand = BRANDS[0];
+  const campOpts = firstBrand
+    ? (firstBrand.campaigns||[]).map((c, i) =>
+        `<option value="${c.id}"${i === 0 ? ' selected' : ''}>${escHtml(c.name)}</option>`
+      ).join('')
+    : '';
+
   return `
     <div class="capture-overlay" id="captureOverlay" style="display:none">
       <div class="capture-sheet">
         <div class="capture-handle"></div>
         <div class="capture-title">New Idea</div>
         <textarea class="capture-textarea" id="captureText" placeholder="What's the idea?"></textarea>
+        <div class="capture-section-label">BRAND</div>
+        <select class="capture-select" id="captureBrandSelect">${brandOpts}</select>
+        <div class="capture-section-label" id="captureCampLabel">CAMPAIGN</div>
+        <select class="capture-select" id="captureCampSelect">${campOpts}</select>
         <div class="capture-section-label">PLATFORM</div>
         <div class="capture-chips" id="capturePlatformChips">
           ${['instagram','threads','youtube','tiktok'].map(p =>
@@ -489,7 +503,16 @@ function bindCapture() {
   const overlay = document.getElementById('captureOverlay');
   if (!overlay) return;
 
-  const open = () => { overlay.style.display = 'flex'; };
+  const open = () => {
+    // Reset state to first brand/campaign
+    const brandSel = document.getElementById('captureBrandSelect');
+    if (brandSel && BRANDS.length) {
+      brandSel.value = BRANDS[0].id;
+      captureState.brandId = BRANDS[0].id;
+      populateCampSelect(BRANDS[0].id);
+    }
+    overlay.style.display = 'flex';
+  };
   const close = () => { overlay.style.display = 'none'; };
 
   document.getElementById('navCapture')?.addEventListener('click', open);
@@ -500,17 +523,43 @@ function bindCapture() {
 
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 
-  document.querySelectorAll('[data-platform]').forEach(btn => {
+  function populateCampSelect(brandId) {
+    const sel = document.getElementById('captureCampSelect');
+    if (!sel) return;
+    const brand = getBrand(brandId);
+    const camps = brand?.campaigns || [];
+    sel.innerHTML = camps.length
+      ? camps.map((c, i) => `<option value="${c.id}"${i===0?' selected':''}>${escHtml(c.name)}</option>`).join('')
+      : `<option value="">No campaigns</option>`;
+    captureState.campaignId = camps[0]?.id || '';
+  }
+
+  document.getElementById('captureBrandSelect')?.addEventListener('change', e => {
+    captureState.brandId = e.target.value;
+    populateCampSelect(e.target.value);
+  });
+  document.getElementById('captureCampSelect')?.addEventListener('change', e => {
+    captureState.campaignId = e.target.value;
+  });
+
+  // Init state from selects
+  const brandSel = document.getElementById('captureBrandSelect');
+  if (brandSel) {
+    captureState.brandId = brandSel.value;
+    populateCampSelect(brandSel.value);
+  }
+
+  overlay.querySelectorAll('[data-platform]').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-platform]').forEach(b => b.classList.remove('active'));
+      overlay.querySelectorAll('[data-platform]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       captureState.platform = btn.dataset.platform;
     });
   });
 
-  document.querySelectorAll('[data-format]').forEach(btn => {
+  overlay.querySelectorAll('[data-format]').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-format]').forEach(b => b.classList.remove('active'));
+      overlay.querySelectorAll('[data-format]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       captureState.format = btn.dataset.format;
     });
@@ -518,11 +567,26 @@ function bindCapture() {
 
   document.getElementById('captureSave')?.addEventListener('click', () => {
     const text = document.getElementById('captureText')?.value.trim();
-    if (text) {
-      alert(`Saved: "${text}"`);
-      document.getElementById('captureText').value = '';
-      close();
+    if (!text) return;
+    const brandId    = document.getElementById('captureBrandSelect')?.value;
+    const campaignId = document.getElementById('captureCampSelect')?.value;
+    const brand = getBrand(brandId);
+    if (brand) {
+      const campaign = (brand.campaigns||[]).find(c=>c.id===campaignId);
+      const newIdea = {
+        id:       uid(),
+        title:    text,
+        platform: captureState.platform || 'instagram',
+        format:   captureState.format   || 'Reel',
+        campaign: campaign?.name || '',
+        campaignId: campaignId || '',
+      };
+      saveBrandOverride(brandId, { ideas: [...(brand.ideas||[]), newIdea] });
     }
+    document.getElementById('captureText').value = '';
+    overlay.querySelectorAll('[data-platform],[data-format]').forEach(b=>b.classList.remove('active'));
+    captureState.platform = ''; captureState.format = '';
+    close();
   });
 }
 
@@ -628,9 +692,9 @@ function pageHome() {
     const postsCompleted = isCurrentPhase ? brand.currentPhase.postsCompleted : 0;
     const totalPosts     = isCurrentPhase ? brand.currentPhase.totalPosts : 0;
     const postLabel = totalPosts > 0 ? `${postsCompleted} / ${totalPosts} posts` : '0 posts';
-    const upcomingVal = campaign.status === 'active'
-      ? (brand.board.ready[0]?.title || brand.board.drafting[0]?.title || '—')
-      : `Starts ${campaign.startDate}`;
+    const stageIdx = campaign.stage != null ? campaign.stage : (campaign.status === 'active' ? 2 : campaign.status === 'upcoming' ? 1 : 0);
+    const STAGE_LABELS = ['Ideation', 'Planning', 'Production', 'Publish'];
+    const stageLabel = STAGE_LABELS[stageIdx] || 'Ideation';
     const cb = campaign.banner;
     const campBannerStyle = cb
       ? (cb.startsWith('data:') || cb.startsWith('http') ? `background:url('${cb}') center/cover no-repeat` : `background:${cb}`)
@@ -656,8 +720,7 @@ function pageHome() {
                   <div class="home-camp-dates">${campaign.startDate} – ${campaign.endDate}</div>
                 </div>
                 <div class="home-camp-right">
-                  <div class="home-camp-next-label">NEXT UP</div>
-                  <div class="home-camp-next-val">${upcomingVal}</div>
+                  <div class="home-camp-stage-badge">${stageLabel}</div>
                 </div>
               </div>
               <div class="home-camp-prog-track">

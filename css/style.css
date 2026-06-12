@@ -637,6 +637,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 }
 .capture-textarea::placeholder { color: #444; }
 .capture-section-label { color: #555; font-size: 11px; letter-spacing: 1.5px; margin-bottom: 8px; }
+.capture-select { width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;color:#fff;font-size:14px;font-family:inherit;outline:none;margin-bottom:16px;appearance:none;-webkit-appearance:none;color-scheme:dark; }
 .capture-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .capture-chip {
   border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
@@ -812,12 +813,16 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
   color: #555;
   font-size: 11px;
 }
-.home-camp-next-label {
-  color: #3a3a3a;
-  font-size: 9px;
+.home-camp-stage-badge {
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 1.5px;
-  margin-bottom: 3px;
+  letter-spacing: 0.8px;
+  color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 4px 9px;
+  display: inline-block;
 }
 .home-camp-next-val {
   color: #888;
