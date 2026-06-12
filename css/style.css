@@ -1316,6 +1316,16 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .sched-sheet { background:#1c1c1e;border-radius:20px 20px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));width:100%;max-width:430px; }
 .sched-title { font-size:15px;font-weight:700;color:#fff;margin-bottom:16px; }
 .sched-save { width:100%;padding:13px;border-radius:12px;background:#fff;color:#000;font-size:14px;font-weight:700;margin-top:14px; }
+/* Mile Markers (campaign page view) */
+.camp-mile-list { display:flex;flex-direction:column;gap:0; }
+.camp-mile-item { display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05); }
+.camp-mile-item:last-child { border-bottom:none; }
+.camp-mile-item.done .camp-mile-text { color:rgba(255,255,255,0.3);text-decoration:line-through; }
+.camp-mile-check { width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#34c759;cursor:pointer; }
+.camp-mile-item.done .camp-mile-check { background:rgba(52,199,89,0.15);border-color:rgba(52,199,89,0.4); }
+.camp-mile-info { display:flex;flex-direction:column;gap:2px;flex:1; }
+.camp-mile-text { font-size:14px;font-weight:500;color:rgba(255,255,255,0.85); }
+.camp-mile-arrival { font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);letter-spacing:0.3px; }
 /* Idea Detail Sheet */
 .idea-link-row { display:flex;gap:6px;margin-bottom:6px;align-items:center; }
 .idea-media-item { display:flex;align-items:center;gap:8px;padding:6px 0; }

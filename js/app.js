@@ -78,6 +78,25 @@ function parseHash() {
 
 function getBrand(id) { return BRANDS.find(b => b.id === id); }
 
+function uid() { return Math.random().toString(36).slice(2, 9); }
+
+function toDateInputVal(str) {
+  if (!str) return '';
+  const months = { Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12 };
+  const m = str.match(/^([A-Za-z]{3})\s+(\d{1,2}),?\s+(\d{4})$/);
+  if (!m) return str.includes('-') ? str : '';
+  const mo = String(months[m[1]] || 1).padStart(2,'0');
+  return `${m[3]}-${mo}-${String(m[2]).padStart(2,'0')}`;
+}
+
+function fromDateInputVal(val) {
+  if (!val) return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const [y, mo, d] = val.split('-').map(Number);
+  if (!y) return val;
+  return `${months[mo-1]} ${d}, ${y}`;
+}
+
 window.addEventListener('hashchange', render);
 window.addEventListener('load', render);
 
@@ -2788,6 +2807,27 @@ function pageCampaign(brandId, campId) {
           <div id="campMktgPlatforms">${mktgSnapshotHTML}</div>
         </div>
 
+        <!-- MILE MARKERS -->
+        ${(() => {
+          const markers = campaign.mileMarkers || [];
+          if (!markers.length) return '';
+          return `<div class="section-card" style="margin-bottom:10px">
+            <div class="camp-card-label">MILE MARKERS</div>
+            <div class="camp-mile-list">
+              ${markers.map(m => `
+                <div class="camp-mile-item${m.done ? ' done' : ''}" data-marker-id="${m.id}">
+                  <button type="button" class="camp-mile-check">
+                    ${m.done ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+                  </button>
+                  <div class="camp-mile-info">
+                    <span class="camp-mile-text">${escHtml(m.text)}</span>
+                    ${m.date ? `<span class="camp-mile-arrival">${fromDateInputVal(m.date)}</span>` : ''}
+                  </div>
+                </div>`).join('')}
+            </div>
+          </div>`;
+        })()}
+
         <!-- BRAND SNAPSHOT -->
         <div class="section-card" style="margin-bottom:10px">
           <div class="camp-card-label">BRAND SNAPSHOT</div>
@@ -2822,18 +2862,131 @@ function bindCampaignPage(brandId, campId) {
   document.getElementById('campInfoSheet')?.remove();
   document.getElementById('campPlanSheet')?.remove();
 
-  // Inject ··· more sheet
+  // Inject ··· settings sheet
   const moreEl = document.createElement('div');
   moreEl.className = 'camp-more-sheet';
   moreEl.id = 'campMoreSheet';
   moreEl.style.display = 'none';
+
+  const ALL_PLATFORMS = ['Instagram','TikTok','Facebook','YouTube','X','LinkedIn','Pinterest','Threads','Snapchat','Email'];
+  const activePlats = (campaign.ov_platforms || '').split(',').map(s => s.trim()).filter(Boolean);
+
+  const existingMarkers = campaign.mileMarkers || [];
+  const mileRowsHTML = existingMarkers.map(m => `
+    <div class="info-mile-row" data-marker-id="${m.id}">
+      <div class="info-mile-fields" style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <input class="notion-input info-mile-text" value="${escHtml(m.text||'')}" placeholder="Milestone name" style="font-size:15px">
+        <div class="info-mile-arrival-wrap" style="display:flex;align-items:center;gap:8px">
+          <span class="info-mile-arrival-label" style="font-size:10px;font-weight:700;letter-spacing:0.6px;color:rgba(255,255,255,0.3);white-space:nowrap">ARRIVAL TIME</span>
+          <input type="date" class="notion-input notion-date info-mile-date" value="${m.date||''}" style="flex:1;color-scheme:dark">
+        </div>
+      </div>
+      <button type="button" class="info-mile-del" style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.3);font-size:22px;padding:0 4px 0 8px;line-height:1">×</button>
+    </div>`).join('');
+
   moreEl.innerHTML = `
     <div class="camp-more-sheet-bg" id="campMoreSheetBg"></div>
-    <div class="camp-more-sheet-panel">
-      <div class="camp-more-sheet-bar"></div>
-      <button class="camp-more-item" id="campMoreChangeCover">Change Cover Photo</button>
+    <div class="camp-settings-panel" style="position:relative;background:#1c1c1e;border-radius:20px 20px 0 0;border-top:1px solid rgba(255,255,255,0.1);max-height:88dvh;display:flex;flex-direction:column">
+      <div style="padding:12px 20px 0;text-align:center">
+        <div style="width:40px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:0 auto 8px"></div>
+        <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);padding-bottom:14px">Campaign Settings</div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 20px 8px">
+
+        <!-- COVER PHOTO -->
+        <div style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">COVER PHOTO</div>
+          <button class="camp-more-item" id="campMoreChangeCover" style="border:none;border-radius:10px;background:rgba(255,255,255,0.06);padding:12px 16px;font-size:14px;text-align:left;width:100%">Change Cover Photo</button>
+        </div>
+
+        <!-- SOCIAL MEDIA -->
+        <div style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">SOCIAL MEDIA</div>
+          <input type="hidden" id="settingsPlatforms" value="${campaign.ov_platforms||''}">
+          <div id="settingsPlatformPills" style="display:flex;flex-wrap:wrap;gap:8px">
+            ${ALL_PLATFORMS.map(p => `
+              <button type="button" class="platform-pill${activePlats.includes(p)?' active':''}" data-platform="${p}">${p}</button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- MILE MARKERS -->
+        <div style="padding:16px 0;border-top:1px solid rgba(255,255,255,0.06)">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">MILE MARKERS</div>
+          <div id="settingsMileList" style="display:flex;flex-direction:column;gap:0">${mileRowsHTML}</div>
+          <button type="button" id="settingsMileAddBtn" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);font-size:13px;font-weight:600;margin-top:8px">+ Add Marker</button>
+        </div>
+
+      </div>
+      <div style="padding:12px 20px;padding-bottom:max(96px,calc(env(safe-area-inset-bottom,0px) + 96px));border-top:1px solid rgba(255,255,255,0.06)">
+        <button id="campSettingsSave" style="width:100%;padding:13px;border-radius:12px;background:#fff;color:#000;font-size:14px;font-weight:700">Save Settings</button>
+      </div>
     </div>`;
   document.body.appendChild(moreEl);
+
+  // ── Settings sheet bindings ──
+  const settingsMileList = moreEl.querySelector('#settingsMileList');
+  const settingsAddBtn   = moreEl.querySelector('#settingsMileAddBtn');
+  const settingsSaveBtn  = moreEl.querySelector('#campSettingsSave');
+  const settingsPlatHidden = moreEl.querySelector('#settingsPlatforms');
+
+  function addSettingsMileRow(text, date, markerId) {
+    const row = document.createElement('div');
+    row.className = 'info-mile-row';
+    row.dataset.markerId = markerId || uid();
+    row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)';
+    row.innerHTML = `
+      <div class="info-mile-fields" style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <input class="notion-input info-mile-text" value="${escHtml(text||'')}" placeholder="Milestone name" style="font-size:15px">
+        <div class="info-mile-arrival-wrap" style="display:flex;align-items:center;gap:8px">
+          <span class="info-mile-arrival-label" style="font-size:10px;font-weight:700;letter-spacing:0.6px;color:rgba(255,255,255,0.3);white-space:nowrap">ARRIVAL TIME</span>
+          <input type="date" class="notion-input notion-date info-mile-date" value="${date||''}" style="flex:1;color-scheme:dark">
+        </div>
+      </div>
+      <button type="button" class="info-mile-del" style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.3);font-size:22px;padding:0 4px 0 8px;line-height:1">×</button>`;
+    row.querySelector('.info-mile-del').addEventListener('click', () => row.remove());
+    settingsMileList.appendChild(row);
+    row.querySelector('.info-mile-text').focus();
+  }
+
+  // Wire up delete for existing rows
+  settingsMileList.querySelectorAll('.info-mile-del').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('.info-mile-row').remove());
+  });
+
+  settingsAddBtn.addEventListener('click', () => addSettingsMileRow());
+
+  // Platform pill toggles
+  moreEl.querySelectorAll('#settingsPlatformPills .platform-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      pill.classList.toggle('active');
+      const selected = Array.from(moreEl.querySelectorAll('#settingsPlatformPills .platform-pill.active'))
+        .map(p => p.dataset.platform).join(', ');
+      settingsPlatHidden.value = selected;
+    });
+  });
+
+  // Save settings
+  settingsSaveBtn.addEventListener('click', () => {
+    const newPlatforms = settingsPlatHidden.value;
+    const newMarkers = Array.from(settingsMileList.querySelectorAll('.info-mile-row')).map(row => {
+      const existing = existingMarkers.find(m => m.id === row.dataset.markerId);
+      return {
+        id: row.dataset.markerId,
+        text: row.querySelector('.info-mile-text')?.value.trim() || '',
+        date: row.querySelector('.info-mile-date')?.value || '',
+        done: existing?.done || false,
+      };
+    }).filter(m => m.text);
+
+    const updatedCampaigns = brand.campaigns.map(c =>
+      c.id === campId ? { ...c, ov_platforms: newPlatforms, mileMarkers: newMarkers } : c
+    );
+    saveBrandOverride(brandId, { campaigns: updatedCampaigns });
+    moreEl.style.display = 'none';
+    document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+    bindCampaignPage(brandId, campId);
+  });
 
   // Inject Aisha sheet
   const aishaEl = document.createElement('div');
@@ -3026,6 +3179,20 @@ function bindCampaignPage(brandId, campId) {
       const isOpen = body?.style.display !== 'none';
       if (body) body.style.display = isOpen ? 'none' : 'block';
       if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+    });
+  });
+
+  // Mile marker done-toggle
+  document.querySelectorAll('.camp-mile-item').forEach(item => {
+    item.querySelector('.camp-mile-check')?.addEventListener('click', () => {
+      const mid = item.dataset.markerId;
+      const updatedCampaigns = brand.campaigns.map(c => c.id === campId ? {
+        ...c,
+        mileMarkers: (c.mileMarkers || []).map(m => m.id === mid ? { ...m, done: !m.done } : m)
+      } : c);
+      saveBrandOverride(brandId, { campaigns: updatedCampaigns });
+      document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+      bindCampaignPage(brandId, campId);
     });
   });
 
