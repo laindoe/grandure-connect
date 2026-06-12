@@ -3786,7 +3786,7 @@ function bindCampaignPage(brandId, campId) {
   moreEl.id = 'campMoreSheet';
   moreEl.style.cssText = 'position:fixed;inset:0;z-index:300;background:#000;display:none;flex-direction:column';
 
-  const ALL_PLATFORMS = ['Instagram','TikTok','Facebook','YouTube','X','LinkedIn','Pinterest','Threads','Snapchat','Email'];
+  const ALL_PLATFORMS = ['Instagram','TikTok','YouTube','Facebook','X','LinkedIn','Threads','Pinterest','Snapchat','Email','Patreon','Discord'];
   const activePlats = (campaign.ov_platforms || '').split(',').map(s => s.trim()).filter(Boolean);
 
   const existingMarkers = campaign.mileMarkers || [];
@@ -3897,13 +3897,67 @@ function bindCampaignPage(brandId, campId) {
     });
   });
 
-  // Platform pill toggles
+  // Platform pill → open account info modal
+  const updatePlatHidden = () => {
+    settingsPlatHidden.value = Array.from(moreEl.querySelectorAll('#settingsPlatformPills .platform-pill.active'))
+      .map(p => p.dataset.platform).join(', ');
+  };
+
   moreEl.querySelectorAll('#settingsPlatformPills .platform-pill').forEach(pill => {
     pill.addEventListener('click', () => {
-      pill.classList.toggle('active');
-      const selected = Array.from(moreEl.querySelectorAll('#settingsPlatformPills .platform-pill.active'))
-        .map(p => p.dataset.platform).join(', ');
-      settingsPlatHidden.value = selected;
+      const platName = pill.dataset.platform;
+      const socialAccounts = getBrand(brandId)?.socialAccounts || {};
+      const acct = socialAccounts[platName.toLowerCase()] || {};
+      let active = pill.classList.contains('active');
+
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
+      modal.innerHTML = `
+        <div style="background:#1c1c1e;border-radius:20px;width:calc(100% - 48px);max-width:360px;padding:24px;border:1px solid rgba(255,255,255,0.1)">
+          <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:20px">${platName}</div>
+          <div style="margin-bottom:14px">
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.8px;margin-bottom:6px">HANDLE</div>
+            <input id="platHandle" type="text" value="${escHtml(acct.handle||'')}" placeholder="@username" class="notion-input" style="width:100%;font-size:15px;box-sizing:border-box">
+          </div>
+          <div style="margin-bottom:16px">
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.8px;margin-bottom:6px">PROFILE URL</div>
+            <input id="platUrl" type="url" value="${escHtml(acct.url||'')}" placeholder="https://..." class="notion-input" style="width:100%;font-size:15px;box-sizing:border-box">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid rgba(255,255,255,0.06)">
+            <span style="font-size:14px;font-weight:500;color:#fff">Active for this campaign</span>
+            <button id="platActiveToggle" type="button" style="width:46px;height:28px;border-radius:100px;border:none;cursor:pointer;padding:3px;background:${active?'#34c759':'rgba(255,255,255,0.15)'}">
+              <div style="width:22px;height:22px;border-radius:50%;background:#fff;transform:translateX(${active?'18px':'0'});transition:transform 0.2s"></div>
+            </button>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button id="platCancel" style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.6);font-size:15px;font-weight:600;cursor:pointer">Cancel</button>
+            <button id="platSave" style="flex:1;padding:12px;border-radius:12px;background:#fff;border:none;color:#000;font-size:15px;font-weight:700;cursor:pointer">Save</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      setTimeout(() => modal.querySelector('#platHandle').focus(), 50);
+
+      const toggleBtn = modal.querySelector('#platActiveToggle');
+      const knob = toggleBtn.querySelector('div');
+      toggleBtn.addEventListener('click', () => {
+        active = !active;
+        toggleBtn.style.background = active ? '#34c759' : 'rgba(255,255,255,0.15)';
+        knob.style.transform = `translateX(${active ? '18px' : '0'})`;
+      });
+
+      modal.querySelector('#platCancel').addEventListener('click', () => modal.remove());
+      modal.querySelector('#platSave').addEventListener('click', () => {
+        const handle = modal.querySelector('#platHandle').value.trim();
+        const url    = modal.querySelector('#platUrl').value.trim();
+        // Save account info to brand
+        const b = getBrand(brandId);
+        const accounts = { ...(b?.socialAccounts || {}), [platName.toLowerCase()]: { handle, url } };
+        saveBrandOverride(brandId, { socialAccounts: accounts });
+        // Update pill active state + hidden input
+        pill.classList.toggle('active', active);
+        updatePlatHidden();
+        modal.remove();
+      });
     });
   });
 
