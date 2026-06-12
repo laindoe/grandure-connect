@@ -123,6 +123,12 @@ function render() {
   } else if (path === '/inspiration') {
     app.innerHTML = pageInspiration(params.id);
     injectCampaignNav(params.id, params.campId || null, null);
+  } else if (path === '/planner') {
+    app.innerHTML = pageVisualPlanner(params.brandId, params.campId || null);
+    injectCampaignNav(params.brandId, params.campId || null, 'visual');
+  } else if (path === '/calendar') {
+    app.innerHTML = pageCalendar(params.brandId, params.campId || null);
+    injectCampaignNav(params.brandId, params.campId || null, 'cal');
   } else if (path === '/campaign') {
     app.innerHTML = pageCampaign(params.brandId, params.id);
   } else if (path === '/doc') {
@@ -137,9 +143,11 @@ function render() {
   bindCapture();
   bindNav();
   bindAddBrand();
-  if (path === '/brand') { bindEditBrand(params.id); bindDropdowns(params.id); }
+  if (path === '/brand')    { bindEditBrand(params.id); bindDropdowns(params.id); }
   if (path === '/campaign') { bindCampaignPage(params.brandId, params.id); }
-  if (path === '/doc') { bindDoc(params.brandId, params.campId, params.type); }
+  if (path === '/planner')  { bindVisualPlanner(params.brandId, params.campId || null); }
+  if (path === '/calendar') { bindCalendar(params.brandId, params.campId || null); }
+  if (path === '/doc')      { bindDoc(params.brandId, params.campId, params.type); }
 }
 
 /* ── Bind all nav links ── */
@@ -2275,6 +2283,561 @@ function bindAisha(brand, campaign, brandId, campId) {
 }
 
 /* ═══════════════════════════════════════
+   PAGE: VISUAL PLANNER
+═══════════════════════════════════════ */
+const PLAT_DOT_COLORS = {
+  instagram:'#e040c8', tiktok:'#00c8bf', youtube:'#f03030',
+  threads:'#5580e0', twitter:'#4488ee', linkedin:'#0a66c2', email:'#74ae00',
+};
+const PLAT_DISPLAY_NAMES = {
+  instagram:'Instagram', tiktok:'TikTok', youtube:'YouTube',
+  threads:'Threads', twitter:'X / Twitter', linkedin:'LinkedIn', email:'Email',
+};
+
+function pageVisualPlanner(brandId, campId) {
+  const brand = getBrand(brandId);
+  if (!brand) return pageHome();
+  const campaign = campId ? (brand.campaigns||[]).find(c=>c.id===campId) : null;
+  const platforms = Object.keys(brand.platformStrategy||{});
+  const backHref = campId ? `#/campaign?brandId=${brandId}&id=${campId}` : '#/';
+
+  if (!platforms.length) return `
+    <div class="page" style="padding-bottom:120px">
+      <div class="back-header">
+        <button class="back-btn" data-href="${backHref}">‹</button>
+        <div class="back-header-center"><div class="back-header-label">CONTENT PLANNER</div><div class="back-header-title">${escHtml(brand.name)}</div></div>
+        <div style="width:36px"></div>
+      </div>
+      <div class="planner-empty" style="margin-top:60px">No platforms configured</div>
+    </div>`;
+
+  const activePlatform = platforms[0];
+
+  function plannerIconSVG(p) {
+    const icons = {
+      instagram:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>`,
+      tiktok:`<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.38a8.26 8.26 0 004.83 1.55V7.48a4.85 4.85 0 01-1.06-.79z"/></svg>`,
+      youtube:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></svg>`,
+      threads:`<svg width="18" height="18" viewBox="0 0 192 192" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M141.537 88.988a73.5 73.5 0 00-2.667-.617c-1.598-6.718-5.03-12.505-10.287-17.203C118.786 62.027 106.48 57.5 92 57.5c-18.42 0-30.4 7.12-38.387 21.887l14.84 10.107C74.13 80.127 81.78 75.6 92 75.6c9.247 0 15.44 2.573 18.78 5.953 1.898 1.927 3.254 4.204 4.073 6.674a68.5 68.5 0 00-15.64-.7c-24.28 1.4-39.9 15.587-39.9 35.187 0 11.38 6.013 22.1 16.52 28.207 8.307 4.827 18.74 5.547 27.747 1.893 10.673-4.267 17.247-13.16 19.38-26.587 2.18 1.313 3.993 2.887 5.373 4.693 3.347 4.373 3.26 11.52 3.26 11.52l16.207-.607s.16-9.413-4.293-17.487c-2.387-4.333-5.733-7.72-9.573-10.16zm-33.893 30.94c-3.68 7.427-10.367 11.733-20.107 11.64-8.88-.094-14.607-4.454-14.607-11.127 0-9.267 8.293-14.787 22.48-15.587 4.64-.267 9.14-.067 13.44.547-.5 6.573-1.24 10.813-1.24 14.5z"/></svg>`,
+      twitter:`<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+      linkedin:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="10" x2="8" y2="18"/><circle cx="8" cy="7" r="0.8" fill="currentColor" stroke="none"/><path d="M12 18v-5c0-1.1.9-2 2-2s2 .9 2 2v5"/><line x1="12" y1="10" x2="12" y2="18"/></svg>`,
+      email:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`,
+    };
+    return icons[p] || `<span style="font-size:10px;font-weight:700">${(p[0]||'').toUpperCase()}</span>`;
+  }
+
+  function sectionHTML(platform) {
+    const pData = brand.platformStrategy[platform]||{};
+    const formats = pData.formats||[];
+    if (!formats.length) return `<div class="planner-empty">No formats set for ${escHtml(PLAT_DISPLAY_NAMES[platform]||platform)}</div>`;
+    const items = (brand.scheduledPosts||[]).filter(i => i.platform===platform && (!campId||!i.campaignId||i.campaignId===campId));
+    let html = '';
+
+    // Stories row
+    const storyFmts = formats.filter(f=>/stor/i.test(f));
+    if (storyFmts.length) {
+      const storyItems = items.filter(i=>/stor/i.test(i.format));
+      html += `
+        <div class="planner-section">
+          <div class="planner-section-label">STORIES</div>
+          <div class="planner-stories-row">
+            ${storyItems.map(it=>`
+              <div class="planner-story-slot" data-id="${it.id}" data-platform="${platform}" draggable="true">
+                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<div class="planner-story-placeholder"></div>`}
+              </div>`).join('')}
+            <button class="planner-add-story planner-add-item" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(storyFmts))}">+</button>
+          </div>
+        </div>`;
+    }
+
+    // Feed grid
+    const feedFmts = formats.filter(f=>!/stor/i.test(f));
+    if (feedFmts.length) {
+      const feedItems = items.filter(i=>!/stor/i.test(i.format));
+      const isYT = platform==='youtube';
+      const cols = isYT ? 2 : 3;
+      const ratio = isYT ? 'youtube' : (platform==='tiktok' ? 'portrait' : 'square');
+      html += `
+        <div class="planner-section">
+          <div class="planner-section-label">FEED</div>
+          <div class="planner-grid planner-cols-${cols}" id="feedGrid">
+            ${feedItems.map(it=>{
+              const fl=it.format.toLowerCase();
+              const badge=/reel|short|long-form|video/.test(fl)?'▶':/carousel/.test(fl)?'⊞':'';
+              return `
+                <div class="planner-grid-item planner-ratio-${ratio}" data-id="${it.id}" data-platform="${platform}" draggable="true">
+                  ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<div class="planner-slot-placeholder"><span class="planner-fmt-hint">${escHtml(it.format)}</span></div>`}
+                  ${badge?`<div class="planner-grid-badge">${badge}</div>`:''}
+                </div>`;
+            }).join('')}
+            <button class="planner-grid-add planner-add-item planner-ratio-${ratio}" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(feedFmts))}"><span>+</span></button>
+          </div>
+        </div>`;
+    }
+
+    return html;
+  }
+
+  const tabsHTML = platforms.map(p=>`
+    <button class="planner-tab${p===activePlatform?' active':''}" data-platform="${p}" title="${PLAT_DISPLAY_NAMES[p]||p}">${plannerIconSVG(p)}</button>`).join('');
+
+  return `
+    <div class="page" style="padding-bottom:120px">
+      <div class="back-header">
+        <button class="back-btn" data-href="${backHref}">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">CONTENT PLANNER</div>
+          <div class="back-header-title">${escHtml(campaign?campaign.name:brand.name)}</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+      <div class="planner-tabs" id="plannerTabs">${tabsHTML}</div>
+      <div class="planner-content" id="plannerContent">
+        ${sectionHTML(activePlatform)}
+      </div>
+      <input type="file" accept="image/*" id="plannerFileInput" style="display:none">
+    </div>`;
+}
+
+function bindVisualPlanner(brandId, campId) {
+  const brand = getBrand(brandId);
+  if (!brand) return;
+  const platforms = Object.keys(brand.platformStrategy||{});
+  let activePlatform = platforms[0]||'';
+  const tabs    = document.getElementById('plannerTabs');
+  const content = document.getElementById('plannerContent');
+  const fileInput = document.getElementById('plannerFileInput');
+  let pendingThumbCb = null;
+
+  function plannerIconSVG(p) {
+    const icons={instagram:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>`,tiktok:`<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.38a8.26 8.26 0 004.83 1.55V7.48a4.85 4.85 0 01-1.06-.79z"/></svg>`,youtube:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></svg>`,threads:`<svg width="18" height="18" viewBox="0 0 192 192" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M141.537 88.988a73.5 73.5 0 00-2.667-.617c-1.598-6.718-5.03-12.505-10.287-17.203C118.786 62.027 106.48 57.5 92 57.5c-18.42 0-30.4 7.12-38.387 21.887l14.84 10.107C74.13 80.127 81.78 75.6 92 75.6c9.247 0 15.44 2.573 18.78 5.953 1.898 1.927 3.254 4.204 4.073 6.674a68.5 68.5 0 00-15.64-.7c-24.28 1.4-39.9 15.587-39.9 35.187 0 11.38 6.013 22.1 16.52 28.207 8.307 4.827 18.74 5.547 27.747 1.893 10.673-4.267 17.247-13.16 19.38-26.587 2.18 1.313 3.993 2.887 5.373 4.693 3.347 4.373 3.26 11.52 3.26 11.52l16.207-.607s.16-9.413-4.293-17.487c-2.387-4.333-5.733-7.72-9.573-10.16zm-33.893 30.94c-3.68 7.427-10.367 11.733-20.107 11.64-8.88-.094-14.607-4.454-14.607-11.127 0-9.267 8.293-14.787 22.48-15.587 4.64-.267 9.14-.067 13.44.547-.5 6.573-1.24 10.813-1.24 14.5z"/></svg>`,twitter:`<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,linkedin:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="10" x2="8" y2="18"/><circle cx="8" cy="7" r="0.8" fill="currentColor" stroke="none"/><path d="M12 18v-5c0-1.1.9-2 2-2s2 .9 2 2v5"/><line x1="12" y1="10" x2="12" y2="18"/></svg>`,email:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`};
+    return icons[p]||`<span style="font-size:10px;font-weight:700">${(p[0]||'').toUpperCase()}</span>`;
+  }
+
+  function renderContent() {
+    const b = getBrand(brandId);
+    if (!b||!content) return;
+    const pData = b.platformStrategy[activePlatform]||{};
+    const formats = pData.formats||[];
+    const items = (b.scheduledPosts||[]).filter(i=>i.platform===activePlatform&&(!campId||!i.campaignId||i.campaignId===campId));
+    let html = '';
+
+    const storyFmts = formats.filter(f=>/stor/i.test(f));
+    if (storyFmts.length) {
+      const storyItems = items.filter(i=>/stor/i.test(i.format));
+      html += `
+        <div class="planner-section">
+          <div class="planner-section-label">STORIES</div>
+          <div class="planner-stories-row">
+            ${storyItems.map(it=>`
+              <div class="planner-story-slot" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
+                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<div class="planner-story-placeholder"></div>`}
+              </div>`).join('')}
+            <button class="planner-add-story planner-add-item" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(storyFmts))}">+</button>
+          </div>
+        </div>`;
+    }
+
+    const feedFmts = formats.filter(f=>!/stor/i.test(f));
+    if (feedFmts.length) {
+      const feedItems = items.filter(i=>!/stor/i.test(i.format));
+      const isYT = activePlatform==='youtube';
+      const cols = isYT?2:3;
+      const ratio = isYT?'youtube':(activePlatform==='tiktok'?'portrait':'square');
+      html += `
+        <div class="planner-section">
+          <div class="planner-section-label">FEED</div>
+          <div class="planner-grid planner-cols-${cols}">
+            ${feedItems.map(it=>{
+              const fl=it.format.toLowerCase();
+              const badge=/reel|short|long-form|video/.test(fl)?'▶':/carousel/.test(fl)?'⊞':'';
+              return `
+                <div class="planner-grid-item planner-ratio-${ratio}" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
+                  ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<div class="planner-slot-placeholder"><span class="planner-fmt-hint">${escHtml(it.format)}</span></div>`}
+                  ${badge?`<div class="planner-grid-badge">${badge}</div>`:''}
+                </div>`;
+            }).join('')}
+            <button class="planner-grid-add planner-add-item planner-ratio-${ratio}" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(feedFmts))}"><span>+</span></button>
+          </div>
+        </div>`;
+    }
+
+    content.innerHTML = html || `<div class="planner-empty">No content yet</div>`;
+    bindDragDrop();
+  }
+
+  // Platform tabs
+  tabs?.addEventListener('click', e => {
+    const tab = e.target.closest('.planner-tab');
+    if (!tab) return;
+    activePlatform = tab.dataset.platform;
+    tabs.querySelectorAll('.planner-tab').forEach(t=>t.classList.toggle('active', t.dataset.platform===activePlatform));
+    renderContent();
+  });
+
+  // Add item
+  content?.addEventListener('click', e => {
+    const btn = e.target.closest('.planner-add-item');
+    if (!btn) return;
+    const platform = btn.dataset.platform;
+    const fmts = JSON.parse(btn.dataset.formats||'[]');
+    showAddSheet(platform, fmts);
+  });
+
+  function showAddSheet(platform, fmts) {
+    document.getElementById('plannerAddSheet')?.remove();
+    let selFmt = fmts[0]||'Post';
+    const overlay = document.createElement('div');
+    overlay.id = 'plannerAddSheet';
+    overlay.className = 'add-post-overlay';
+    overlay.innerHTML = `
+      <div class="add-post-sheet">
+        <div class="add-post-title">Add to ${escHtml(PLAT_DISPLAY_NAMES[platform]||platform)}</div>
+        <input class="notion-input" id="addItemTitle" placeholder="Post title (optional)" style="margin-bottom:14px">
+        ${fmts.length>1?`
+          <div class="planner-section-label" style="margin-bottom:8px">FORMAT</div>
+          <div class="add-post-format-row" id="addFmtPicker">
+            ${fmts.map((f,i)=>`<button class="add-post-fmt-btn${i===0?' active':''}" data-fmt="${escHtml(f)}">${escHtml(f)}</button>`).join('')}
+          </div>`:''}
+        <button class="add-post-save" id="addWithThumb">Add with Thumbnail</button>
+        <button class="add-post-save" id="addNoThumb" style="background:rgba(255,255,255,0.08);color:#fff;margin-top:8px">Add Placeholder</button>
+        <button class="add-post-cancel" id="addCancel">Cancel</button>
+      </div>`;
+    document.getElementById('app').appendChild(overlay);
+
+    overlay.querySelectorAll('.add-post-fmt-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        overlay.querySelectorAll('.add-post-fmt-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        selFmt = btn.dataset.fmt;
+      });
+    });
+
+    function doAdd(thumbnail) {
+      const b = getBrand(brandId);
+      if (!b) return;
+      const title = document.getElementById('addItemTitle')?.value.trim()||'';
+      const newItem = { id:uid(), platform, format:selFmt, title, thumbnail:thumbnail||null, scheduledDate:null, campaignId:campId||null, order:(b.scheduledPosts||[]).filter(i=>i.platform===platform).length };
+      saveBrandOverride(brandId, { scheduledPosts:[...(b.scheduledPosts||[]), newItem] });
+      overlay.remove();
+      renderContent();
+    }
+
+    document.getElementById('addWithThumb')?.addEventListener('click',()=>{
+      pendingThumbCb = doAdd;
+      fileInput?.click();
+    });
+    document.getElementById('addNoThumb')?.addEventListener('click',()=>doAdd(null));
+    document.getElementById('addCancel')?.addEventListener('click',()=>overlay.remove());
+    overlay.addEventListener('click',e=>{ if(e.target===overlay) overlay.remove(); });
+  }
+
+  fileInput?.addEventListener('change',()=>{
+    const file = fileInput.files[0];
+    if (!file||!pendingThumbCb) return;
+    const reader = new FileReader();
+    reader.onload = ev => { pendingThumbCb(ev.target.result); pendingThumbCb=null; fileInput.value=''; };
+    reader.readAsDataURL(file);
+  });
+
+  // Touch drag-and-drop
+  function bindDragDrop() {
+    if (!content) return;
+    let drag=null, ghost=null;
+
+    function startDrag(item, x, y) {
+      const rect = item.getBoundingClientRect();
+      ghost = item.cloneNode(true);
+      Object.assign(ghost.style, { position:'fixed', left:rect.left+'px', top:rect.top+'px', width:rect.width+'px', height:rect.height+'px', zIndex:'9999', opacity:'0.88', pointerEvents:'none', borderRadius:'6px', boxShadow:'0 10px 30px rgba(0,0,0,0.6)', transition:'none' });
+      document.body.appendChild(ghost);
+      item.style.opacity='0.2';
+      drag = { item, startX:x, startY:y, dropTarget:null };
+    }
+
+    function moveDrag(x, y) {
+      if (!drag||!ghost) return;
+      ghost.style.transform = `translate(${x-drag.startX}px,${y-drag.startY}px)`;
+      ghost.style.display='none';
+      const el = document.elementFromPoint(x,y);
+      ghost.style.display='';
+      const target = el?.closest('[data-id]');
+      content.querySelectorAll('.planner-drop-over').forEach(e=>e.classList.remove('planner-drop-over'));
+      if (target&&target!==drag.item&&target.dataset.id) { target.classList.add('planner-drop-over'); drag.dropTarget=target; }
+      else drag.dropTarget=null;
+    }
+
+    function endDrag() {
+      if (!drag) return;
+      content.querySelectorAll('.planner-drop-over').forEach(e=>e.classList.remove('planner-drop-over'));
+      ghost?.remove(); ghost=null;
+      drag.item.style.opacity='';
+      if (drag.dropTarget?.dataset.id) {
+        const b = getBrand(brandId);
+        if (b) {
+          const posts = [...(b.scheduledPosts||[])];
+          const fi = posts.findIndex(p=>p.id===drag.item.dataset.id);
+          const ti = posts.findIndex(p=>p.id===drag.dropTarget.dataset.id);
+          if (fi!==-1&&ti!==-1&&fi!==ti) {
+            const tmp=posts[fi]; posts[fi]=posts[ti]; posts[ti]=tmp;
+            saveBrandOverride(brandId,{scheduledPosts:posts});
+            renderContent(); drag=null; return;
+          }
+        }
+      }
+      drag=null;
+    }
+
+    let dragTimer=null;
+    content.addEventListener('touchstart',e=>{
+      const item=e.target.closest('[data-id]');
+      if(!item) return;
+      const t=e.touches[0];
+      dragTimer=setTimeout(()=>startDrag(item,t.clientX,t.clientY),250);
+    },{passive:true});
+    content.addEventListener('touchmove',e=>{
+      if(!drag){clearTimeout(dragTimer);return;}
+      e.preventDefault();
+      moveDrag(e.touches[0].clientX,e.touches[0].clientY);
+    },{passive:false});
+    content.addEventListener('touchend',()=>{clearTimeout(dragTimer);endDrag();},{passive:true});
+    content.addEventListener('touchcancel',()=>{clearTimeout(dragTimer);ghost?.remove();ghost=null;if(drag){drag.item.style.opacity='';drag=null;}},{passive:true});
+  }
+
+  bindDragDrop();
+}
+
+/* ═══════════════════════════════════════
+   PAGE: CALENDAR
+═══════════════════════════════════════ */
+function pageCalendar(brandId, campId) {
+  const brand = getBrand(brandId);
+  if (!brand) return pageHome();
+  const campaign = campId?(brand.campaigns||[]).find(c=>c.id===campId):null;
+  const backHref = campId?`#/campaign?brandId=${brandId}&id=${campId}`:'#/';
+  const today = new Date();
+
+  return `
+    <div class="page" style="padding-bottom:120px">
+      <div class="back-header">
+        <button class="back-btn" data-href="${backHref}">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">CALENDAR</div>
+          <div class="back-header-title">${escHtml(campaign?campaign.name:brand.name)}</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+      <div class="cal-view-switcher">
+        <button class="cal-view-btn active" data-view="month">Month</button>
+        <button class="cal-view-btn" data-view="week">Week</button>
+        <button class="cal-view-btn" data-view="list">List</button>
+      </div>
+      <div id="calBody" class="cal-body">
+        ${calMonthHTML(brand, campId, today.getFullYear(), today.getMonth())}
+      </div>
+    </div>`;
+}
+
+function calMonthHTML(brand, campId, year, month) {
+  const posts = (brand.scheduledPosts||[]).filter(p=>p.scheduledDate&&(!campId||!p.campaignId||p.campaignId===campId));
+  const firstDay = new Date(year,month,1);
+  const lastDay  = new Date(year,month+1,0);
+  const startDow = (firstDay.getDay()+6)%7;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const monthLabel = firstDay.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const dayHdrs = ['M','T','W','T','F','S','S'].map(d=>`<div class="cal-grid-hdr">${d}</div>`).join('');
+
+  let cells = '';
+  for(let i=0;i<startDow;i++){
+    const d=new Date(year,month,1-startDow+i);
+    cells+=`<div class="cal-day-cell other-month"><div class="cal-day-num">${d.getDate()}</div></div>`;
+  }
+  for(let d=1;d<=lastDay.getDate();d++){
+    const iso=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dp=posts.filter(p=>p.scheduledDate===iso);
+    const isToday=new Date(year,month,d).getTime()===today.getTime();
+    const dots=dp.slice(0,4).map(p=>`<div class="cal-post-dot" style="background:${PLAT_DOT_COLORS[p.platform]||'#888'}"></div>`).join('');
+    cells+=`<div class="cal-day-cell${isToday?' today':''}${dp.length?' has-post':''}" data-date="${iso}"><div class="cal-day-num">${d}</div><div class="cal-day-dots">${dots}</div></div>`;
+  }
+  const total=startDow+lastDay.getDate();
+  for(let i=1;i<=(7-(total%7))%7;i++) cells+=`<div class="cal-day-cell other-month"><div class="cal-day-num">${i}</div></div>`;
+
+  return `
+    <div class="cal-month-nav">
+      <button class="cal-nav-btn" id="calPrev">‹</button>
+      <div class="cal-month-label">${escHtml(monthLabel)}</div>
+      <button class="cal-nav-btn" id="calNext">›</button>
+    </div>
+    <div class="cal-grid">${dayHdrs}${cells}</div>
+    <button class="cal-add-btn" id="calAddPost">+ Schedule Post</button>`;
+}
+
+function calWeekHTML(brand, campId, weekStart) {
+  const posts = (brand.scheduledPosts||[]).filter(p=>p.scheduledDate&&(!campId||!p.campaignId||p.campaignId===campId));
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days=[];
+  for(let i=0;i<7;i++){const d=new Date(weekStart);d.setDate(d.getDate()+i);days.push(d);}
+  const label=`${days[0].toLocaleDateString('en-US',{month:'short',day:'numeric'})} – ${days[6].toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
+  const cols=days.map(d=>{
+    const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const dp=posts.filter(p=>p.scheduledDate===iso);
+    const isTd=d.getTime()===today.getTime();
+    return `<div>
+      <div class="cal-week-day-hdr">${d.toLocaleDateString('en-US',{weekday:'narrow'})}</div>
+      <div class="cal-week-day-num${isTd?' today':''}">${d.getDate()}</div>
+      ${dp.map(p=>`<div class="cal-week-post-card" style="border-left:2px solid ${PLAT_DOT_COLORS[p.platform]||'#888'}">${escHtml(p.title||p.format)}</div>`).join('')}
+      ${!dp.length?'<div class="cal-week-empty"></div>':''}
+    </div>`;
+  }).join('');
+  return `
+    <div class="cal-month-nav">
+      <button class="cal-nav-btn" id="calPrev">‹</button>
+      <div class="cal-month-label" style="font-size:13px">${escHtml(label)}</div>
+      <button class="cal-nav-btn" id="calNext">›</button>
+    </div>
+    <div class="cal-week-cols">${cols}</div>
+    <button class="cal-add-btn" id="calAddPost">+ Schedule Post</button>`;
+}
+
+function calListHTML(brand, campId) {
+  const posts = (brand.scheduledPosts||[])
+    .filter(p=>p.scheduledDate&&(!campId||!p.campaignId||p.campaignId===campId))
+    .sort((a,b)=>a.scheduledDate.localeCompare(b.scheduledDate));
+
+  const addBtn = `<button class="cal-add-btn" id="calAddPost">+ Schedule Post</button>`;
+  if (!posts.length) return `<div class="cal-empty-msg">No scheduled posts yet</div>${addBtn}`;
+
+  const byDate={};
+  posts.forEach(p=>{ if(!byDate[p.scheduledDate])byDate[p.scheduledDate]=[]; byDate[p.scheduledDate].push(p); });
+  const rows=Object.entries(byDate).map(([date,ps])=>{
+    const [y,m,d]=date.split('-').map(Number);
+    const lbl=new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    return `
+      <div class="cal-list-date-hdr">${escHtml(lbl)}</div>
+      ${ps.map(p=>`<div class="cal-list-item"><div class="cal-list-platform-dot" style="background:${PLAT_DOT_COLORS[p.platform]||'#888'}"></div><div style="flex:1"><div class="cal-list-title">${escHtml(p.title||'Untitled')}</div><div class="cal-list-fmt">${escHtml(p.format)}</div></div></div>`).join('')}`;
+  }).join('');
+  return `${rows}${addBtn}`;
+}
+
+function bindCalendar(brandId, campId) {
+  const brand = getBrand(brandId);
+  if (!brand) return;
+  let view='month';
+  const now=new Date();
+  let year=now.getFullYear(), month=now.getMonth();
+  const dow=now.getDay();
+  let weekStart=new Date(now); weekStart.setDate(now.getDate()-((dow+6)%7)); weekStart.setHours(0,0,0,0);
+  const body=document.getElementById('calBody');
+
+  function rerender() {
+    const b=getBrand(brandId);
+    if(!b||!body) return;
+    if(view==='month') body.innerHTML=calMonthHTML(b,campId,year,month);
+    else if(view==='week') body.innerHTML=calWeekHTML(b,campId,weekStart);
+    else body.innerHTML=calListHTML(b,campId);
+    bindBodyClicks();
+  }
+
+  function bindBodyClicks() {
+    document.getElementById('calPrev')?.addEventListener('click',()=>{
+      if(view==='month'){month--;if(month<0){month=11;year--;}}
+      else if(view==='week'){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()-7);}
+      rerender();
+    });
+    document.getElementById('calNext')?.addEventListener('click',()=>{
+      if(view==='month'){month++;if(month>11){month=0;year++;}}
+      else if(view==='week'){weekStart=new Date(weekStart);weekStart.setDate(weekStart.getDate()+7);}
+      rerender();
+    });
+    document.getElementById('calAddPost')?.addEventListener('click',()=>showSchedSheet(null));
+    body?.addEventListener('click',e=>{
+      const cell=e.target.closest('.cal-day-cell[data-date]');
+      if(cell&&!e.target.closest('#calAddPost')) showSchedSheet(cell.dataset.date);
+    });
+  }
+
+  document.querySelectorAll('.cal-view-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      view=btn.dataset.view;
+      document.querySelectorAll('.cal-view-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+      rerender();
+    });
+  });
+
+  function showSchedSheet(date) {
+    document.getElementById('schedSheet')?.remove();
+    const b=getBrand(brandId);
+    if(!b) return;
+    const platforms=Object.keys(b.platformStrategy||{});
+    let selPlat=platforms[0]||'instagram';
+    let selFmt=(b.platformStrategy[selPlat]?.formats||[])[0]||'Post';
+
+    function fmtsForPlat(p){ return b.platformStrategy[p]?.formats||[]; }
+
+    const overlay=document.createElement('div');
+    overlay.id='schedSheet';
+    overlay.className='add-post-overlay';
+    overlay.innerHTML=`
+      <div class="sched-sheet">
+        <div class="sched-title">Schedule Post</div>
+        <div class="notion-field"><div class="notion-label">TITLE</div><input class="notion-input" id="schedTitle" placeholder="Post title"></div>
+        <div class="notion-field"><div class="notion-label">DATE</div><input type="date" class="notion-input notion-date" id="schedDate" value="${date||''}"></div>
+        <div class="notion-field">
+          <div class="notion-label">PLATFORM</div>
+          <div class="add-post-format-row" id="schedPlatRow">
+            ${platforms.map((p,i)=>`<button class="add-post-fmt-btn${i===0?' active':''}" data-plat="${p}">${PLAT_DISPLAY_NAMES[p]||p}</button>`).join('')}
+          </div>
+        </div>
+        <div class="notion-field">
+          <div class="notion-label">FORMAT</div>
+          <div class="add-post-format-row" id="schedFmtRow">
+            ${fmtsForPlat(selPlat).map((f,i)=>`<button class="add-post-fmt-btn${i===0?' active':''}" data-fmt="${escHtml(f)}">${escHtml(f)}</button>`).join('')}
+          </div>
+        </div>
+        <button class="sched-save" id="schedSave">Schedule</button>
+        <button class="add-post-cancel" id="schedCancel">Cancel</button>
+      </div>`;
+    document.getElementById('app').appendChild(overlay);
+
+    function rebindFmts() {
+      overlay.querySelectorAll('#schedFmtRow .add-post-fmt-btn').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          overlay.querySelectorAll('#schedFmtRow .add-post-fmt-btn').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active'); selFmt=btn.dataset.fmt;
+        });
+      });
+    }
+    rebindFmts();
+
+    overlay.querySelectorAll('#schedPlatRow .add-post-fmt-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        overlay.querySelectorAll('#schedPlatRow .add-post-fmt-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active'); selPlat=btn.dataset.plat;
+        const fmts=fmtsForPlat(selPlat);
+        selFmt=fmts[0]||'Post';
+        const fmtRow=overlay.querySelector('#schedFmtRow');
+        if(fmtRow){ fmtRow.innerHTML=fmts.map((f,i)=>`<button class="add-post-fmt-btn${i===0?' active':''}" data-fmt="${escHtml(f)}">${escHtml(f)}</button>`).join(''); rebindFmts(); }
+      });
+    });
+
+    document.getElementById('schedSave')?.addEventListener('click',()=>{
+      const title=document.getElementById('schedTitle')?.value.trim();
+      const dateVal=document.getElementById('schedDate')?.value;
+      if(!dateVal){ document.getElementById('schedDate').style.borderBottomColor='rgba(255,100,100,0.6)'; return; }
+      const b2=getBrand(brandId);
+      if(!b2) return;
+      const newPost={id:uid(),title:title||'',platform:selPlat,format:selFmt,scheduledDate:dateVal,campaignId:campId||null,thumbnail:null};
+      saveBrandOverride(brandId,{scheduledPosts:[...(b2.scheduledPosts||[]),newPost]});
+      overlay.remove();
+      rerender();
+    });
+    document.getElementById('schedCancel')?.addEventListener('click',()=>overlay.remove());
+    overlay.addEventListener('click',e=>{ if(e.target===overlay) overlay.remove(); });
+  }
+
+  bindBodyClicks();
+}
+
+/* ═══════════════════════════════════════
    CAMPAIGN PAGE: NAV HTML
 ═══════════════════════════════════════ */
 function injectCampaignNav(brandId, campId, activeTab, onAisha) {
@@ -2299,13 +2862,15 @@ function injectCampaignNav(brandId, campId, activeTab, onAisha) {
     </nav>`;
   document.getElementById('app').appendChild(wrap);
 
-  const docHref   = campId ? `#/campaign?brandId=${brandId}&id=${campId}` : null;
-  const ideasHref = campId ? `#/vault?id=${brandId}&campId=${campId}` : `#/vault?id=${brandId}`;
+  const docHref    = campId ? `#/campaign?brandId=${brandId}&id=${campId}` : '#/';
+  const ideasHref  = campId ? `#/vault?id=${brandId}&campId=${campId}` : `#/vault?id=${brandId}`;
+  const visualHref = campId ? `#/planner?brandId=${brandId}&campId=${campId}` : `#/planner?brandId=${brandId}`;
+  const calHref    = campId ? `#/calendar?brandId=${brandId}&campId=${campId}` : `#/calendar?brandId=${brandId}`;
 
-  if (docHref) document.getElementById('campNavDoc')?.addEventListener('click', () => navigate(docHref));
+  document.getElementById('campNavDoc')?.addEventListener('click',    () => navigate(docHref));
   document.getElementById('campNavIdeas')?.addEventListener('click',  () => navigate(ideasHref));
-  document.getElementById('campNavVisual')?.addEventListener('click', () => navigate(`#/brand?id=${brandId}`));
-  document.getElementById('campNavCal')?.addEventListener('click',    () => {});
+  document.getElementById('campNavVisual')?.addEventListener('click', () => navigate(visualHref));
+  document.getElementById('campNavCal')?.addEventListener('click',    () => navigate(calHref));
   document.getElementById('campNavAisha')?.addEventListener('click',  () => { if (onAisha) onAisha(); });
 }
 
