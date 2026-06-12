@@ -3837,16 +3837,14 @@ function bindCampaignPage(brandId, campId) {
 
       <!-- MILE MARKERS -->
       <div style="padding:20px 0 16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3)">MILE MARKERS</div>
-          <button id="settingsMileAddBtn" type="button" style="width:28px;height:28px;border-radius:100px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">+</button>
-        </div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">MILE MARKERS</div>
         <div style="display:grid;grid-template-columns:1fr auto 28px;gap:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:2px">
           <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.22);letter-spacing:0.8px">NAME</span>
           <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.22);letter-spacing:0.8px">ETA</span>
           <span></span>
         </div>
         <div id="settingsMileList">${mileRowsHTML}</div>
+        <button type="button" id="settingsMileAddBtn" style="width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);font-size:13px;font-weight:600;margin-top:10px;cursor:pointer">+ Add Marker</button>
       </div>
 
     </div>`;
