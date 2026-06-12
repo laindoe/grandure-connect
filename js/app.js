@@ -2431,13 +2431,38 @@ function pageCampaign(brandId, campId) {
     threads:'Threads', twitter:'X / Twitter', linkedin:'LinkedIn', email:'Email',
   };
   const mktgChevSVG = `<svg class="camp-mktg-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const FORMAT_MEDIA = {
+    'reels':        'video',
+    'carousels':    'image',
+    'stories':      'image / video',
+    'text posts':   'text',
+    'quote threads':'text',
+    'polls':        'interactive',
+    'threads':      'text',
+    'long-form':    'video',
+    'shorts':       'video',
+    'live streams': 'video',
+    'lives':        'video',
+    'mini-docs':    'video',
+    'vlogs':        'video',
+    'interviews':   'video',
+    'talking head': 'video · voiceover',
+    'animation':    'animation',
+    'voiceover':    'video · voiceover',
+    'pov':          'video · voiceover',
+  };
+
   const mktgPlatformRows = Object.entries(brand.platformStrategy || {}).map(([pKey, pData]) => {
     const icon = (PLATFORM_ICONS[pKey] || '').replace(/width="20" height="20"/g, 'width="18" height="18"');
     const name = MKTG_PLAT_NAMES[pKey] || (pKey.charAt(0).toUpperCase() + pKey.slice(1));
     const themes = pData.themes || [];
-    const formatsHTML = (pData.formats || []).map((f, i) =>
-      `<button class="camp-mktg-fmt" type="button" data-fmt-idx="${i}">${escHtml(f)}</button>`
-    ).join('');
+    const formatsHTML = (pData.formats || []).map((f, i) => {
+      const media = FORMAT_MEDIA[f.toLowerCase()] || '';
+      return `<button class="camp-mktg-fmt" type="button" data-fmt-idx="${i}">
+        <span class="camp-mktg-fmt-name">${escHtml(f)}</span>
+        ${media ? `<span class="camp-mktg-fmt-media">${escHtml(media)}</span>` : ''}
+      </button>`;
+    }).join('');
     return `
       <div class="camp-mktg-row" data-themes="${escHtml(JSON.stringify(themes))}">
         <div class="camp-mktg-row-hd">

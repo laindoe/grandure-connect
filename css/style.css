@@ -1090,9 +1090,13 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-mktg-chev { flex-shrink:0; }
 .camp-mktg-row-body { padding:2px 0 16px 42px; }
 .camp-mktg-fmts { display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px; }
-.camp-mktg-fmt { padding:6px 13px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);font-size:13px;font-weight:500;color:rgba(255,255,255,0.65);cursor:pointer;touch-action:manipulation;transition:background .15s,border-color .15s,color .15s; }
+.camp-mktg-fmt { padding:7px 13px;border-radius:10px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);cursor:pointer;touch-action:manipulation;transition:background .15s,border-color .15s,color .15s;display:flex;flex-direction:column;align-items:center;gap:2px; }
 .camp-mktg-fmt:active { opacity:.7; }
-.camp-mktg-fmt.active { background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.28);color:#fff; }
+.camp-mktg-fmt.active { background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.28); }
+.camp-mktg-fmt-name { font-size:13px;font-weight:500;color:rgba(255,255,255,0.7);line-height:1; }
+.camp-mktg-fmt.active .camp-mktg-fmt-name { color:#fff; }
+.camp-mktg-fmt-media { font-size:10px;font-weight:400;color:rgba(255,255,255,0.35);line-height:1; }
+.camp-mktg-fmt.active .camp-mktg-fmt-media { color:rgba(255,255,255,0.55); }
 .camp-mktg-theme-preview { font-size:17px;color:rgba(255,255,255,0.6);line-height:1.5;padding-top:4px; }
 .camp-mktg-empty-hint { font-size:13px;color:rgba(255,255,255,0.22);font-style:italic; }
 
