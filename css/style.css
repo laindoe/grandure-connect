@@ -1095,9 +1095,9 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-hero-pct { font-size:13px;font-weight:700;color:#fff;flex-shrink:0; }
 .camp-hero-posts { font-size:11px;color:rgba(255,255,255,0.38);margin-bottom:14px; }
 /* In-card stage tracker with icons */
-.camp-hero-stages { display:flex;border-radius:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);gap:3px;padding:4px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px); }
-.camp-hero-stages .camp-stage-seg { flex-direction:column;gap:3px;padding:8px 4px;height:auto;font-size:7px;letter-spacing:.6px;border-radius:10px; }
-.camp-hero-stages .camp-stage-seg svg { flex-shrink:0; }
+.camp-hero-stages { display:flex;border-radius:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);gap:4px;padding:5px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px); }
+.camp-hero-stages .camp-stage-seg { flex-direction:column;gap:5px;padding:14px 6px;height:auto;font-size:8.5px;letter-spacing:.7px;border-radius:10px; }
+.camp-hero-stages .camp-stage-seg svg { flex-shrink:0;width:17px;height:17px; }
 
 /* Mile Markers — hero card display */
 .camp-mile-wrap { margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07); }
