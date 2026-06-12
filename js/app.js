@@ -1046,9 +1046,10 @@ function openEditHeroPhoto(brandId, campId) {
   // Remove any existing instance
   document.getElementById('editHeroPhotoOverlay')?.remove();
 
-  // Hide the campaign nav bar so it doesn't show through the modal
+  // Remove the campaign nav from the compositor entirely (visibility:hidden leaves the
+  // backdrop-filter layer visible on iOS; display:none is the only reliable fix)
   const campNav = document.getElementById('campaignBottomNav');
-  if (campNav) campNav.style.visibility = 'hidden';
+  if (campNav) campNav.style.display = 'none';
 
   // Mount directly on document.body at z-index:500 — above all nav bars and iOS stacking contexts
   const wrapper = document.createElement('div');
@@ -1110,7 +1111,7 @@ function openEditHeroPhoto(brandId, campId) {
 
   const closeOverlay = () => {
     wrapper.remove();
-    if (campNav) campNav.style.visibility = '';
+    if (campNav) campNav.style.display = '';
   };
 
   wrapper.querySelector('#editPhotoCancel').addEventListener('click', closeOverlay);
