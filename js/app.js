@@ -430,30 +430,55 @@ function _populateSettings() {
 }
 
 /* ── Idea Capture Modal ── */
-let captureState = { platform: '', format: '', brandId: '' };
+let captureState = { platforms: [], formats: [], brandId: '', campaignId: '' };
+
+const CAPTURE_PLATFORMS = [
+  'instagram','tiktok','youtube','threads','twitter','linkedin','facebook','pinterest','podcast','email','patreon'
+];
+const CAPTURE_PLAT_LABELS = {
+  instagram:'Instagram', tiktok:'TikTok', youtube:'YouTube', threads:'Threads',
+  twitter:'X', linkedin:'LinkedIn', facebook:'Facebook', pinterest:'Pinterest',
+  podcast:'Podcast', email:'Email', patreon:'Patreon',
+};
 
 function captureModalHTML() {
+  const brandOptions = BRANDS.map(b =>
+    `<option value="${b.id}">${escHtml(b.name)}</option>`
+  ).join('');
   return `
     <div class="capture-overlay" id="captureOverlay" style="display:none">
-      <div class="capture-sheet">
-        <div class="capture-handle"></div>
-        <div class="capture-title">New Idea</div>
-        <textarea class="capture-textarea" id="captureText" placeholder="What's the idea?"></textarea>
-        <div class="capture-section-label">PLATFORM</div>
-        <div class="capture-chips" id="capturePlatformChips">
-          ${['instagram','threads','youtube','tiktok'].map(p =>
-            `<button class="capture-chip" data-platform="${p}">${PLATFORM_LABELS[p]}</button>`
-          ).join('')}
+      <div class="capture-sheet" style="padding:0;display:flex;flex-direction:column;max-height:88dvh">
+        <div style="padding:20px 24px 12px;flex-shrink:0">
+          <div class="capture-handle"></div>
+          <div class="capture-title">New Idea</div>
         </div>
-        <div class="capture-section-label">FORMAT</div>
-        <div class="capture-chips" id="captureFormatChips">
-          ${['Reel','Carousel','Thread','Long-form','Short','Live'].map(f =>
-            `<button class="capture-chip" data-format="${f}">${f}</button>`
-          ).join('')}
+        <div style="flex:1;overflow-y:auto;padding:0 24px 8px">
+          <textarea class="capture-textarea" id="captureText" placeholder="What's the idea?" style="margin-bottom:16px"></textarea>
+          <div class="capture-section-label">BRAND</div>
+          <select id="captureBrandSel" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;margin-bottom:14px;outline:none;color-scheme:dark">
+            <option value="">— Select brand —</option>
+            ${brandOptions}
+          </select>
+          <div class="capture-section-label">CAMPAIGN</div>
+          <select id="captureCampSel" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;margin-bottom:14px;outline:none;color-scheme:dark">
+            <option value="">— Select campaign —</option>
+          </select>
+          <div class="capture-section-label">PLATFORM <span style="color:rgba(255,255,255,0.25);font-size:9px;font-weight:400;letter-spacing:0">select all that apply</span></div>
+          <div class="capture-chips" id="capturePlatformChips">
+            ${CAPTURE_PLATFORMS.map(p =>
+              `<button class="capture-chip" data-platform="${p}">${CAPTURE_PLAT_LABELS[p]}</button>`
+            ).join('')}
+          </div>
+          <div class="capture-section-label">FORMAT <span style="color:rgba(255,255,255,0.25);font-size:9px;font-weight:400;letter-spacing:0">select all that apply</span></div>
+          <div class="capture-chips" id="captureFormatChips">
+            <span style="color:rgba(255,255,255,0.2);font-size:12px">Pick a platform first</span>
+          </div>
         </div>
-        <div class="capture-actions">
-          <button class="capture-cancel" id="captureCancel">Cancel</button>
-          <button class="capture-save" id="captureSave">Save Idea</button>
+        <div style="padding:12px 24px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0">
+          <div class="capture-actions" style="margin-top:0">
+            <button class="capture-cancel" id="captureCancel">Cancel</button>
+            <button class="capture-save" id="captureSave">Save Idea</button>
+          </div>
         </div>
       </div>
     </div>
@@ -495,40 +520,114 @@ function bindCapture() {
   const overlay = document.getElementById('captureOverlay');
   if (!overlay) return;
 
-  const open = () => { overlay.style.display = 'flex'; };
+  const reset = () => {
+    captureState = { platforms: [], formats: [], brandId: '', campaignId: '' };
+    overlay.querySelector('#captureText').value = '';
+    overlay.querySelector('#captureBrandSel').value = '';
+    overlay.querySelector('#captureCampSel').innerHTML = '<option value="">— Select campaign —</option>';
+    overlay.querySelectorAll('.capture-chip').forEach(c => c.classList.remove('active'));
+    overlay.querySelector('#captureFormatChips').innerHTML = '<span style="color:rgba(255,255,255,0.2);font-size:12px">Pick a platform first</span>';
+  };
+
+  const open = () => {
+    // Refresh brand options in case new brands were added
+    const brandSel = overlay.querySelector('#captureBrandSel');
+    const currentVal = brandSel.value;
+    brandSel.innerHTML = '<option value="">— Select brand —</option>' +
+      BRANDS.map(b => `<option value="${b.id}"${b.id===currentVal?' selected':''}>${escHtml(b.name)}</option>`).join('');
+    overlay.style.display = 'flex';
+  };
   const close = () => { overlay.style.display = 'none'; };
 
   document.getElementById('navCapture')?.addEventListener('click', open);
   document.getElementById('dockCapture')?.addEventListener('click', open);
-  document.getElementById('captureCancel')?.addEventListener('click', close);
-
+  document.getElementById('captureCancel')?.addEventListener('click', () => { reset(); close(); });
   document.getElementById('navHome')?.addEventListener('click', () => navigate('/'));
+  overlay.addEventListener('click', e => { if (e.target === overlay) { reset(); close(); } });
 
-  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-
-  document.querySelectorAll('[data-platform]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-platform]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      captureState.platform = btn.dataset.platform;
-    });
+  // Brand → populate campaign dropdown
+  overlay.querySelector('#captureBrandSel')?.addEventListener('change', function() {
+    captureState.brandId = this.value;
+    captureState.campaignId = '';
+    const campSel = overlay.querySelector('#captureCampSel');
+    const brand = getBrand(this.value);
+    campSel.innerHTML = '<option value="">— Select campaign —</option>' +
+      (brand?.campaigns || []).map(c =>
+        `<option value="${c.id}">${escHtml(c.name)}</option>`
+      ).join('');
   });
 
-  document.querySelectorAll('[data-format]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-format]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      captureState.format = btn.dataset.format;
-    });
+  overlay.querySelector('#captureCampSel')?.addEventListener('change', function() {
+    captureState.campaignId = this.value;
   });
 
-  document.getElementById('captureSave')?.addEventListener('click', () => {
-    const text = document.getElementById('captureText')?.value.trim();
-    if (text) {
-      alert(`Saved: "${text}"`);
-      document.getElementById('captureText').value = '';
-      close();
+  // Rebuild format chips from all currently selected platforms
+  function rebuildFormats() {
+    const fmtChips = overlay.querySelector('#captureFormatChips');
+    const plats = captureState.platforms;
+    if (!plats.length) {
+      fmtChips.innerHTML = '<span style="color:rgba(255,255,255,0.2);font-size:12px">Pick a platform first</span>';
+      captureState.formats = [];
+      return;
     }
+    const seen = new Set();
+    const formats = [];
+    plats.forEach(p => {
+      (PLATFORM_FORMATS[p] || []).forEach(f => {
+        if (!seen.has(f)) { seen.add(f); formats.push(f); }
+      });
+    });
+    fmtChips.innerHTML = formats.map(f =>
+      `<button class="capture-chip${captureState.formats.includes(f) ? ' active' : ''}" data-format="${f}">${f}</button>`
+    ).join('');
+    // Re-bind format toggle
+    fmtChips.querySelectorAll('[data-format]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        const f = btn.dataset.format;
+        captureState.formats = btn.classList.contains('active')
+          ? [...captureState.formats, f]
+          : captureState.formats.filter(x => x !== f);
+      });
+    });
+  }
+
+  // Platform multi-select
+  overlay.querySelectorAll('#capturePlatformChips [data-platform]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active');
+      const p = btn.dataset.platform;
+      captureState.platforms = btn.classList.contains('active')
+        ? [...captureState.platforms, p]
+        : captureState.platforms.filter(x => x !== p);
+      rebuildFormats();
+    });
+  });
+
+  // Save — actually persist to brand ideas
+  overlay.querySelector('#captureSave')?.addEventListener('click', () => {
+    const text = overlay.querySelector('#captureText')?.value.trim();
+    if (!text) { overlay.querySelector('#captureText').focus(); return; }
+
+    const brand = getBrand(captureState.brandId);
+    if (brand) {
+      const campaign = (brand.campaigns || []).find(c => c.id === captureState.campaignId);
+      const idea = {
+        id: uid(),
+        title: text,
+        platform: captureState.platforms[0] || '',
+        platforms: captureState.platforms,
+        format: captureState.formats[0] || '',
+        formats: captureState.formats,
+        campaign: campaign?.name || '',
+        campaignId: captureState.campaignId || '',
+        notes: '', references: '', links: [],
+      };
+      const updatedIdeas = [...(brand.ideas || []), idea];
+      saveBrandOverride(captureState.brandId, { ideas: updatedIdeas });
+    }
+    reset();
+    close();
   });
 }
 
