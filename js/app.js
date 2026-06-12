@@ -683,11 +683,27 @@ function pageHome() {
     const isCurrent = campaign.status === 'active' && campaign.name === brand.currentPhase.name;
     return campaign.progress != null ? campaign.progress : (isCurrent ? brand.currentPhase.progress : 0);
   };
+  const getDaysLeft = ({ campaign }) => {
+    const iso = toDateInputVal(campaign.endDate);
+    if (!iso) return Infinity;
+    const [y, mo, d] = iso.split('-').map(Number);
+    const today = new Date(); today.setHours(0,0,0,0);
+    return Math.ceil((new Date(y, mo - 1, d) - today) / 86400000);
+  };
   const sorted = [...allCampaigns];
-  if (_campFilter === 'brand') sorted.sort((a, b) => a.brand.name.localeCompare(b.brand.name));
-  if (_campFilter === 'pct')   sorted.sort((a, b) => getPct(b) - getPct(a));
+  if (_campFilter === 'brand')    sorted.sort((a, b) => a.brand.name.localeCompare(b.brand.name));
+  if (_campFilter === 'pct')      sorted.sort((a, b) => getPct(b) - getPct(a));
+  if (_campFilter === 'daysleft') sorted.sort((a, b) => getDaysLeft(a) - getDaysLeft(b));
+  if (_campFilter === 'status') {
+    const HOME_STAGE_ORDER = ['Ideation','Planning','Production','Publish','Dormant','Complete'];
+    sorted.sort((a, b) => {
+      const ai = a.campaign.stage != null ? a.campaign.stage : (a.campaign.status === 'active' ? 2 : 1);
+      const bi = b.campaign.stage != null ? b.campaign.stage : (b.campaign.status === 'active' ? 2 : 1);
+      return ai - bi;
+    });
+  }
 
-  const filterLabel = { date: 'Date', brand: 'Brand', pct: '% Complete' }[_campFilter];
+  const filterLabel = { date: 'Date', brand: 'Brand', pct: '% Complete', daysleft: 'Days Left', status: 'Status' }[_campFilter] || 'Date';
 
   const campCards = sorted.length ? sorted.map(({ campaign, brand }) => {
     const isCurrentPhase = campaign.status === 'active' && campaign.name === brand.currentPhase.name;
@@ -774,6 +790,8 @@ function pageHome() {
           <button class="camp-filter-opt${_campFilter === 'date' ? ' active' : ''}" data-cf="date">Date</button>
           <button class="camp-filter-opt${_campFilter === 'brand' ? ' active' : ''}" data-cf="brand">Brand</button>
           <button class="camp-filter-opt${_campFilter === 'pct' ? ' active' : ''}" data-cf="pct">% Complete</button>
+          <button class="camp-filter-opt${_campFilter === 'daysleft' ? ' active' : ''}" data-cf="daysleft">Days Left</button>
+          <button class="camp-filter-opt${_campFilter === 'status' ? ' active' : ''}" data-cf="status">Status</button>
         </div>
       </div>
     </div>
