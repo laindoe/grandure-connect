@@ -2474,7 +2474,7 @@ function pageCampaign(brandId, campId) {
   const heroImgStyle = campaign.heroImage ? `background-image:url(${campaign.heroImage})` : '';
 
   return `
-    <div class="page">
+    <div class="page" style="padding-bottom:120px">
 
       <!-- Back header -->
       <div class="back-header">
