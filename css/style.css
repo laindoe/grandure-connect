@@ -1458,6 +1458,11 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-mile-item:last-child { border-bottom:none; }
 .camp-mile-item.done .camp-mile-text { color:rgba(255,255,255,0.3);text-decoration:line-through; }
 .camp-mile-check { width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:none;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#34c759;cursor:pointer; }
+/* Settings 2-column mile marker rows */
+.settings-mile-row { display:grid;grid-template-columns:1fr auto 28px;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05); }
+.settings-mile-row:last-child { border-bottom:none; }
+.settings-mile-name { font-size:14px;font-weight:500;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.settings-mile-eta { font-size:12px;font-weight:600;color:rgba(255,255,255,0.4);white-space:nowrap;text-align:right; }
 .camp-mile-item.done .camp-mile-check { background:rgba(52,199,89,0.15);border-color:rgba(52,199,89,0.4); }
 .camp-mile-info { display:flex;flex-direction:column;gap:2px;flex:1; }
 .camp-mile-text { font-size:14px;font-weight:500;color:rgba(255,255,255,0.85); }

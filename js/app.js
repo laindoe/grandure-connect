@@ -3791,15 +3791,10 @@ function bindCampaignPage(brandId, campId) {
 
   const existingMarkers = campaign.mileMarkers || [];
   const mileRowsHTML = existingMarkers.map(m => `
-    <div class="info-mile-row" data-marker-id="${m.id}" style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-      <div class="info-mile-fields" style="flex:1;display:flex;flex-direction:column;gap:6px">
-        <input class="notion-input info-mile-text" value="${escHtml(m.text||'')}" placeholder="Milestone name" style="font-size:15px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:10px;font-weight:700;letter-spacing:0.6px;color:rgba(255,255,255,0.3);white-space:nowrap">ARRIVAL TIME</span>
-          <input type="date" class="notion-input notion-date info-mile-date" value="${m.date||''}" style="flex:1;color-scheme:dark">
-        </div>
-      </div>
-      <button type="button" class="info-mile-del" style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.3);font-size:22px;padding:0 4px 0 8px;line-height:1">×</button>
+    <div class="settings-mile-row" data-marker-id="${m.id}" data-text="${escHtml(m.text||'')}" data-date="${m.date||''}">
+      <span class="settings-mile-name">${escHtml(m.text||'')}</span>
+      <span class="settings-mile-eta">${m.date ? fromDateInputVal(m.date) : '—'}</span>
+      <button type="button" class="info-mile-del" style="background:none;border:none;color:rgba(255,255,255,0.25);font-size:18px;padding:0;line-height:1;cursor:pointer">×</button>
     </div>`).join('');
 
   moreEl.innerHTML = `
@@ -3832,45 +3827,75 @@ function bindCampaignPage(brandId, campId) {
 
       <!-- MILE MARKERS -->
       <div style="padding:20px 0 16px">
-        <div style="font-size:10px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px">MILE MARKERS</div>
-        <div id="settingsMileList" style="display:flex;flex-direction:column">${mileRowsHTML}</div>
-        <button type="button" id="settingsMileAddBtn" style="width:100%;padding:12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);font-size:13px;font-weight:600;margin-top:10px">+ Add Marker</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3)">MILE MARKERS</div>
+          <button id="settingsMileAddBtn" type="button" style="width:28px;height:28px;border-radius:100px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">+</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr auto 28px;gap:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:2px">
+          <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.22);letter-spacing:0.8px">NAME</span>
+          <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.22);letter-spacing:0.8px">ETA</span>
+          <span></span>
+        </div>
+        <div id="settingsMileList">${mileRowsHTML}</div>
       </div>
 
     </div>`;
   document.body.appendChild(moreEl);
 
   // ── Settings sheet bindings ──
-  const settingsMileList = moreEl.querySelector('#settingsMileList');
-  const settingsAddBtn   = moreEl.querySelector('#settingsMileAddBtn');
-  const settingsSaveBtn  = moreEl.querySelector('#campSettingsSave');
+  const settingsMileList   = moreEl.querySelector('#settingsMileList');
+  const settingsAddBtn     = moreEl.querySelector('#settingsMileAddBtn');
+  const settingsSaveBtn    = moreEl.querySelector('#campSettingsSave');
   const settingsPlatHidden = moreEl.querySelector('#settingsPlatforms');
 
-  function addSettingsMileRow(text, date, markerId) {
-    const row = document.createElement('div');
-    row.className = 'info-mile-row';
-    row.dataset.markerId = markerId || uid();
-    row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)';
-    row.innerHTML = `
-      <div class="info-mile-fields" style="flex:1;display:flex;flex-direction:column;gap:6px">
-        <input class="notion-input info-mile-text" value="${escHtml(text||'')}" placeholder="Milestone name" style="font-size:15px">
-        <div class="info-mile-arrival-wrap" style="display:flex;align-items:center;gap:8px">
-          <span class="info-mile-arrival-label" style="font-size:10px;font-weight:700;letter-spacing:0.6px;color:rgba(255,255,255,0.3);white-space:nowrap">ARRIVAL TIME</span>
-          <input type="date" class="notion-input notion-date info-mile-date" value="${date||''}" style="flex:1;color-scheme:dark">
-        </div>
-      </div>
-      <button type="button" class="info-mile-del" style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.3);font-size:22px;padding:0 4px 0 8px;line-height:1">×</button>`;
-    row.querySelector('.info-mile-del').addEventListener('click', () => row.remove());
-    settingsMileList.appendChild(row);
-    row.querySelector('.info-mile-text').focus();
+  function bindMileDelBtns() {
+    settingsMileList.querySelectorAll('.info-mile-del').forEach(btn => {
+      btn.onclick = () => btn.closest('.settings-mile-row').remove();
+    });
   }
+  bindMileDelBtns();
 
-  // Wire up delete for existing rows
-  settingsMileList.querySelectorAll('.info-mile-del').forEach(btn => {
-    btn.addEventListener('click', () => btn.closest('.info-mile-row').remove());
+  settingsAddBtn.addEventListener('click', () => {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
+    modal.innerHTML = `
+      <div style="background:#1c1c1e;border-radius:20px;width:calc(100% - 48px);max-width:360px;padding:24px;border:1px solid rgba(255,255,255,0.1)">
+        <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:20px">Enter Mile Marker</div>
+        <div style="margin-bottom:14px">
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.8px;margin-bottom:6px">NAME</div>
+          <input id="mileModalName" type="text" placeholder="Milestone name" class="notion-input" style="width:100%;font-size:15px;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:20px">
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.8px;margin-bottom:6px">ETA</div>
+          <input id="mileModalDate" type="date" class="notion-input notion-date" style="width:100%;color-scheme:dark;box-sizing:border-box">
+        </div>
+        <div style="display:flex;gap:10px">
+          <button id="mileModalCancel" style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.6);font-size:15px;font-weight:600;cursor:pointer">Cancel</button>
+          <button id="mileModalSave" style="flex:1;padding:12px;border-radius:12px;background:#fff;border:none;color:#000;font-size:15px;font-weight:700;cursor:pointer">Save</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.querySelector('#mileModalName').focus(), 50);
+
+    modal.querySelector('#mileModalCancel').addEventListener('click', () => modal.remove());
+    modal.querySelector('#mileModalSave').addEventListener('click', () => {
+      const name = modal.querySelector('#mileModalName').value.trim();
+      const date = modal.querySelector('#mileModalDate').value;
+      if (!name) return;
+      const row = document.createElement('div');
+      row.className = 'settings-mile-row';
+      row.dataset.markerId = uid();
+      row.dataset.text = name;
+      row.dataset.date = date;
+      row.innerHTML = `
+        <span class="settings-mile-name">${escHtml(name)}</span>
+        <span class="settings-mile-eta">${date ? fromDateInputVal(date) : '—'}</span>
+        <button type="button" class="info-mile-del" style="background:none;border:none;color:rgba(255,255,255,0.25);font-size:18px;padding:0;line-height:1;cursor:pointer">×</button>`;
+      row.querySelector('.info-mile-del').addEventListener('click', () => row.remove());
+      settingsMileList.appendChild(row);
+      modal.remove();
+    });
   });
-
-  settingsAddBtn.addEventListener('click', () => addSettingsMileRow());
 
   // Platform pill toggles
   moreEl.querySelectorAll('#settingsPlatformPills .platform-pill').forEach(pill => {
@@ -3885,12 +3910,12 @@ function bindCampaignPage(brandId, campId) {
   // Save settings
   settingsSaveBtn.addEventListener('click', () => {
     const newPlatforms = settingsPlatHidden.value;
-    const newMarkers = Array.from(settingsMileList.querySelectorAll('.info-mile-row')).map(row => {
+    const newMarkers = Array.from(settingsMileList.querySelectorAll('.settings-mile-row')).map(row => {
       const existing = existingMarkers.find(m => m.id === row.dataset.markerId);
       return {
         id: row.dataset.markerId,
-        text: row.querySelector('.info-mile-text')?.value.trim() || '',
-        date: row.querySelector('.info-mile-date')?.value || '',
+        text: row.dataset.text || '',
+        date: row.dataset.date || '',
         done: existing?.done || false,
       };
     }).filter(m => m.text);
