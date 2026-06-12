@@ -2434,10 +2434,12 @@ function pageCampaign(brandId, campId) {
   const mktgPlatformRows = Object.entries(brand.platformStrategy || {}).map(([pKey, pData]) => {
     const icon = (PLATFORM_ICONS[pKey] || '').replace(/width="20" height="20"/g, 'width="18" height="18"');
     const name = MKTG_PLAT_NAMES[pKey] || (pKey.charAt(0).toUpperCase() + pKey.slice(1));
-    const formatsHTML = (pData.formats || []).map(f => `<span class="camp-mktg-fmt">${escHtml(f)}</span>`).join('');
-    const themesHTML  = (pData.themes  || []).map(t => `<div class="camp-mktg-theme">· ${escHtml(t)}</div>`).join('');
+    const themes = pData.themes || [];
+    const formatsHTML = (pData.formats || []).map((f, i) =>
+      `<button class="camp-mktg-fmt" type="button" data-fmt-idx="${i}">${escHtml(f)}</button>`
+    ).join('');
     return `
-      <div class="camp-mktg-row">
+      <div class="camp-mktg-row" data-themes="${escHtml(JSON.stringify(themes))}">
         <div class="camp-mktg-row-hd">
           <div class="camp-mktg-row-left">
             <div class="camp-mktg-row-icon">${icon}</div>
@@ -2447,7 +2449,7 @@ function pageCampaign(brandId, campId) {
         </div>
         <div class="camp-mktg-row-body" style="display:none">
           ${formatsHTML ? `<div class="camp-mktg-fmts">${formatsHTML}</div>` : ''}
-          ${themesHTML  ? `<div class="camp-mktg-themes">${themesHTML}</div>` : ''}
+          <div class="camp-mktg-theme-preview" style="display:none"></div>
         </div>
       </div>`;
   }).join('');
@@ -2792,13 +2794,34 @@ function bindCampaignPage(brandId, campId) {
 
   // Marketing Snapshot — expand/collapse platform rows
   document.querySelectorAll('#campMktgPlatforms .camp-mktg-row').forEach(row => {
-    const hd   = row.querySelector('.camp-mktg-row-hd');
-    const body = row.querySelector('.camp-mktg-row-body');
-    const chev = row.querySelector('.camp-mktg-chev');
+    const hd      = row.querySelector('.camp-mktg-row-hd');
+    const body    = row.querySelector('.camp-mktg-row-body');
+    const chev    = row.querySelector('.camp-mktg-chev');
+    const preview = row.querySelector('.camp-mktg-theme-preview');
+    const themes  = JSON.parse(row.dataset.themes || '[]');
+
     hd?.addEventListener('click', () => {
       const isOpen = body?.style.display !== 'none';
       if (body) body.style.display = isOpen ? 'none' : 'block';
       if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+    });
+
+    row.querySelectorAll('.camp-mktg-fmt').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.fmtIdx, 10);
+        const wasActive = btn.classList.contains('active');
+        row.querySelectorAll('.camp-mktg-fmt').forEach(b => b.classList.remove('active'));
+        if (!wasActive) {
+          btn.classList.add('active');
+          if (preview) {
+            preview.textContent = themes[idx] ? '· ' + themes[idx] : '';
+            preview.style.display = themes[idx] ? 'block' : 'none';
+          }
+        } else {
+          if (preview) preview.style.display = 'none';
+        }
+      });
     });
   });
 
