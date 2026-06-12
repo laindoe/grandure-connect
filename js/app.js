@@ -723,9 +723,10 @@ function pageHome() {
       <div class="swipe-wrap" data-camp-id="${campaign.id}" data-brand-id="${brand.id}">
         <div class="swipe-row">
           <div class="home-camp-card" data-href="#/campaign?brandId=${brand.id}&id=${campaign.id}">
-            <div class="home-camp-banner" style="${campBannerStyle}"></div>
-            <div class="home-camp-body">
+            <div class="home-camp-banner" style="${campBannerStyle}">
               ${homeDaysLeft ? `<div class="home-camp-days-pill home-camp-days-${homeDaysLeft.cls}">${homeDaysLeft.label}</div>` : ''}
+            </div>
+            <div class="home-camp-body">
               <div class="home-camp-top">
                 <div class="home-camp-left">
                   <div class="home-camp-name">${campaign.name}</div>
