@@ -3622,16 +3622,16 @@ function pageCampaign(brandId, campId) {
         ${(() => {
           const nextM = (campaign.mileMarkers || []).find(m => !m.done);
           if (!nextM) return '';
-          const checkSVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(52,199,89,0.9)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+          const checkSVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
           return `
             <div style="padding:12px 16px 0">
               <div class="camp-mile-next" style="display:flex;align-items:flex-start;gap:12px">
                 <button type="button" id="campHeroCheckBtn" data-marker-id="${nextM.id}"
-                  style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(52,199,89,0.5);background:none;flex-shrink:0;margin-top:3px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+                  style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,0.55);background:none;flex-shrink:0;margin-top:3px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
                   ${nextM.done ? checkSVG : ''}
                 </button>
                 <div style="flex:1;min-width:0">
-                  <div class="camp-mile-next-label">NEXT CHECKPOINT</div>
+                  <div class="camp-mile-next-label">NEXT MILE MARKER</div>
                   <div class="camp-mile-next-text">${escHtml(nextM.text)}</div>
                   ${nextM.date ? `<div class="camp-mile-next-eta">ETA ${fromDateInputVal(nextM.date)}</div>` : ''}
                 </div>
