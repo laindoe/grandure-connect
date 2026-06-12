@@ -2422,6 +2422,55 @@ function pageCampaign(brandId, campId) {
   const ov = brand.overview || {};
   const pillarsHTML = (ov.contentPillars || []).map(p => `<span class="notion-pillar">${p}</span>`).join('');
 
+  // Campaign Overview card: brand keyword pills
+  const kwPillsHTML = (ov.keywords || []).map(k => `<span class="camp-kw-pill">${escHtml(k)}</span>`).join('');
+
+  // Marketing Snapshot: per-platform expandable rows
+  const MKTG_PLAT_NAMES = {
+    instagram:'Instagram', tiktok:'TikTok', youtube:'YouTube',
+    threads:'Threads', twitter:'X / Twitter', linkedin:'LinkedIn', email:'Email',
+  };
+  const mktgChevSVG = `<svg class="camp-mktg-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const mktgPlatformRows = Object.entries(brand.platformStrategy || {}).map(([pKey, pData]) => {
+    const icon = (PLATFORM_ICONS[pKey] || '').replace(/width="20" height="20"/g, 'width="18" height="18"');
+    const name = MKTG_PLAT_NAMES[pKey] || (pKey.charAt(0).toUpperCase() + pKey.slice(1));
+    const formatsHTML = (pData.formats || []).map(f => `<span class="camp-mktg-fmt">${escHtml(f)}</span>`).join('');
+    const themesHTML  = (pData.themes  || []).map(t => `<div class="camp-mktg-theme">· ${escHtml(t)}</div>`).join('');
+    return `
+      <div class="camp-mktg-row">
+        <div class="camp-mktg-row-hd">
+          <div class="camp-mktg-row-left">
+            <div class="camp-mktg-row-icon">${icon}</div>
+            <span class="camp-mktg-row-name">${escHtml(name)}</span>
+          </div>
+          ${mktgChevSVG}
+        </div>
+        <div class="camp-mktg-row-body" style="display:none">
+          ${formatsHTML ? `<div class="camp-mktg-fmts">${formatsHTML}</div>` : ''}
+          ${themesHTML  ? `<div class="camp-mktg-themes">${themesHTML}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+  const MKTG_EMAIL_ICON  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`;
+  const MKTG_EVENTS_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+  const mktgExtraRows = [
+    { key:'email',  icon: MKTG_EMAIL_ICON,  name:'Email' },
+    { key:'events', icon: MKTG_EVENTS_ICON, name:'Events & Meetups' },
+  ].map(({ icon, name }) => `
+    <div class="camp-mktg-row">
+      <div class="camp-mktg-row-hd">
+        <div class="camp-mktg-row-left">
+          <div class="camp-mktg-row-icon" style="color:rgba(255,255,255,0.35)">${icon}</div>
+          <span class="camp-mktg-row-name">${name}</span>
+        </div>
+        ${mktgChevSVG}
+      </div>
+      <div class="camp-mktg-row-body" style="display:none">
+        <div class="camp-mktg-empty-hint">No strategy added yet</div>
+      </div>
+    </div>`).join('');
+  const mktgSnapshotHTML = mktgPlatformRows + mktgExtraRows;
+
   const heroImgStyle = campaign.heroImage ? `background-image:url(${campaign.heroImage})` : '';
 
   return `
@@ -2471,35 +2520,29 @@ function pageCampaign(brandId, campId) {
         </div>
 
         <!-- CAMPAIGN OVERVIEW -->
-        <div class="section-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
-          <div class="section-card-header" style="display:flex;align-items:center;gap:8px;margin-bottom:0">
-            <div class="section-card-title" style="flex:1">CAMPAIGN OVERVIEW</div>
-            <button class="doc-open-btn" id="campInfoDocBtn">Open Doc</button>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+        <div class="section-card" style="margin-bottom:10px">
+          <div class="camp-card-label">CAMPAIGN OVERVIEW</div>
+          <div class="camp-ov-body${campaign.ov_objective ? '' : ' camp-ov-empty'}">${escHtml(campaign.ov_objective || 'No objective set yet. Tap Edit Document to fill in the details.')}</div>
+          ${kwPillsHTML ? `<div class="camp-kw-pills">${kwPillsHTML}</div>` : ''}
+          ${campaign.ov_cta ? `<div class="camp-ov-cta-row"><span class="camp-ov-cta-label">CTA</span><span class="camp-ov-cta-val">${escHtml(campaign.ov_cta)}</span></div>` : ''}
+          <div class="camp-ov-btns">
+            <button class="camp-ov-btn-out" id="campInfoDocBtn">Open Document</button>
+            <button class="camp-ov-btn-solid" id="campEditDocBtn">Edit Document</button>
           </div>
         </div>
 
-        <!-- CONTENT PLAN -->
-        <div class="section-card" id="campPlanCard" style="cursor:pointer;margin-bottom:10px">
-          <div class="section-card-header" style="display:flex;align-items:center;gap:8px;margin-bottom:0">
-            <div class="section-card-title" style="flex:1">CONTENT PLAN</div>
-            <button class="doc-open-btn" id="campPlanDocBtn">Open Doc</button>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
-          </div>
+        <!-- MARKETING SNAPSHOT -->
+        <div class="section-card" style="margin-bottom:10px">
+          <div class="camp-card-label">MARKETING SNAPSHOT</div>
+          <div id="campMktgPlatforms">${mktgSnapshotHTML}</div>
         </div>
 
         <!-- BRAND SNAPSHOT -->
-        <div class="section-card dd-card" id="campSnapCard" style="cursor:pointer;margin-bottom:10px">
-          <div class="section-card-header" id="campSnapToggle" style="display:flex;align-items:center;gap:8px">
-            <div class="section-card-title" style="flex:1">BRAND SNAPSHOT</div>
-            <svg class="dd-chevron" id="campSnapChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          <div class="dd-body" id="campSnapBody" style="display:none;padding-top:14px">
-            ${ov.mission ? `<div class="notion-label" style="margin-bottom:6px">MISSION</div><div class="body-text" style="margin-bottom:16px">${ov.mission}</div>` : ''}
-            ${ov.audience ? `<div class="notion-label" style="margin-bottom:6px">AUDIENCE</div><div class="body-text" style="margin-bottom:16px">${ov.audience}</div>` : ''}
-            ${(ov.contentPillars || []).length ? `<div class="notion-label" style="margin-bottom:8px">CONTENT PILLARS</div><div style="margin-bottom:16px">${pillarsHTML}</div>` : ''}
-            ${ov.brandVoice ? `<div class="notion-label" style="margin-bottom:6px">BRAND VOICE</div><div class="body-text">${ov.brandVoice}</div>` : ''}
-          </div>
+        <div class="section-card" style="margin-bottom:10px">
+          <div class="camp-card-label">BRAND SNAPSHOT</div>
+          ${ov.mission ? `<div class="camp-brand-snap-text">${escHtml(ov.mission)}</div>` : ''}
+          ${(ov.keywords || []).length ? `<div class="camp-kw-pills">${(ov.keywords || []).map(k => `<span class="camp-kw-pill">${escHtml(k)}</span>`).join('')}</div>` : ''}
+          <button class="camp-view-details-btn" id="campBrandViewDetails">View Details ›</button>
         </div>
 
       </div>
@@ -2715,24 +2758,29 @@ function bindCampaignPage(brandId, campId) {
     });
   });
 
-  // Open sheets when tapping cards
-  document.getElementById('campInfoCard')?.addEventListener('click', e => {
-    if (e.target.closest('#campInfoDocBtn')) return;
+  // Campaign Overview card buttons
+  document.getElementById('campEditDocBtn')?.addEventListener('click', () => {
     requestAnimationFrame(() => infoSheet.classList.add('open'));
   });
-  document.getElementById('campPlanCard')?.addEventListener('click', e => {
-    if (e.target.closest('#campPlanDocBtn')) return;
-    requestAnimationFrame(() => planSheet.classList.add('open'));
-  });
-
-  // Open Doc buttons on cards (navigate without saving)
-  document.getElementById('campInfoDocBtn')?.addEventListener('click', e => {
-    e.stopPropagation();
+  document.getElementById('campInfoDocBtn')?.addEventListener('click', () => {
     navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=overview`);
   });
-  document.getElementById('campPlanDocBtn')?.addEventListener('click', e => {
-    e.stopPropagation();
-    navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=plan`);
+
+  // Marketing Snapshot — expand/collapse platform rows
+  document.querySelectorAll('#campMktgPlatforms .camp-mktg-row').forEach(row => {
+    const hd   = row.querySelector('.camp-mktg-row-hd');
+    const body = row.querySelector('.camp-mktg-row-body');
+    const chev = row.querySelector('.camp-mktg-chev');
+    hd?.addEventListener('click', () => {
+      const isOpen = body?.style.display !== 'none';
+      if (body) body.style.display = isOpen ? 'none' : 'block';
+      if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+    });
+  });
+
+  // Brand Snapshot "View Details" → brand page
+  document.getElementById('campBrandViewDetails')?.addEventListener('click', () => {
+    navigate(`#/brand?id=${brandId}`);
   });
 
   // Close buttons
@@ -2821,16 +2869,6 @@ function bindCampaignPage(brandId, campId) {
     const updatedCampaigns = brand.campaigns.map(c => c.id === campId ? { ...c, ...patch } : c);
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
     planSheet.classList.remove('open');
-  });
-
-  // BRAND SNAPSHOT toggle
-  const campSnapToggle  = document.getElementById('campSnapToggle');
-  const campSnapBody    = document.getElementById('campSnapBody');
-  const campSnapChevron = document.getElementById('campSnapChevron');
-  campSnapToggle?.addEventListener('click', () => {
-    const open = campSnapBody.style.display === 'none';
-    campSnapBody.style.display = open ? 'block' : 'none';
-    campSnapChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
   });
 
   bindCapture();
