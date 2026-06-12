@@ -1461,7 +1461,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 /* Settings 2-column mile marker rows */
 .settings-mile-row { position:relative;overflow:hidden;border-bottom:1px solid rgba(255,255,255,0.05);isolation:isolate; }
 .settings-mile-row:last-child { border-bottom:none; }
-.mile-swipe-content { display:grid;grid-template-columns:1fr auto;align-items:start;gap:12px;padding:12px 0;background:#000; }
+.mile-swipe-content { position:relative;z-index:1;display:grid;grid-template-columns:1fr auto;align-items:start;gap:12px;padding:12px 0;background:#000; }
 .settings-mile-name { font-size:16px;font-weight:500;color:#fff;word-break:break-word; }
 .settings-mile-eta { font-size:12px;font-weight:600;color:rgba(255,255,255,0.4);white-space:nowrap;text-align:right;padding-top:3px; }
 .mile-swipe-actions { position:absolute;right:0;top:0;bottom:0;display:flex;align-items:center;gap:4px;padding:0 8px; }
