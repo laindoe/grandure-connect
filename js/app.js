@@ -3232,7 +3232,7 @@ function pageCampaign(brandId, campId) {
           <div class="camp-card-label">CAMPAIGN OVERVIEW</div>
           ${(campaign.startDate || campaign.endDate) ? `<div class="camp-ov-dates">${escHtml(campaign.startDate || '')}${campaign.startDate && campaign.endDate ? ' – ' : ''}${escHtml(campaign.endDate || '')}</div>` : ''}
           <div class="camp-ov-body${campaign.ov_objective ? '' : ' camp-ov-empty'}">${escHtml(campaign.ov_objective || 'No objective set yet. Tap Edit Document to fill in the details.')}</div>
-          ${(campaign.ov_offers || []).length ? `<div class="camp-ov-offer-row"><span class="camp-ov-offer-label">OFFERS</span><div class="camp-ov-offer-list">${(campaign.ov_offers || []).map(o => `<div class="camp-ov-offer-item">· ${escHtml(o)}</div>`).join('')}</div></div>` : ''}
+          ${(campaign.ov_offers || []).length ? `<div class="camp-ov-offer-row"><span class="camp-ov-offer-label">OFFERS</span><div class="camp-ov-offer-list">${(campaign.ov_offers || []).map(o => `<div class="camp-ov-offer-item">${escHtml(o)}</div>`).join('')}</div></div>` : ''}
           ${campaign.ov_cta ? `<div class="camp-ov-cta-row"><span class="camp-ov-cta-label">CTA</span><span class="camp-ov-cta-val">${escHtml(campaign.ov_cta)}</span></div>` : ''}
           <div class="camp-ov-btns">
             <button class="camp-ov-btn-out" id="campInfoDocBtn">Open Document</button>
