@@ -825,7 +825,28 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
   border-radius: 8px;
   padding: 4px 9px;
   display: inline-block;
+  cursor: pointer;
+  user-select: none;
 }
+.home-camp-stage-0 { color: #a78bfa; background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.22); }
+.home-camp-stage-1 { color: #60a5fa; background: rgba(96,165,250,0.12);  border-color: rgba(96,165,250,0.22); }
+.home-camp-stage-2 { color: #fb923c; background: rgba(251,146,60,0.12);  border-color: rgba(251,146,60,0.22); }
+.home-camp-stage-3 { color: #e040c8; background: rgba(224,64,200,0.12);  border-color: rgba(224,64,200,0.22); }
+.home-camp-stage-4 { color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+.home-camp-stage-5 { color: #34c759; background: rgba(52,199,89,0.12);   border-color: rgba(52,199,89,0.22); }
+
+/* Stage picker bottom sheet */
+.stage-picker-sheet { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; justify-content: flex-end; }
+.stage-picker-bg    { position: absolute; inset: 0; background: rgba(0,0,0,0.55); }
+.stage-picker-panel { position: relative; background: #1e1e1e; border-top: 1px solid rgba(255,255,255,0.1); border-radius: 20px 20px 0 0; padding-bottom: env(safe-area-inset-bottom, 0); }
+.stage-picker-bar   { width: 40px; height: 4px; background: rgba(255,255,255,0.12); border-radius: 100px; margin: 12px auto 4px; }
+.stage-picker-title { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: rgba(255,255,255,0.35); text-align: center; padding: 6px 20px 12px; text-transform: uppercase; }
+.stage-picker-opts  { padding: 0 0 8px; }
+.stage-picker-opt   { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 22px; background: none; border: none; border-top: 1px solid rgba(255,255,255,0.05); color: #fff; font-size: 15px; text-align: left; cursor: pointer; }
+.stage-picker-opt.active { background: rgba(255,255,255,0.03); }
+.stage-picker-dot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.stage-picker-opt-label { flex: 1; }
+.stage-picker-check { color: rgba(255,255,255,0.6); }
 .home-camp-next-val {
   color: #888;
   font-size: 11px;
@@ -860,10 +881,8 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
   font-weight: 600;
 }
 .home-camp-days-pill {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
+  margin-left: auto;
+  flex-shrink: 0;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.4px;

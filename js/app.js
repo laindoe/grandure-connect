@@ -692,9 +692,9 @@ function pageHome() {
     const postsCompleted = isCurrentPhase ? brand.currentPhase.postsCompleted : 0;
     const totalPosts     = isCurrentPhase ? brand.currentPhase.totalPosts : 0;
     const postLabel = totalPosts > 0 ? `${postsCompleted} / ${totalPosts} posts` : '0 posts';
+    const HOME_STAGE_LABELS = ['Ideation', 'Planning', 'Production', 'Publish', 'Dormant', 'Complete'];
     const stageIdx = campaign.stage != null ? campaign.stage : (campaign.status === 'active' ? 2 : campaign.status === 'upcoming' ? 1 : 0);
-    const STAGE_LABELS = ['Ideation', 'Planning', 'Production', 'Publish'];
-    const stageLabel = STAGE_LABELS[stageIdx] || 'Ideation';
+    const stageLabel = HOME_STAGE_LABELS[stageIdx] || 'Ideation';
     const homeDaysLeft = (() => {
       const iso = toDateInputVal(campaign.endDate);
       if (!iso) return '';
@@ -719,13 +719,12 @@ function pageHome() {
       <div class="home-camp-brand-header">
         <div class="home-camp-brand-icon" style="${iconBg}">${iconContent}</div>
         <span class="home-camp-brand-header-name">${brand.name}</span>
+        ${homeDaysLeft ? `<div class="home-camp-days-pill home-camp-days-${homeDaysLeft.cls}">${homeDaysLeft.label}</div>` : ''}
       </div>
       <div class="swipe-wrap" data-camp-id="${campaign.id}" data-brand-id="${brand.id}">
         <div class="swipe-row">
           <div class="home-camp-card" data-href="#/campaign?brandId=${brand.id}&id=${campaign.id}">
-            <div class="home-camp-banner" style="${campBannerStyle}">
-              ${homeDaysLeft ? `<div class="home-camp-days-pill home-camp-days-${homeDaysLeft.cls}">${homeDaysLeft.label}</div>` : ''}
-            </div>
+            <div class="home-camp-banner" style="${campBannerStyle}"></div>
             <div class="home-camp-body">
               <div class="home-camp-top">
                 <div class="home-camp-left">
@@ -733,7 +732,7 @@ function pageHome() {
                   <div class="home-camp-dates">${campaign.startDate} – ${campaign.endDate}</div>
                 </div>
                 <div class="home-camp-right">
-                  <div class="home-camp-stage-badge">${stageLabel}</div>
+                  <div class="home-camp-stage-badge home-camp-stage-${stageIdx}" data-stage-brand="${brand.id}" data-stage-camp="${campaign.id}" data-stage-idx="${stageIdx}">${stageLabel}</div>
                 </div>
               </div>
               <div class="home-camp-prog-track">
@@ -868,6 +867,64 @@ function bindHomeDock() {
       _campFilter = btn.dataset.cf;
       document.getElementById('app').innerHTML = pageHome();
       bindHomeDock(); bindCapture(); bindNav(); bindAddBrand();
+    });
+  });
+
+  // Stage badge picker
+  const HOME_STAGE_CONFIG = [
+    { label: 'Ideation',   color: '#a78bfa' },
+    { label: 'Planning',   color: '#60a5fa' },
+    { label: 'Production', color: '#fb923c' },
+    { label: 'Publish',    color: '#e040c8' },
+    { label: 'Dormant',    color: 'rgba(255,255,255,0.35)' },
+    { label: 'Complete',   color: '#34c759' },
+  ];
+
+  document.querySelectorAll('.home-camp-stage-badge').forEach(badge => {
+    badge.addEventListener('click', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      const brandId = badge.dataset.stageBrand;
+      const campId  = badge.dataset.stageCamp;
+      const current = parseInt(badge.dataset.stageIdx, 10);
+
+      document.getElementById('stagePickerSheet')?.remove();
+
+      const checkSVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      const optsHTML = HOME_STAGE_CONFIG.map((s, i) => `
+        <button class="stage-picker-opt${i === current ? ' active' : ''}" data-si="${i}">
+          <span class="stage-picker-dot" style="background:${s.color}"></span>
+          <span class="stage-picker-opt-label">${s.label}</span>
+          ${i === current ? `<span class="stage-picker-check">${checkSVG}</span>` : ''}
+        </button>`).join('');
+
+      const sheet = document.createElement('div');
+      sheet.className = 'stage-picker-sheet';
+      sheet.id = 'stagePickerSheet';
+      sheet.innerHTML = `
+        <div class="stage-picker-bg" id="stagePickerBg"></div>
+        <div class="stage-picker-panel">
+          <div class="stage-picker-bar"></div>
+          <div class="stage-picker-title">Campaign Status</div>
+          <div class="stage-picker-opts">${optsHTML}</div>
+        </div>`;
+      document.body.appendChild(sheet);
+
+      document.getElementById('stagePickerBg')?.addEventListener('click', () => sheet.remove());
+
+      sheet.querySelectorAll('.stage-picker-opt').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const newStage = parseInt(opt.dataset.si, 10);
+          const brand = getBrand(brandId);
+          if (brand) {
+            const updated = brand.campaigns.map(c => c.id === campId ? { ...c, stage: newStage } : c);
+            saveBrandOverride(brandId, { campaigns: updated });
+          }
+          sheet.remove();
+          document.getElementById('app').innerHTML = pageHome();
+          bindHomeDock(); bindCapture(); bindNav(); bindAddBrand();
+        });
+      });
     });
   });
 
