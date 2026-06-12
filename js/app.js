@@ -3797,8 +3797,8 @@ function bindCampaignPage(brandId, campId) {
   const mileRowsHTML = existingMarkers.map(m => `
     <div class="settings-mile-row" data-marker-id="${m.id}" data-text="${escHtml(m.text||'')}" data-date="${m.date||''}">
       <div class="mile-swipe-actions">
-        <button type="button" class="mile-edit-btn">Edit</button>
-        <button type="button" class="mile-del-btn">Delete</button>
+        <button type="button" class="mile-edit-btn" aria-label="Edit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button type="button" class="mile-del-btn" aria-label="Delete"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
       <div class="mile-swipe-content">
         <span class="settings-mile-name">${escHtml(m.text||'')}</span>
@@ -3815,7 +3815,7 @@ function bindCampaignPage(brandId, campId) {
     </div>
 
     <!-- Scrollable content -->
-    <div style="flex:1;overflow-y:auto;padding:0 20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))">
+    <div style="flex:1;overflow-y:auto;overscroll-behavior:contain;padding:0 20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))">
 
       <!-- COVER PHOTO -->
       <div style="padding:20px 0 16px;border-bottom:1px solid rgba(255,255,255,0.06)">
@@ -3893,8 +3893,8 @@ function bindCampaignPage(brandId, campId) {
     row.dataset.date = date;
     row.innerHTML = `
       <div class="mile-swipe-actions">
-        <button type="button" class="mile-edit-btn">Edit</button>
-        <button type="button" class="mile-del-btn">Delete</button>
+        <button type="button" class="mile-edit-btn" aria-label="Edit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button type="button" class="mile-del-btn" aria-label="Delete"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
       </div>
       <div class="mile-swipe-content">
         <span class="settings-mile-name">${escHtml(name)}</span>
@@ -3906,7 +3906,7 @@ function bindCampaignPage(brandId, campId) {
 
   function bindMileSwipe(row) {
     const content = row.querySelector('.mile-swipe-content');
-    const ACTIONS_W = 120;
+    const ACTIONS_W = 90;
     let startX = 0, startY = 0, revealed = false, dragging = false;
 
     content.addEventListener('touchstart', e => {
