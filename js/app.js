@@ -947,10 +947,14 @@ function openEditHeroPhoto(brandId, campId) {
   // Remove any existing instance
   document.getElementById('editHeroPhotoOverlay')?.remove();
 
+  // Hide the campaign nav bar so it doesn't show through the modal
+  const campNav = document.getElementById('campaignBottomNav');
+  if (campNav) campNav.style.visibility = 'hidden';
+
   // Mount directly on document.body at z-index:500 — above all nav bars and iOS stacking contexts
   const wrapper = document.createElement('div');
   wrapper.id = 'editHeroPhotoOverlay';
-  wrapper.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)';
+  wrapper.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
   wrapper.innerHTML = `
     <div style="background:rgba(18,18,18,0.97);border-radius:20px;width:calc(100% - 32px);max-width:398px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
       <div style="padding:18px 22px 10px">
@@ -1005,7 +1009,10 @@ function openEditHeroPhoto(brandId, campId) {
   placeholder.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
 
-  const closeOverlay = () => wrapper.remove();
+  const closeOverlay = () => {
+    wrapper.remove();
+    if (campNav) campNav.style.visibility = '';
+  };
 
   wrapper.querySelector('#editPhotoCancel').addEventListener('click', closeOverlay);
 
