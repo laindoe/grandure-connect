@@ -1058,6 +1058,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-card-label { font-size:10px;font-weight:700;letter-spacing:1.3px;color:rgba(255,255,255,0.3);margin-bottom:14px;text-transform:uppercase; }
 
 /* Campaign Overview card */
+.camp-ov-dates { font-size:12px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.4px;margin-bottom:10px; }
 .camp-ov-body { font-size:18px;line-height:1.6;color:rgba(255,255,255,0.8); }
 .camp-ov-empty { color:rgba(255,255,255,0.28);font-style:italic; }
 .camp-kw-pills { display:flex;flex-wrap:wrap;gap:6px;margin-top:12px; }
@@ -1108,6 +1109,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .notion-label { font-size:9px;font-weight:700;letter-spacing:1.4px;color:#3a3a3a;margin-bottom:6px; }
 .notion-input { width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.07);padding:6px 0;color:#fff;font-size:16px;font-family:inherit;outline:none;box-sizing:border-box; }
 .notion-input:focus { border-bottom-color:rgba(255,255,255,0.22); }
+.notion-date { color-scheme:dark; padding:8px 0; }
 .notion-textarea { width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.07);padding:6px 0;color:#fff;font-size:16px;font-family:inherit;outline:none;resize:none;min-height:52px;line-height:1.55;box-sizing:border-box;overflow:hidden; }
 .notion-textarea:focus { border-bottom-color:rgba(255,255,255,0.22); }
 .notion-pillar { display:inline-block;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);border-radius:20px;padding:5px 12px;font-size:11px;color:#bbb;margin:3px 4px 3px 0; }

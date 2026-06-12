@@ -2546,6 +2546,7 @@ function pageCampaign(brandId, campId) {
         <!-- CAMPAIGN OVERVIEW -->
         <div class="section-card" style="margin-bottom:10px">
           <div class="camp-card-label">CAMPAIGN OVERVIEW</div>
+          ${(campaign.startDate || campaign.endDate) ? `<div class="camp-ov-dates">${escHtml(campaign.startDate || '')}${campaign.startDate && campaign.endDate ? ' – ' : ''}${escHtml(campaign.endDate || '')}</div>` : ''}
           <div class="camp-ov-body${campaign.ov_objective ? '' : ' camp-ov-empty'}">${escHtml(campaign.ov_objective || 'No objective set yet. Tap Edit Document to fill in the details.')}</div>
           ${(campaign.ov_offers || []).length ? `<div class="camp-ov-offer-row"><span class="camp-ov-offer-label">OFFERS</span><div class="camp-ov-offer-list">${(campaign.ov_offers || []).map(o => `<div class="camp-ov-offer-item">· ${escHtml(o)}</div>`).join('')}</div></div>` : ''}
           ${campaign.ov_cta ? `<div class="camp-ov-cta-row"><span class="camp-ov-cta-label">CTA</span><span class="camp-ov-cta-val">${escHtml(campaign.ov_cta)}</span></div>` : ''}
@@ -2678,8 +2679,8 @@ function bindCampaignPage(brandId, campId) {
       <div class="notion-field">
         <div class="notion-label">DATES</div>
         <div style="display:flex;gap:10px">
-          <input class="notion-input" id="campEditStart" value="${campaign.startDate}" placeholder="Start" style="flex:1">
-          <input class="notion-input" id="campEditEnd" value="${campaign.endDate}" placeholder="End" style="flex:1">
+          <input type="date" class="notion-input notion-date" id="campEditStart" value="${toDateInputVal(campaign.startDate)}" style="flex:1">
+          <input type="date" class="notion-input notion-date" id="campEditEnd" value="${toDateInputVal(campaign.endDate)}" style="flex:1">
         </div>
       </div>
       <div class="notion-field">
@@ -2882,8 +2883,8 @@ function bindCampaignPage(brandId, campId) {
     try {
       saveBrandOverride(brandId, { campaigns: brand.campaigns.map(c => c.id === campId ? { ...c,
         name: getVal('campEditName') || c.name,
-        startDate: getVal('campEditStart') || c.startDate,
-        endDate: getVal('campEditEnd') || c.endDate,
+        startDate: fromDateInputVal(getVal('campEditStart')) || c.startDate,
+        endDate: fromDateInputVal(getVal('campEditEnd')) || c.endDate,
         ov_objective: getVal('ov_objective'),
         ov_audience:  getVal('ov_audience'),
         ov_message:   getVal('ov_message'),
@@ -2916,8 +2917,8 @@ function bindCampaignPage(brandId, campId) {
   document.getElementById('campInfoSheetSave')?.addEventListener('click', () => {
     const patch = {
       name:         getVal('campEditName') || campaign.name,
-      startDate:    getVal('campEditStart') || campaign.startDate,
-      endDate:      getVal('campEditEnd')   || campaign.endDate,
+      startDate:    fromDateInputVal(getVal('campEditStart')) || campaign.startDate,
+      endDate:      fromDateInputVal(getVal('campEditEnd'))   || campaign.endDate,
       ov_objective: getVal('ov_objective'),
       ov_audience:  getVal('ov_audience'),
       ov_message:   getVal('ov_message'),
@@ -2990,6 +2991,27 @@ function pageInspiration(id) {
 ═══════════════════════════════════════ */
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// "Jun 20, 2026" → "2026-06-20"  (returns '' if unparseable)
+function toDateInputVal(str) {
+  if (!str) return '';
+  const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  const m = String(str).match(/([a-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})/i);
+  if (!m) return '';
+  const mo = months.indexOf(m[1].toLowerCase().slice(0, 3));
+  if (mo === -1) return '';
+  const dd = String(m[2]).padStart(2, '0');
+  const mm = String(mo + 1).padStart(2, '0');
+  return `${m[3]}-${mm}-${dd}`;
+}
+
+// "2026-06-20" → "Jun 20, 2026"  (returns '' if empty)
+function fromDateInputVal(val) {
+  if (!val) return '';
+  const [y, mo, d] = val.split('-').map(Number);
+  if (!y || !mo || !d) return '';
+  return new Date(y, mo - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function placeCursorAtEnd(el) {
