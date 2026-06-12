@@ -695,6 +695,16 @@ function pageHome() {
     const stageIdx = campaign.stage != null ? campaign.stage : (campaign.status === 'active' ? 2 : campaign.status === 'upcoming' ? 1 : 0);
     const STAGE_LABELS = ['Ideation', 'Planning', 'Production', 'Publish'];
     const stageLabel = STAGE_LABELS[stageIdx] || 'Ideation';
+    const homeDaysLeft = (() => {
+      const iso = toDateInputVal(campaign.endDate);
+      if (!iso) return '';
+      const [y, mo, d] = iso.split('-').map(Number);
+      const today = new Date(); today.setHours(0,0,0,0);
+      const days = Math.ceil((new Date(y, mo - 1, d) - today) / 86400000);
+      if (days < 0) return 'ended';
+      if (days === 0) return 'last day';
+      return `${days}d left`;
+    })();
     const cb = campaign.banner;
     const campBannerStyle = cb
       ? (cb.startsWith('data:') || cb.startsWith('http') ? `background:url('${cb}') center/cover no-repeat` : `background:${cb}`)
@@ -728,6 +738,7 @@ function pageHome() {
               </div>
               <div class="home-camp-bottom">
                 <div class="home-camp-count">${postLabel}</div>
+                ${homeDaysLeft ? `<div class="home-camp-days">${homeDaysLeft}</div>` : ''}
                 <div class="home-camp-pct">${pct}%</div>
               </div>
             </div>
@@ -3056,6 +3067,7 @@ function pageCampaign(brandId, campId) {
         <div class="camp-analytics-delta ${dCls}">${m.delta ? sign + m.delta : ''}</div>
       </div>`;
   }).join('') : `<div style="color:#333;font-size:12px;padding:8px 0">Set platforms in Brand settings</div>`;
+
 
   // Brand overview for snapshot
   const ov = brand.overview || {};

@@ -857,6 +857,11 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
   font-size: 10px;
   font-weight: 600;
 }
+.home-camp-days {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+}
 .home-camp-pct {
   color: #666;
   font-size: 11px;
