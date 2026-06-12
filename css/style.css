@@ -1110,12 +1110,20 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .info-mile-date { flex:1;font-size:13px; }
 .info-mile-del { font-size:18px;color:rgba(255,255,255,0.2);padding:4px;line-height:1;flex-shrink:0;margin-top:8px; }
 
-/* More options sheet */
+/* Settings sheet */
 .camp-more-sheet { position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;justify-content:flex-end; }
 .camp-more-sheet-bg { position:absolute;inset:0;background:rgba(0,0,0,0.55); }
-.camp-more-sheet-panel { position:relative;background:#232323;border-top:1px solid rgba(255,255,255,0.13);border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0); }
-.camp-more-sheet-bar { width:40px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:12px auto 8px; }
+.camp-more-sheet-panel { position:relative;background:#1a1a1a;border-top:1px solid rgba(255,255,255,0.1);border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0); }
+.camp-more-sheet-bar { width:40px;height:4px;background:rgba(255,255,255,0.12);border-radius:100px;margin:12px auto 4px; }
 .camp-more-item { display:block;width:100%;padding:16px 20px;text-align:left;color:#fff;font-size:15px;background:none;border:none;border-top:1px solid rgba(255,255,255,0.05); }
+.camp-settings-panel { max-height:88dvh;display:flex;flex-direction:column; }
+.camp-settings-title { font-size:13px;font-weight:700;color:rgba(255,255,255,0.5);text-align:center;padding:6px 20px 14px;letter-spacing:0.3px; }
+.camp-settings-body { flex:1;overflow-y:auto;padding:0 20px 8px; }
+.camp-settings-section { padding:16px 0;border-top:1px solid rgba(255,255,255,0.06); }
+.camp-settings-section:first-child { border-top:none;padding-top:0; }
+.camp-settings-label { font-size:9px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,0.3);margin-bottom:12px; }
+.camp-settings-action-btn { width:100%;padding:13px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:#fff;font-size:14px;font-weight:500;text-align:left;cursor:pointer; }
+.camp-settings-footer { padding:12px 20px;border-top:1px solid rgba(255,255,255,0.06);padding-bottom:max(12px,env(safe-area-inset-bottom,12px)); }
 
 /* Analytics bar */
 .camp-analytics { margin-bottom:12px; }

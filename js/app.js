@@ -3353,16 +3353,58 @@ function bindCampaignPage(brandId, campId) {
   document.getElementById('campInfoSheet')?.remove();
   document.getElementById('campPlanSheet')?.remove();
 
-  // Inject ··· more sheet
+  // Inject ··· settings sheet
+  const activePlatformList = (campaign.ov_platforms || '').split(',').map(s => s.trim()).filter(Boolean);
+  const allPlatforms = ['Instagram','TikTok','Facebook','YouTube','X','LinkedIn','Pinterest','Threads','Snapchat','Email'];
+  const platPillsHTML = allPlatforms.map(p =>
+    `<button type="button" class="platform-pill${activePlatformList.includes(p) ? ' active' : ''}" data-platform="${p}">${p}</button>`
+  ).join('');
+  const mileRowHTML = m => `
+    <div class="info-mile-row" data-marker-id="${m.id}">
+      <div class="info-mile-fields">
+        <input class="notion-input info-mile-text" value="${escHtml(m.text)}" placeholder="Milestone name" style="font-size:15px">
+        <div class="info-mile-arrival-wrap">
+          <span class="info-mile-arrival-label">Arrival Time</span>
+          <input type="date" class="notion-input notion-date info-mile-date" value="${m.date || ''}">
+        </div>
+      </div>
+      <button type="button" class="info-mile-del">×</button>
+    </div>`;
+
   const moreEl = document.createElement('div');
   moreEl.className = 'camp-more-sheet';
   moreEl.id = 'campMoreSheet';
   moreEl.style.display = 'none';
   moreEl.innerHTML = `
     <div class="camp-more-sheet-bg" id="campMoreSheetBg"></div>
-    <div class="camp-more-sheet-panel">
+    <div class="camp-more-sheet-panel camp-settings-panel">
       <div class="camp-more-sheet-bar"></div>
-      <button class="camp-more-item" id="campMoreChangeCover">Change Cover Photo</button>
+      <div class="camp-settings-title">Campaign Settings</div>
+      <div class="camp-settings-body">
+
+        <div class="camp-settings-section">
+          <div class="camp-settings-label">COVER PHOTO</div>
+          <button class="camp-settings-action-btn" id="campMoreChangeCover">Change Cover Photo</button>
+        </div>
+
+        <div class="camp-settings-section">
+          <div class="camp-settings-label">SOCIAL MEDIA</div>
+          <input type="hidden" id="settingsPlatforms" value="${escHtml(campaign.ov_platforms || '')}">
+          <div class="platform-pills" id="settingsPlatformPills">${platPillsHTML}</div>
+        </div>
+
+        <div class="camp-settings-section">
+          <div class="camp-settings-label">MILE MARKERS</div>
+          <div id="settingsMileList">
+            ${(campaign.mileMarkers || []).map(mileRowHTML).join('')}
+          </div>
+          <button type="button" class="offer-add-btn" id="settingsMileAddBtn">+ Add Marker</button>
+        </div>
+
+      </div>
+      <div class="camp-settings-footer">
+        <button class="camp-save-btn" id="campSettingsSave">Save</button>
+      </div>
     </div>`;
   document.body.appendChild(moreEl);
 
@@ -3376,7 +3418,7 @@ function bindCampaignPage(brandId, campId) {
 
   let aishaReturnSheet = null;
 
-  // ··· sheet bindings
+  // ··· settings sheet bindings
   document.getElementById('campMoreBtn')?.addEventListener('click', () => {
     moreEl.style.display = 'flex';
   });
@@ -3386,6 +3428,67 @@ function bindCampaignPage(brandId, campId) {
   document.getElementById('campMoreChangeCover')?.addEventListener('click', () => {
     moreEl.style.display = 'none';
     openEditHeroPhoto(brandId, campId);
+  });
+
+  // Platform pills toggle
+  moreEl.querySelectorAll('#settingsPlatformPills .platform-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      pill.classList.toggle('active');
+      const selected = Array.from(moreEl.querySelectorAll('#settingsPlatformPills .platform-pill.active'))
+        .map(p => p.dataset.platform).join(', ');
+      const hidden = document.getElementById('settingsPlatforms');
+      if (hidden) hidden.value = selected;
+    });
+  });
+
+  // Mile marker rows — delete
+  function bindSettingsMileDel() {
+    moreEl.querySelectorAll('#settingsMileList .info-mile-del').forEach(btn => {
+      btn.addEventListener('click', () => btn.closest('.info-mile-row').remove());
+    });
+  }
+  bindSettingsMileDel();
+
+  // Mile marker — add new row
+  document.getElementById('settingsMileAddBtn')?.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'info-mile-row';
+    row.dataset.markerId = uid();
+    row.innerHTML = `
+      <div class="info-mile-fields">
+        <input class="notion-input info-mile-text" value="" placeholder="Milestone name" style="font-size:15px">
+        <div class="info-mile-arrival-wrap">
+          <span class="info-mile-arrival-label">Arrival Time</span>
+          <input type="date" class="notion-input notion-date info-mile-date" value="">
+        </div>
+      </div>
+      <button type="button" class="info-mile-del">×</button>`;
+    row.querySelector('.info-mile-del').addEventListener('click', () => row.remove());
+    document.getElementById('settingsMileList')?.appendChild(row);
+  });
+
+  // Save settings
+  document.getElementById('campSettingsSave')?.addEventListener('click', () => {
+    const existingMarkers = (getBrand(brandId)?.campaigns||[]).find(c=>c.id===campId)?.mileMarkers || [];
+    const mileMarkers = Array.from(moreEl.querySelectorAll('#settingsMileList .info-mile-row')).map(row => {
+      const id = row.dataset.markerId;
+      const existing = existingMarkers.find(m => m.id === id);
+      return {
+        id,
+        text: row.querySelector('.info-mile-text')?.value.trim() || '',
+        date: row.querySelector('.info-mile-date')?.value || '',
+        done: existing?.done || false,
+      };
+    }).filter(m => m.text);
+    const patch = {
+      ov_platforms: document.getElementById('settingsPlatforms')?.value || campaign.ov_platforms || '',
+      mileMarkers,
+    };
+    const updated = brand.campaigns.map(c => c.id === campId ? { ...c, ...patch } : c);
+    saveBrandOverride(brandId, { campaigns: updated });
+    moreEl.style.display = 'none';
+    document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+    bindCampaignPage(brandId, campId);
   });
 
   // Campaign nav (body-level so position:fixed works correctly on iOS)
