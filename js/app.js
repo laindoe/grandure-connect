@@ -2523,7 +2523,7 @@ function pageCampaign(brandId, campId) {
         <div class="section-card" style="margin-bottom:10px">
           <div class="camp-card-label">CAMPAIGN OVERVIEW</div>
           <div class="camp-ov-body${campaign.ov_objective ? '' : ' camp-ov-empty'}">${escHtml(campaign.ov_objective || 'No objective set yet. Tap Edit Document to fill in the details.')}</div>
-          ${kwPillsHTML ? `<div class="camp-kw-pills">${kwPillsHTML}</div>` : ''}
+          ${campaign.ov_offer ? `<div class="camp-ov-offer-row"><span class="camp-ov-offer-label">OFFER</span><span class="camp-ov-offer-title">${escHtml(campaign.ov_offer)}</span></div>` : ''}
           ${campaign.ov_cta ? `<div class="camp-ov-cta-row"><span class="camp-ov-cta-label">CTA</span><span class="camp-ov-cta-val">${escHtml(campaign.ov_cta)}</span></div>` : ''}
           <div class="camp-ov-btns">
             <button class="camp-ov-btn-out" id="campInfoDocBtn">Open Document</button>
@@ -2680,6 +2680,10 @@ function bindCampaignPage(brandId, campId) {
         </div>
       </div>
       <div class="notion-field">
+        <div class="notion-label">OFFER TITLE</div>
+        <input class="notion-input" id="ov_offer" value="${campaign.ov_offer || ''}" placeholder="What offer is this campaign promoting?">
+      </div>
+      <div class="notion-field">
         <div class="notion-label">CALL TO ACTION</div>
         <input class="notion-input" id="ov_cta" value="${campaign.ov_cta || ''}" placeholder="What do you want people to do?">
       </div>
@@ -2815,6 +2819,7 @@ function bindCampaignPage(brandId, campId) {
         ov_audience:  getVal('ov_audience'),
         ov_message:   getVal('ov_message'),
         ov_platforms: getVal('ov_platforms'),
+        ov_offer:     getVal('ov_offer'),
         ov_cta:       getVal('ov_cta'),
         ov_timeline:  getVal('ov_timeline'),
         ov_notes:     getVal('ov_notes'),
@@ -2848,6 +2853,7 @@ function bindCampaignPage(brandId, campId) {
       ov_audience:  getVal('ov_audience'),
       ov_message:   getVal('ov_message'),
       ov_platforms: getVal('ov_platforms'),
+      ov_offer:     getVal('ov_offer'),
       ov_cta:       getVal('ov_cta'),
       ov_timeline:  getVal('ov_timeline'),
       ov_notes:     getVal('ov_notes'),
@@ -2929,7 +2935,7 @@ function getDefaultOvBlocks(campaign) {
   const uid = () => 'b' + Math.random().toString(36).slice(2,8);
   const blocks = [{ id: uid(), type: 'h1', text: campaign.name || 'Campaign Overview', generated: true }];
   [['ov_objective','Objective'],['ov_audience','Target Audience'],['ov_message','Core Message'],
-   ['ov_platforms','Platforms'],['ov_cta','Call to Action'],['ov_timeline','Timeline'],['ov_notes','Notes']
+   ['ov_platforms','Platforms'],['ov_offer','Offer Title'],['ov_cta','Call to Action'],['ov_timeline','Timeline'],['ov_notes','Notes']
   ].forEach(([k,l]) => {
     blocks.push({ id: uid(), type: 'h2', text: l, generated: true });
     blocks.push({ id: uid(), type: 'text', text: campaign[k] || '', generated: true });

@@ -1062,7 +1062,10 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-ov-empty { color:rgba(255,255,255,0.28);font-style:italic; }
 .camp-kw-pills { display:flex;flex-wrap:wrap;gap:6px;margin-top:12px; }
 .camp-kw-pill { padding:5px 12px;border-radius:100px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:.15px; }
-.camp-ov-cta-row { display:flex;align-items:center;gap:8px;margin-top:14px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.06); }
+.camp-ov-offer-row { margin-top:14px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.06); }
+.camp-ov-offer-label { display:block;font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:4px; }
+.camp-ov-offer-title { font-size:15px;font-weight:700;color:#fff;line-height:1.3; }
+.camp-ov-cta-row { display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.06); }
 .camp-ov-cta-label { font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;flex-shrink:0; }
 .camp-ov-cta-val { font-size:13px;color:rgba(255,255,255,0.7);flex:1; }
 .camp-ov-btns { display:flex;gap:8px;margin-top:14px; }
