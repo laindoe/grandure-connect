@@ -1316,6 +1316,10 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .sched-sheet { background:#1c1c1e;border-radius:20px 20px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));width:100%;max-width:430px; }
 .sched-title { font-size:15px;font-weight:700;color:#fff;margin-bottom:16px; }
 .sched-save { width:100%;padding:13px;border-radius:12px;background:#fff;color:#000;font-size:14px;font-weight:700;margin-top:14px; }
+/* Idea Detail Sheet */
+.idea-link-row { display:flex;gap:6px;margin-bottom:6px;align-items:center; }
+.idea-media-item { display:flex;align-items:center;gap:8px;padding:6px 0; }
+
 /* Analytics — All Platforms view */
 .analytics-all-list { display:flex;flex-direction:column; }
 .analytics-all-row { display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer; }

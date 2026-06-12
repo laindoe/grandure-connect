@@ -113,6 +113,9 @@ function render() {
     app.innerHTML = pageSeason(params.id);
   } else if (path === '/vault') {
     app.innerHTML = pageIdeaVault(params.id);
+    bindVaultPage(params.id);
+  } else if (path === '/analytics') {
+    app.innerHTML = pageAnalytics(params.brandId, params.campId, params.platform);
   } else if (path === '/inspiration') {
     app.innerHTML = pageInspiration(params.id);
   } else if (path === '/campaign') {
@@ -1136,8 +1139,8 @@ function openEditIconPhoto(sourceDataUrl, onSave) {
 /* ── Edit Photo / Crop Sheet ── */
 function editPhotoCropSheetHTML() {
   return `
-    <div class="capture-overlay" id="editPhotoOverlay" style="display:none">
-      <div class="capture-sheet" style="padding:0;overflow:hidden;border-radius:28px 28px 0 0">
+    <div class="capture-overlay" id="editPhotoOverlay" style="display:none;align-items:center;justify-content:center;z-index:300">
+      <div class="capture-sheet" style="padding:0;overflow:hidden;border-radius:20px;width:calc(100% - 32px);max-width:398px;margin:0 16px">
         <div style="padding:20px 24px 12px">
           <div class="capture-handle"></div>
           <div class="capture-title" style="margin-bottom:4px">Edit Photo</div>
@@ -1958,7 +1961,7 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
   );
 
   const ideasHTML = filtered.length ? filtered.map(idea => `
-    <div class="idea-card">
+    <div class="idea-card" data-idea-id="${idea.id}" data-brand-id="${id}" style="cursor:pointer">
       <div class="idea-card-meta">
         <span class="chip">${PLATFORM_SHORT[idea.platform] || idea.platform}</span>
         <span class="chip">${idea.format}</span>
@@ -2003,7 +2006,247 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
 window.vaultFilter = function(id, platform, format) {
   document.getElementById('app').innerHTML = pageIdeaVault(id, platform, format);
   bindCapture(); bindNav();
+  bindVaultPage(id);
 };
+
+const PLATFORM_FORMATS = {
+  instagram: ['Reel','Carousel','Story','Static Post','DM Note','Live','Guide'],
+  tiktok:    ['Short Video','Duet','Stitch','Series','Live','Photo Mode'],
+  youtube:   ['Long Video','Short','Live','Podcast','Community Post'],
+  threads:   ['Thread','Reply','Quote','Image Post'],
+  twitter:   ['Tweet','Thread','Space','Poll','Image Post'],
+  linkedin:  ['Post','Article','Newsletter','Poll','Document'],
+  facebook:  ['Post','Reel','Story','Live','Event'],
+  pinterest: ['Pin','Idea Pin','Board'],
+  podcast:   ['Episode','Teaser','Interview','Roundtable'],
+  email:     ['Newsletter','Promotional','Drip','Announcement'],
+  patreon:   ['Post','Exclusive','Tier Update','Live'],
+};
+
+function buildFormatOptions(platform, current) {
+  const fmts = PLATFORM_FORMATS[platform] || [];
+  if (!fmts.length) return `<option value="${current||''}">${current||'—'}</option>`;
+  return fmts.map(f => `<option value="${f}" ${f===current?'selected':''}>${f}</option>`).join('');
+}
+
+function bindVaultPage(brandId) {
+  document.querySelectorAll('.idea-card[data-idea-id]').forEach(card => {
+    card.addEventListener('click', () => openIdeaDetail(card.dataset.brandId, card.dataset.ideaId));
+  });
+}
+
+function openIdeaDetail(brandId, ideaId) {
+  const brand = getBrand(brandId);
+  if (!brand) return;
+  const idea = (brand.ideas || []).find(i => i.id === ideaId) || {};
+  const platform = idea.platform || '';
+
+  document.getElementById('ideaDetailSheet')?.remove();
+
+  const sheetEl = document.createElement('div');
+  sheetEl.id = 'ideaDetailSheet';
+  sheetEl.style.cssText = 'position:fixed;inset:0;z-index:250;display:flex;flex-direction:column;justify-content:flex-end;align-items:center';
+
+  const fmtOpts = buildFormatOptions(platform, idea.format);
+  const linksHTML = (idea.links || []).map((lk, i) => `
+    <div class="idea-link-row" data-link-idx="${i}">
+      <input class="notion-input idea-link-label" value="${escHtml(lk.label||'')}" placeholder="Label" style="flex:1;min-width:0">
+      <input class="notion-input idea-link-url" value="${escHtml(lk.url||'')}" placeholder="URL" style="flex:2;min-width:0">
+      <button type="button" class="idea-link-del" style="flex-shrink:0;background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;padding:0 4px">×</button>
+    </div>`).join('');
+
+  const mediaFiles = idea.mediaFiles || [];
+  const mediaListHTML = mediaFiles.length ? mediaFiles.map((m, i) => `
+    <div class="idea-media-item" data-media-idx="${i}">
+      <span class="idea-media-icon">${m.type==='audio'?'🎵':m.type==='video'?'🎬':'🖼'}</span>
+      <span class="idea-media-name" style="flex:1;font-size:12px;color:rgba(255,255,255,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(m.name||'File')}</span>
+      <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;padding:0 4px">×</button>
+    </div>`).join('') : '';
+
+  sheetEl.innerHTML = `
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6)" id="ideaDetailBg"></div>
+    <div style="position:relative;background:#1c1c1e;border-radius:20px 20px 0 0;width:100%;max-width:430px;max-height:92dvh;display:flex;flex-direction:column">
+      <div class="idea-detail-topbar" style="display:flex;align-items:center;padding:16px 20px 12px;gap:10px">
+        <button id="ideaDetailClose" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;font-size:18px;flex-shrink:0">×</button>
+        <div style="flex:1;font-size:16px;font-weight:700;color:#fff">Idea Details</div>
+        <button id="ideaDetailAdd" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 20px 8px">
+        <div class="notion-field">
+          <div class="notion-label">TITLE</div>
+          <input class="notion-input" id="ideaEditTitle" value="${escHtml(idea.title||'')}" placeholder="Idea title">
+        </div>
+        <div class="notion-field" style="display:flex;gap:10px">
+          <div style="flex:1">
+            <div class="notion-label">PLATFORM</div>
+            <select class="notion-input" id="ideaEditPlatform" style="color:#fff;background:#2c2c2e">
+              <option value="">— Select —</option>
+              ${['instagram','tiktok','youtube','threads','twitter','linkedin','facebook','pinterest','podcast','email','patreon'].map(p =>
+                `<option value="${p}" ${p===platform?'selected':''}>${PLATFORM_SHORT[p]||p.charAt(0).toUpperCase()+p.slice(1)}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div style="flex:1">
+            <div class="notion-label">FORMAT</div>
+            <select class="notion-input" id="ideaEditFormat" style="color:#fff;background:#2c2c2e">${fmtOpts}</select>
+          </div>
+        </div>
+        <!-- Media Uploads -->
+        <div class="notion-field">
+          <div class="notion-label">MEDIA</div>
+          <div id="ideaMediaList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">${mediaListHTML}</div>
+          <div style="display:flex;gap:8px">
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> Image
+              <input type="file" accept="image/*" id="ideaUploadImage" style="display:none">
+            </label>
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> Video
+              <input type="file" accept="video/*" id="ideaUploadVideo" style="display:none">
+            </label>
+            <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg> Audio
+              <input type="file" accept="audio/*" id="ideaUploadAudio" style="display:none">
+            </label>
+          </div>
+        </div>
+        <div class="notion-field">
+          <div class="notion-label">NOTES</div>
+          <textarea class="notion-input" id="ideaEditNotes" rows="3" style="resize:none">${escHtml(idea.notes||'')}</textarea>
+        </div>
+        <div class="notion-field">
+          <div class="notion-label">REFERENCES</div>
+          <textarea class="notion-input" id="ideaEditRefs" rows="2" style="resize:none">${escHtml(idea.references||'')}</textarea>
+        </div>
+        <div class="notion-field">
+          <div class="notion-label">LINKS</div>
+          <div id="ideaLinksList">${linksHTML}</div>
+          <button type="button" id="ideaAddLink" style="width:100%;padding:9px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.35);font-size:12px;font-weight:600;margin-top:6px">+ Add Link</button>
+        </div>
+      </div>
+      <div style="padding:12px 20px;padding-bottom:max(28px,env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,0.06)">
+        <button id="ideaDetailSave" style="width:100%;padding:13px;border-radius:12px;background:#fff;color:#000;font-size:14px;font-weight:700">Save</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(sheetEl);
+
+  const mediaList = sheetEl.querySelector('#ideaMediaList');
+  let currentMediaFiles = [...mediaFiles];
+
+  function addMediaItem(file, type) {
+    currentMediaFiles.push({ name: file.name, type, size: file.size });
+    const item = document.createElement('div');
+    item.className = 'idea-media-item';
+    item.dataset.mediaIdx = currentMediaFiles.length - 1;
+    item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0';
+    item.innerHTML = `
+      <span class="idea-media-icon" style="font-size:16px">${type==='audio'?'🎵':type==='video'?'🎬':'🖼'}</span>
+      <span style="flex:1;font-size:12px;color:rgba(255,255,255,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(file.name)}</span>
+      <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;padding:0 4px">×</button>`;
+    item.querySelector('.idea-media-del').addEventListener('click', () => {
+      currentMediaFiles.splice(parseInt(item.dataset.mediaIdx), 1);
+      item.remove();
+    });
+    mediaList.appendChild(item);
+  }
+
+  sheetEl.querySelector('#ideaUploadImage').addEventListener('change', e => { if(e.target.files[0]) addMediaItem(e.target.files[0], 'image'); });
+  sheetEl.querySelector('#ideaUploadVideo').addEventListener('change', e => { if(e.target.files[0]) addMediaItem(e.target.files[0], 'video'); });
+  sheetEl.querySelector('#ideaUploadAudio').addEventListener('change', e => { if(e.target.files[0]) addMediaItem(e.target.files[0], 'audio'); });
+
+  // Delete existing media items
+  mediaList.querySelectorAll('.idea-media-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.closest('.idea-media-item').dataset.mediaIdx);
+      currentMediaFiles.splice(idx, 1);
+      btn.closest('.idea-media-item').remove();
+    });
+  });
+
+  // Platform change → repopulate format dropdown
+  const platSel = sheetEl.querySelector('#ideaEditPlatform');
+  const fmtSel  = sheetEl.querySelector('#ideaEditFormat');
+  platSel.addEventListener('change', () => {
+    fmtSel.innerHTML = buildFormatOptions(platSel.value, '');
+  });
+
+  // Add link row
+  const linksList = sheetEl.querySelector('#ideaLinksList');
+  sheetEl.querySelector('#ideaAddLink').addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'idea-link-row';
+    row.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center';
+    row.innerHTML = `
+      <input class="notion-input idea-link-label" placeholder="Label" style="flex:1;min-width:0">
+      <input class="notion-input idea-link-url" placeholder="URL" style="flex:2;min-width:0">
+      <button type="button" class="idea-link-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;padding:0 4px">×</button>`;
+    row.querySelector('.idea-link-del').addEventListener('click', () => row.remove());
+    linksList.appendChild(row);
+  });
+  linksList.querySelectorAll('.idea-link-del').forEach(btn => btn.addEventListener('click', () => btn.closest('.idea-link-row').remove()));
+
+  // Close / backdrop
+  const closeSheet = () => sheetEl.remove();
+  sheetEl.querySelector('#ideaDetailClose').addEventListener('click', closeSheet);
+  sheetEl.querySelector('#ideaDetailBg').addEventListener('click', closeSheet);
+
+  // Add to campaign "+" button
+  sheetEl.querySelector('#ideaDetailAdd').addEventListener('click', () => {
+    const campaigns = (brand.campaigns || []);
+    if (!campaigns.length) return;
+    const destEl = document.createElement('div');
+    destEl.style.cssText = 'position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;justify-content:flex-end;align-items:center';
+    destEl.innerHTML = `
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5)" id="ideaDestBg"></div>
+      <div style="position:relative;background:#1c1c1e;border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:20px 20px calc(28px + env(safe-area-inset-bottom,0px))">
+        <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:14px">Add to Campaign</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${campaigns.map(c => `
+            <button type="button" class="idea-dest-camp-btn" data-camp-id="${c.id}" style="text-align:left;padding:13px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-size:13px;font-weight:600">${escHtml(c.name)}</button>
+          `).join('')}
+        </div>
+      </div>`;
+    document.body.appendChild(destEl);
+    destEl.querySelector('#ideaDestBg').addEventListener('click', () => destEl.remove());
+    destEl.querySelectorAll('.idea-dest-camp-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const campId = btn.dataset.campId;
+        const campaign = campaigns.find(c => c.id === campId);
+        const updatedIdeas = (brand.ideas || []).map(i =>
+          i.id === ideaId ? { ...i, campaignId: campId, campaign: campaign?.name || '' } : i
+        );
+        saveBrandOverride(brandId, { ideas: updatedIdeas });
+        destEl.remove();
+        closeSheet();
+      });
+    });
+  });
+
+  // Save
+  sheetEl.querySelector('#ideaDetailSave').addEventListener('click', () => {
+    const links = [];
+    sheetEl.querySelectorAll('.idea-link-row').forEach(row => {
+      const label = row.querySelector('.idea-link-label')?.value.trim() || '';
+      const url   = row.querySelector('.idea-link-url')?.value.trim() || '';
+      if (label || url) links.push({ label, url });
+    });
+    const updated = {
+      ...(idea),
+      id: idea.id || uid(),
+      title: sheetEl.querySelector('#ideaEditTitle').value.trim() || idea.title || '',
+      platform: platSel.value,
+      format: fmtSel.value,
+      notes: sheetEl.querySelector('#ideaEditNotes').value,
+      references: sheetEl.querySelector('#ideaEditRefs').value,
+      links,
+      mediaFiles: currentMediaFiles,
+    };
+    const ideas = brand.ideas.map(i => i.id === ideaId ? updated : i);
+    saveBrandOverride(brandId, { ideas });
+    closeSheet();
+  });
+}
 
 /* ═══════════════════════════════════════
    AISHA: GENERATE
