@@ -3625,11 +3625,11 @@ function pageCampaign(brandId, campId) {
           if (!nextM) return '';
           const checkSVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
           return `
-            <div style="padding:12px 16px 0">
+            <div style="padding-top:12px">
               <div class="camp-hero-next-label" style="margin-bottom:6px">MILE MARKER</div>
-              <div class="camp-mile-next" style="display:flex;align-items:flex-start;gap:12px">
+              <div class="camp-mile-next" style="display:flex;align-items:center;gap:12px">
                 <button type="button" id="campHeroCheckBtn" data-marker-id="${nextM.id}"
-                  style="width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,0.55);background:none;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+                  style="width:26px;height:26px;border-radius:100px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.1);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
                   ${nextM.done ? checkSVG : ''}
                 </button>
                 <div style="flex:1;min-width:0">
