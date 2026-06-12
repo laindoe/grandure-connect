@@ -1148,7 +1148,7 @@ function openEditCampaignPhoto(brandId, campId) {
   cropWin.addEventListener('touchend', e => { lastTouches = Array.from(e.touches); });
 }
 
-function openEditHeroPhoto(brandId, campId) {
+function openEditHeroPhoto(brandId, campId, onClose) {
   // Remove any existing instance
   document.getElementById('editHeroPhotoOverlay')?.remove();
 
@@ -1218,6 +1218,7 @@ function openEditHeroPhoto(brandId, campId) {
   const closeOverlay = () => {
     wrapper.remove();
     if (campNav) campNav.style.display = '';
+    onClose?.();
   };
 
   wrapper.querySelector('#editPhotoCancel').addEventListener('click', closeOverlay);
@@ -1230,9 +1231,17 @@ function openEditHeroPhoto(brandId, campId) {
     if (dataUrl && brand) {
       const campaigns = brand.campaigns.map(c => c.id === campId ? { ...c, heroImage: dataUrl } : c);
       saveBrandOverride(brandId, { campaigns });
-      closeOverlay();
-      document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
-      bindCampaignPage(brandId, campId);
+      if (!onClose) {
+        closeOverlay();
+        document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+        bindCampaignPage(brandId, campId);
+      } else {
+        // Re-render campaign page first (recreates campMoreSheet), then close overlay
+        // which fires onClose to re-show the freshly created settings sheet
+        document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+        bindCampaignPage(brandId, campId);
+        closeOverlay();
+      }
     } else {
       closeOverlay();
     }
@@ -3914,7 +3923,9 @@ function bindCampaignPage(brandId, campId) {
   });
   moreEl.querySelector('#campMoreChangeCover')?.addEventListener('click', () => {
     moreEl.style.display = 'none';
-    openEditHeroPhoto(brandId, campId);
+    openEditHeroPhoto(brandId, campId, () => {
+      document.getElementById('campMoreSheet')?.style.setProperty('display', 'flex');
+    });
   });
 
   // Campaign nav (body-level so position:fixed works correctly on iOS)
