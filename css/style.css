@@ -507,9 +507,18 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
   border: 1px solid rgba(255,255,255,0.07);
   box-shadow: 0 4px 16px rgba(0,0,0,0.25);
 }
-.idea-card-meta { display: flex; gap: 8px; margin-bottom: 10px; }
-.idea-title { color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.idea-card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.idea-title { color: #fff; font-size: 15px; font-weight: 600; margin-bottom: 6px; }
 .idea-campaign { color: #444; font-size: 11px; }
+.idea-link-count { font-size:10px;font-weight:600;color:rgba(255,255,255,0.25);letter-spacing:0.3px; }
+
+/* Idea detail sheet */
+.idea-detail-topbar { display:flex;align-items:center;padding:0 20px 14px;gap:10px; }
+.idea-detail-add-btn { width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:20px;font-weight:300;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer; }
+.idea-link-row { display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05); }
+.idea-link-fields { flex:1;display:flex;flex-direction:column;gap:6px; }
+.idea-dest-btn { flex:1;padding:13px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;text-align:center; }
+.idea-dest-btn:active { background:rgba(255,255,255,0.14); }
 
 /* ── Inspiration grid ── */
 .inspiration-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; }
@@ -1130,7 +1139,8 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .camp-analytics-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
 .camp-analytics-title { font-size:9px;font-weight:700;letter-spacing:1.4px;color:#3a3a3a; }
 .camp-analytics-more { font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);letter-spacing:.3px;background:none;border:none;padding:0;cursor:pointer; }
-.camp-analytics-row { display:flex;gap:6px; }
+.camp-analytics-row { display:flex;flex-wrap:wrap;gap:6px; }
+.camp-analytics-item { min-width:calc(33% - 4px); }
 .camp-analytics-item { flex:1;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;border-radius:12px;padding:10px 6px;border:1px solid rgba(255,255,255,0.07);background:#1c1c1e;box-shadow:0 2px 12px rgba(0,0,0,0.3); }
 .camp-analytics-icon { color:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;line-height:0;flex-shrink:0; }
 .camp-analytics-icon svg { width:16px;height:16px; }

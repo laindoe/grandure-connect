@@ -148,6 +148,7 @@ function render() {
   bindAddBrand();
   if (path === '/brand')    { bindEditBrand(params.id); bindDropdowns(params.id); }
   if (path === '/campaign') { bindCampaignPage(params.brandId, params.id); }
+  if (path === '/vault')    { bindVaultPage(params.id, params.campId || null); }
   if (path === '/planner')  { bindVisualPlanner(params.brandId, params.campId || null); }
   if (path === '/calendar') { bindCalendar(params.brandId, params.campId || null); }
   if (path === '/doc')      { bindDoc(params.brandId, params.campId, params.type); }
@@ -2128,13 +2129,14 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
   );
 
   const ideasHTML = filtered.length ? filtered.map(idea => `
-    <div class="idea-card">
+    <div class="idea-card" data-idea-id="${idea.id}" data-brand-id="${id}" style="cursor:pointer">
       <div class="idea-card-meta">
         <span class="chip">${PLATFORM_SHORT[idea.platform] || idea.platform}</span>
         <span class="chip">${idea.format}</span>
+        ${idea.campaign ? `<span class="chip" style="color:rgba(255,255,255,0.35)">${escHtml(idea.campaign)}</span>` : ''}
       </div>
-      <div class="idea-title">${idea.title}</div>
-      ${idea.campaign ? `<div class="idea-campaign">${idea.campaign}</div>` : ''}
+      <div class="idea-title">${escHtml(idea.title)}</div>
+      ${(idea.links||[]).length ? `<div class="idea-link-count">${idea.links.length} link${idea.links.length===1?'':'s'}</div>` : ''}
     </div>
   `).join('') : '<div class="empty-card" style="margin-top:20px">No ideas match this filter</div>';
 
@@ -2166,14 +2168,197 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
       </div>
       <div style="padding:16px">${ideasHTML}</div>
     </div>
-    ${pageChrome()}
+    ${captureModalHTML()}
   `;
 }
 
 window.vaultFilter = function(id, platform, format) {
+  const { params } = parseHash();
   document.getElementById('app').innerHTML = pageIdeaVault(id, platform, format);
-  bindCapture(); bindNav();
+  injectCampaignNav(id, params.campId || null, 'ideas');
+  bindCapture(); bindNav(); bindVaultPage(id, params.campId || null);
 };
+
+function bindVaultPage(brandId, campId) {
+  document.querySelectorAll('.idea-card[data-idea-id]').forEach(card => {
+    card.addEventListener('click', () => {
+      const ideaId = card.dataset.ideaId;
+      const bId    = card.dataset.brandId;
+      openIdeaDetail(bId, ideaId, campId);
+    });
+  });
+}
+
+function openIdeaDetail(brandId, ideaId, campId) {
+  document.getElementById('ideaDetailSheet')?.remove();
+
+  const brand = getBrand(brandId);
+  const idea  = (brand?.ideas||[]).find(i=>i.id===ideaId);
+  if (!idea) return;
+
+  const links = idea.links || [];
+  const linksHTML = links.map((l,i) => `
+    <div class="idea-link-row" data-idx="${i}">
+      <div class="idea-link-fields">
+        <input class="notion-input idea-link-label" value="${escHtml(l.label||'')}" placeholder="Label (optional)" style="font-size:14px">
+        <input class="notion-input idea-link-url" value="${escHtml(l.url||'')}" placeholder="https://…" style="font-size:13px;color:rgba(255,255,255,0.5)">
+      </div>
+      <button type="button" class="info-mile-del idea-link-del">×</button>
+    </div>`).join('');
+
+  const campOpts = (brand.campaigns||[]).map(c=>
+    `<option value="${c.id}">${escHtml(c.name)}</option>`
+  ).join('');
+
+  const sheet = document.createElement('div');
+  sheet.className = 'camp-more-sheet';
+  sheet.id = 'ideaDetailSheet';
+  sheet.innerHTML = `
+    <div class="camp-more-sheet-bg" id="ideaDetailBg"></div>
+    <div class="camp-more-sheet-panel camp-settings-panel">
+      <div class="camp-more-sheet-bar"></div>
+      <div class="idea-detail-topbar">
+        <div class="camp-settings-title" style="flex:1;text-align:left;padding:0">Idea Details</div>
+        <button class="idea-detail-add-btn" id="ideaAddToCamp" title="Add to campaign">+</button>
+      </div>
+      <div class="camp-settings-body">
+
+        <div class="camp-settings-section" style="padding-top:0;border-top:none">
+          <div class="camp-settings-label">TITLE</div>
+          <input class="notion-input" id="ideaDetailTitle" value="${escHtml(idea.title)}" placeholder="Idea title" style="font-size:16px;font-weight:600">
+        </div>
+
+        <div class="camp-settings-section">
+          <div class="camp-settings-label">PLATFORM & FORMAT</div>
+          <div style="display:flex;gap:8px">
+            <select class="capture-select" id="ideaDetailPlatform" style="flex:1">
+              ${['instagram','tiktok','youtube','threads','twitter','linkedin','facebook'].map(p=>
+                `<option value="${p}"${idea.platform===p?' selected':''}>${PLAT_DISPLAY_NAMES[p]||p}</option>`
+              ).join('')}
+            </select>
+            <input class="notion-input" id="ideaDetailFormat" value="${escHtml(idea.format||'')}" placeholder="Format" style="flex:1;font-size:14px">
+          </div>
+        </div>
+
+        <div class="camp-settings-section">
+          <div class="camp-settings-label">NOTES</div>
+          <textarea class="notion-textarea" id="ideaDetailNotes" placeholder="Details, angles, inspiration…" style="min-height:90px">${escHtml(idea.notes||'')}</textarea>
+        </div>
+
+        <div class="camp-settings-section">
+          <div class="camp-settings-label">REFERENCES</div>
+          <textarea class="notion-textarea" id="ideaDetailRefs" placeholder="Creators, posts, or content to reference…" style="min-height:60px">${escHtml(idea.references||'')}</textarea>
+        </div>
+
+        <div class="camp-settings-section">
+          <div class="camp-settings-label">LINKS</div>
+          <div id="ideaLinkList">${linksHTML}</div>
+          <button type="button" class="offer-add-btn" id="ideaAddLinkBtn">+ Add Link</button>
+        </div>
+
+      </div>
+      <div class="camp-settings-footer">
+        <button class="camp-save-btn" id="ideaDetailSave">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(sheet);
+
+  document.getElementById('ideaDetailBg')?.addEventListener('click', () => sheet.remove());
+
+  // Delete link rows
+  sheet.querySelectorAll('.idea-link-del').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('.idea-link-row').remove());
+  });
+
+  // Add link row
+  document.getElementById('ideaAddLinkBtn')?.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'idea-link-row';
+    row.innerHTML = `
+      <div class="idea-link-fields">
+        <input class="notion-input idea-link-label" value="" placeholder="Label (optional)" style="font-size:14px">
+        <input class="notion-input idea-link-url" value="" placeholder="https://…" style="font-size:13px;color:rgba(255,255,255,0.5)">
+      </div>
+      <button type="button" class="info-mile-del idea-link-del">×</button>`;
+    row.querySelector('.idea-link-del').addEventListener('click', () => row.remove());
+    document.getElementById('ideaLinkList')?.appendChild(row);
+  });
+
+  // Save
+  document.getElementById('ideaDetailSave')?.addEventListener('click', () => {
+    const links = Array.from(sheet.querySelectorAll('.idea-link-row')).map(row => ({
+      label: row.querySelector('.idea-link-label')?.value.trim() || '',
+      url:   row.querySelector('.idea-link-url')?.value.trim()   || '',
+    })).filter(l => l.url);
+    const patch = {
+      title:      document.getElementById('ideaDetailTitle')?.value.trim() || idea.title,
+      platform:   document.getElementById('ideaDetailPlatform')?.value || idea.platform,
+      format:     document.getElementById('ideaDetailFormat')?.value.trim() || idea.format,
+      notes:      document.getElementById('ideaDetailNotes')?.value.trim()  || '',
+      references: document.getElementById('ideaDetailRefs')?.value.trim()   || '',
+      links,
+    };
+    const updatedIdeas = (getBrand(brandId)?.ideas||[]).map(i => i.id===ideaId ? {...i,...patch} : i);
+    saveBrandOverride(brandId, { ideas: updatedIdeas });
+    sheet.remove();
+    // Refresh vault page in place
+    const app = document.getElementById('app');
+    const { params } = parseHash();
+    app.innerHTML = pageIdeaVault(brandId, params.fp || null, params.ff || null);
+    injectCampaignNav(brandId, campId, 'ideas');
+    bindCapture(); bindNav(); bindVaultPage(brandId, campId);
+  });
+
+  // + Add to campaign
+  document.getElementById('ideaAddToCamp')?.addEventListener('click', () => {
+    document.getElementById('ideaAddCampPicker')?.remove();
+    const picker = document.createElement('div');
+    picker.id = 'ideaAddCampPicker';
+    picker.className = 'stage-picker-sheet';
+    picker.innerHTML = `
+      <div class="stage-picker-bg" id="ideaPickerBg"></div>
+      <div class="stage-picker-panel">
+        <div class="stage-picker-bar"></div>
+        <div class="stage-picker-title">Add to Campaign</div>
+        <div style="padding:0 20px 12px">
+          <div class="camp-settings-label" style="margin-bottom:8px">CAMPAIGN</div>
+          <select class="capture-select" id="ideaPickerCamp">${campOpts}</select>
+          <div class="camp-settings-label" style="margin:14px 0 8px">ADD TO</div>
+          <div style="display:flex;gap:8px">
+            <button class="idea-dest-btn" id="ideaToPlanner">Visual Planner</button>
+            <button class="idea-dest-btn" id="ideaToSchedule">Scheduled List</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(picker);
+
+    document.getElementById('ideaPickerBg')?.addEventListener('click', () => picker.remove());
+
+    const addToDestination = (dest) => {
+      const selCampId = document.getElementById('ideaPickerCamp')?.value;
+      const b2 = getBrand(brandId);
+      const title = document.getElementById('ideaDetailTitle')?.value.trim() || idea.title;
+      const platform = document.getElementById('ideaDetailPlatform')?.value || idea.platform;
+      const format   = document.getElementById('ideaDetailFormat')?.value.trim() || idea.format;
+      const newPost = {
+        id: uid(), title, platform, format,
+        scheduledDate: '', campaignId: selCampId || '',
+        thumbnail: null, order: (b2?.scheduledPosts||[]).length,
+      };
+      saveBrandOverride(brandId, { scheduledPosts: [...(b2?.scheduledPosts||[]), newPost] });
+      picker.remove();
+      sheet.remove();
+      if (dest === 'planner') {
+        navigate(`#/planner?brandId=${brandId}&campId=${selCampId||''}`);
+      } else {
+        navigate(`#/calendar?brandId=${brandId}&campId=${selCampId||''}`);
+      }
+    };
+
+    document.getElementById('ideaToPlanner')?.addEventListener('click',  () => addToDestination('planner'));
+    document.getElementById('ideaToSchedule')?.addEventListener('click', () => addToDestination('schedule'));
+  });
+}
 
 /* ═══════════════════════════════════════
    AISHA: GENERATE
