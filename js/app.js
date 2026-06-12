@@ -3193,6 +3193,27 @@ function pageCampaign(brandId, campId) {
         <div class="camp-hero-stages" id="campStageTracker">
           ${stageTrackerHTML}
         </div>
+        ${(() => {
+          const markers = campaign.mileMarkers || [];
+          if (!markers.length) return `
+            <div class="camp-mile-wrap" id="campMileWrap">
+              <div class="camp-mile-label">MILE MARKERS</div>
+              <div class="camp-mile-list" id="campMileList"></div>
+              <button class="camp-mile-add" id="campMileAddBtn">+ Add marker</button>
+            </div>`;
+          return `
+            <div class="camp-mile-wrap" id="campMileWrap">
+              <div class="camp-mile-label">MILE MARKERS</div>
+              <div class="camp-mile-list" id="campMileList">
+                ${markers.map(m => `
+                  <div class="camp-mile-item${m.done ? ' done' : ''}" data-marker-id="${m.id}">
+                    <div class="camp-mile-check">${m.done ? `<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>` : ''}</div>
+                    <span class="camp-mile-text">${escHtml(m.text)}</span>
+                  </div>`).join('')}
+              </div>
+              <button class="camp-mile-add" id="campMileAddBtn">+ Add marker</button>
+            </div>`;
+        })()}
       </div>
 
       <div style="padding:0 16px;padding-top:14px">
@@ -3315,6 +3336,69 @@ function bindCampaignPage(brandId, campId) {
       bindCampaignPage(brandId, campId);
     });
   });
+
+  // Mile Markers
+  function saveMileMarkers(markers) {
+    const updated = brand.campaigns.map(c => c.id === campId ? { ...c, mileMarkers: markers } : c);
+    saveBrandOverride(brandId, { campaigns: updated });
+  }
+
+  function refreshMileList() {
+    const b = getBrand(brandId);
+    const markers = (b?.campaigns||[]).find(c=>c.id===campId)?.mileMarkers || [];
+    const list = document.getElementById('campMileList');
+    if (!list) return;
+    list.innerHTML = markers.map(m => `
+      <div class="camp-mile-item${m.done?' done':''}" data-marker-id="${m.id}">
+        <div class="camp-mile-check">${m.done?`<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></svg>`:''}</div>
+        <span class="camp-mile-text">${escHtml(m.text)}</span>
+        <button class="camp-mile-delete" data-marker-id="${m.id}" title="Remove">×</button>
+      </div>`).join('');
+    bindMileItems();
+  }
+
+  function bindMileItems() {
+    document.querySelectorAll('#campMileList .camp-mile-item').forEach(item => {
+      item.addEventListener('click', e => {
+        if (e.target.closest('.camp-mile-delete')) return;
+        const id = item.dataset.markerId;
+        const b = getBrand(brandId);
+        const markers = [...((b?.campaigns||[]).find(c=>c.id===campId)?.mileMarkers||[])];
+        const idx = markers.findIndex(m=>m.id===id);
+        if (idx !== -1) { markers[idx] = { ...markers[idx], done: !markers[idx].done }; saveMileMarkers(markers); refreshMileList(); }
+      });
+    });
+    document.querySelectorAll('#campMileList .camp-mile-delete').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = btn.dataset.markerId;
+        const b = getBrand(brandId);
+        const markers = ((b?.campaigns||[]).find(c=>c.id===campId)?.mileMarkers||[]).filter(m=>m.id!==id);
+        saveMileMarkers(markers); refreshMileList();
+      });
+    });
+  }
+
+  document.getElementById('campMileAddBtn')?.addEventListener('click', () => {
+    document.getElementById('campMileInputWrap')?.remove();
+    const wrap = document.createElement('div');
+    wrap.id = 'campMileInputWrap';
+    wrap.className = 'camp-mile-input-wrap';
+    wrap.innerHTML = `<input class="camp-mile-input" id="campMileInput" placeholder="Marker name…" maxlength="80"><button class="camp-mile-input-save" id="campMileSave">Add</button>`;
+    document.getElementById('campMileWrap')?.appendChild(wrap);
+    const input = document.getElementById('campMileInput');
+    input?.focus();
+    document.getElementById('campMileSave')?.addEventListener('click', () => {
+      const text = input?.value.trim();
+      if (!text) return;
+      const b = getBrand(brandId);
+      const markers = [...((b?.campaigns||[]).find(c=>c.id===campId)?.mileMarkers||[]), { id:uid(), text, done:false }];
+      saveMileMarkers(markers); refreshMileList(); wrap.remove();
+    });
+    input?.addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('campMileSave')?.click(); if (e.key==='Escape') wrap.remove(); });
+  });
+
+  bindMileItems();
 
   // Clean up doc picker sheets left from a previous doc page visit
   document.getElementById('docPickerSheet')?.remove();
