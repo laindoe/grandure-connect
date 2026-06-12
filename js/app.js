@@ -2081,24 +2081,23 @@ ${voice || 'Authentic, grounded, on-brand'}`.trim();
 function aishaBlockHTML() {
   const sendSVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
   return `
-    <div class="aisha-block">
-      <div class="aisha-header">
-        <div class="aisha-avatar">✦</div>
-        <div class="aisha-info">
-          <div class="aisha-name">Ask Aisha</div>
-          <div class="aisha-role">Campaign Strategist · AI</div>
-        </div>
-        <button class="aisha-wizard-btn" id="aishaWizardBtn">Start Wizard</button>
-      </div>
-      <div class="aisha-chat" id="aishaChat"></div>
-      <div class="aisha-opts-wrap" id="aishaOptsWrap" style="display:none">
-        <div class="aisha-opts-grid" id="aishaOptsGrid"></div>
-        <button class="aisha-opts-done" id="aishaOptsDone" style="display:none">Done ›</button>
-      </div>
-      <div class="aisha-input-row">
-        <input class="aisha-input" id="aishaInput" type="text" placeholder="Ask Aisha about this campaign…">
-        <button class="aisha-send" id="aishaSendBtn">${sendSVG}</button>
-      </div>
+    <div class="aisha-topbar">
+      <button class="aisha-back-btn" id="aishaBackBtn" type="button">‹</button>
+    </div>
+    <div class="aisha-mode-row">
+      <button class="aisha-mode-btn aisha-mode-active" id="aishaChatModeBtn" type="button">
+        <span class="aisha-mode-icon">✦</span>Ask Aisha
+      </button>
+      <button class="aisha-mode-btn" id="aishaWizardBtn" type="button">Start Wizard</button>
+    </div>
+    <div class="aisha-chat" id="aishaChat"></div>
+    <div class="aisha-opts-wrap" id="aishaOptsWrap" style="display:none">
+      <div class="aisha-opts-grid" id="aishaOptsGrid"></div>
+      <button class="aisha-opts-done" id="aishaOptsDone" style="display:none">Done ›</button>
+    </div>
+    <div class="aisha-input-row">
+      <input class="aisha-input" id="aishaInput" type="text" placeholder="Ask Aisha about this campaign…" style="font-size:16px">
+      <button class="aisha-send" id="aishaSendBtn" type="button">${sendSVG}</button>
     </div>
   `;
 }
@@ -2197,6 +2196,7 @@ function bindAisha(brand, campaign, brandId, campId) {
           setVal('ov_cta',       a.cta);
           setVal('ov_timeline',  a.milestones !== 'Skip for now' ? a.milestones : '');
 
+          document.getElementById('aishaSheet')?.classList.remove('open');
           document.getElementById('campInfoSheet')?.classList.add('open');
 
           _aishaMessages.push({ role: 'aisha', text: `I've filled in your Campaign Overview for ${campaign.name} — it's open now. Review, edit, and hit Save.\n\nNow building your Content Plan…` });
@@ -2233,7 +2233,18 @@ function bindAisha(brand, campaign, brandId, campId) {
     showAishaOptions(_aishaWizardStep);
   }
 
+  const setActiveMode = id => {
+    ['aishaChatModeBtn','aishaWizardBtn'].forEach(btnId => {
+      document.getElementById(btnId)?.classList.toggle('aisha-mode-active', btnId === id);
+    });
+  };
+
+  document.getElementById('aishaChatModeBtn')?.addEventListener('click', () => {
+    setActiveMode('aishaChatModeBtn');
+  });
+
   document.getElementById('aishaWizardBtn')?.addEventListener('click', () => {
+    setActiveMode('aishaWizardBtn');
     _aishaWizardStep = 0;
     _aishaAnswers = {};
     _aishaGenerated = null;
@@ -2269,15 +2280,16 @@ function injectCampaignNav(brandId, campId, activeTab, onAisha) {
 
   const wrap = document.createElement('div');
   wrap.id = 'campaignBottomNav';
+  wrap.className = 'campaign-dock';
   wrap.innerHTML = `
-    <nav class="bottom-nav">
+    <nav class="bottom-nav campaign-nav">
       <button class="nav-btn${activeTab === 'doc'    ? ' nav-active' : ''}" id="campNavDoc">${docSVG}</button>
       <button class="nav-btn${activeTab === 'ideas'  ? ' nav-active' : ''}" id="campNavIdeas">${ideaSVG}</button>
       <button class="nav-btn nav-btn-center" id="campNavAisha">${aishaSVG}</button>
       <button class="nav-btn${activeTab === 'visual' ? ' nav-active' : ''}" id="campNavVisual">${visualSVG}</button>
       <button class="nav-btn${activeTab === 'cal'    ? ' nav-active' : ''}" id="campNavCal">${calSVG}</button>
     </nav>`;
-  document.body.appendChild(wrap);
+  document.getElementById('app').appendChild(wrap);
 
   document.getElementById('campNavDoc')?.addEventListener('click',    () => navigate(`#/campaign?brandId=${brandId}&id=${campId}`));
   document.getElementById('campNavIdeas')?.addEventListener('click',  () => navigate(`#/vault?id=${brandId}&campId=${campId}`));
@@ -2410,10 +2422,59 @@ function pageCampaign(brandId, campId) {
   const ov = brand.overview || {};
   const pillarsHTML = (ov.contentPillars || []).map(p => `<span class="notion-pillar">${p}</span>`).join('');
 
+  // Campaign Overview card: brand keyword pills
+  const kwPillsHTML = (ov.keywords || []).map(k => `<span class="camp-kw-pill">${escHtml(k)}</span>`).join('');
+
+  // Marketing Snapshot: per-platform expandable rows
+  const MKTG_PLAT_NAMES = {
+    instagram:'Instagram', tiktok:'TikTok', youtube:'YouTube',
+    threads:'Threads', twitter:'X / Twitter', linkedin:'LinkedIn', email:'Email',
+  };
+  const mktgChevSVG = `<svg class="camp-mktg-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const mktgPlatformRows = Object.entries(brand.platformStrategy || {}).map(([pKey, pData]) => {
+    const icon = (PLATFORM_ICONS[pKey] || '').replace(/width="20" height="20"/g, 'width="18" height="18"');
+    const name = MKTG_PLAT_NAMES[pKey] || (pKey.charAt(0).toUpperCase() + pKey.slice(1));
+    const formatsHTML = (pData.formats || []).map(f => `<span class="camp-mktg-fmt">${escHtml(f)}</span>`).join('');
+    const themesHTML  = (pData.themes  || []).map(t => `<div class="camp-mktg-theme">· ${escHtml(t)}</div>`).join('');
+    return `
+      <div class="camp-mktg-row">
+        <div class="camp-mktg-row-hd">
+          <div class="camp-mktg-row-left">
+            <div class="camp-mktg-row-icon">${icon}</div>
+            <span class="camp-mktg-row-name">${escHtml(name)}</span>
+          </div>
+          ${mktgChevSVG}
+        </div>
+        <div class="camp-mktg-row-body" style="display:none">
+          ${formatsHTML ? `<div class="camp-mktg-fmts">${formatsHTML}</div>` : ''}
+          ${themesHTML  ? `<div class="camp-mktg-themes">${themesHTML}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+  const MKTG_EMAIL_ICON  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`;
+  const MKTG_EVENTS_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+  const mktgExtraRows = [
+    { key:'email',  icon: MKTG_EMAIL_ICON,  name:'Email' },
+    { key:'events', icon: MKTG_EVENTS_ICON, name:'Events & Meetups' },
+  ].map(({ icon, name }) => `
+    <div class="camp-mktg-row">
+      <div class="camp-mktg-row-hd">
+        <div class="camp-mktg-row-left">
+          <div class="camp-mktg-row-icon" style="color:rgba(255,255,255,0.35)">${icon}</div>
+          <span class="camp-mktg-row-name">${name}</span>
+        </div>
+        ${mktgChevSVG}
+      </div>
+      <div class="camp-mktg-row-body" style="display:none">
+        <div class="camp-mktg-empty-hint">No strategy added yet</div>
+      </div>
+    </div>`).join('');
+  const mktgSnapshotHTML = mktgPlatformRows + mktgExtraRows;
+
   const heroImgStyle = campaign.heroImage ? `background-image:url(${campaign.heroImage})` : '';
 
   return `
-    <div class="page" style="padding-bottom:110px">
+    <div class="page">
 
       <!-- Back header -->
       <div class="back-header">
@@ -2459,35 +2520,29 @@ function pageCampaign(brandId, campId) {
         </div>
 
         <!-- CAMPAIGN OVERVIEW -->
-        <div class="section-card" id="campInfoCard" style="cursor:pointer;margin-bottom:10px">
-          <div class="section-card-header" style="display:flex;align-items:center;gap:8px;margin-bottom:0">
-            <div class="section-card-title" style="flex:1">CAMPAIGN OVERVIEW</div>
-            <button class="doc-open-btn" id="campInfoDocBtn">Open Doc</button>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+        <div class="section-card" style="margin-bottom:10px">
+          <div class="camp-card-label">CAMPAIGN OVERVIEW</div>
+          <div class="camp-ov-body${campaign.ov_objective ? '' : ' camp-ov-empty'}">${escHtml(campaign.ov_objective || 'No objective set yet. Tap Edit Document to fill in the details.')}</div>
+          ${kwPillsHTML ? `<div class="camp-kw-pills">${kwPillsHTML}</div>` : ''}
+          ${campaign.ov_cta ? `<div class="camp-ov-cta-row"><span class="camp-ov-cta-label">CTA</span><span class="camp-ov-cta-val">${escHtml(campaign.ov_cta)}</span></div>` : ''}
+          <div class="camp-ov-btns">
+            <button class="camp-ov-btn-out" id="campInfoDocBtn">Open Document</button>
+            <button class="camp-ov-btn-solid" id="campEditDocBtn">Edit Document</button>
           </div>
         </div>
 
-        <!-- CONTENT PLAN -->
-        <div class="section-card" id="campPlanCard" style="cursor:pointer;margin-bottom:10px">
-          <div class="section-card-header" style="display:flex;align-items:center;gap:8px;margin-bottom:0">
-            <div class="section-card-title" style="flex:1">CONTENT PLAN</div>
-            <button class="doc-open-btn" id="campPlanDocBtn">Open Doc</button>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
-          </div>
+        <!-- MARKETING SNAPSHOT -->
+        <div class="section-card" style="margin-bottom:10px">
+          <div class="camp-card-label">MARKETING SNAPSHOT</div>
+          <div id="campMktgPlatforms">${mktgSnapshotHTML}</div>
         </div>
 
         <!-- BRAND SNAPSHOT -->
-        <div class="section-card dd-card" id="campSnapCard" style="cursor:pointer;margin-bottom:10px">
-          <div class="section-card-header" id="campSnapToggle" style="display:flex;align-items:center;gap:8px">
-            <div class="section-card-title" style="flex:1">BRAND SNAPSHOT</div>
-            <svg class="dd-chevron" id="campSnapChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .22s;flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          <div class="dd-body" id="campSnapBody" style="display:none;padding-top:14px">
-            ${ov.mission ? `<div class="notion-label" style="margin-bottom:6px">MISSION</div><div class="body-text" style="margin-bottom:16px">${ov.mission}</div>` : ''}
-            ${ov.audience ? `<div class="notion-label" style="margin-bottom:6px">AUDIENCE</div><div class="body-text" style="margin-bottom:16px">${ov.audience}</div>` : ''}
-            ${(ov.contentPillars || []).length ? `<div class="notion-label" style="margin-bottom:8px">CONTENT PILLARS</div><div style="margin-bottom:16px">${pillarsHTML}</div>` : ''}
-            ${ov.brandVoice ? `<div class="notion-label" style="margin-bottom:6px">BRAND VOICE</div><div class="body-text">${ov.brandVoice}</div>` : ''}
-          </div>
+        <div class="section-card" style="margin-bottom:10px">
+          <div class="camp-card-label">BRAND SNAPSHOT</div>
+          ${ov.mission ? `<div class="camp-brand-snap-text">${escHtml(ov.mission)}</div>` : ''}
+          ${(ov.keywords || []).length ? `<div class="camp-kw-pills">${(ov.keywords || []).map(k => `<span class="camp-kw-pill">${escHtml(k)}</span>`).join('')}</div>` : ''}
+          <button class="camp-view-details-btn" id="campBrandViewDetails">View Details ›</button>
         </div>
 
       </div>
@@ -2533,14 +2588,11 @@ function bindCampaignPage(brandId, campId) {
   const aishaEl = document.createElement('div');
   aishaEl.className = 'aisha-sheet';
   aishaEl.id = 'aishaSheet';
-  aishaEl.style.display = 'none';
-  aishaEl.innerHTML = `
-    <div class="aisha-sheet-bg" id="aishaSheetBg"></div>
-    <div class="aisha-sheet-panel">
-      <div class="aisha-sheet-bar"></div>
-      ${aishaBlockHTML()}
-    </div>`;
+  aishaEl.innerHTML = aishaBlockHTML();
   document.body.appendChild(aishaEl);
+  bindAisha(brand, campaign, brandId, campId);
+
+  let aishaReturnSheet = null;
 
   // ··· sheet bindings
   document.getElementById('campMoreBtn')?.addEventListener('click', () => {
@@ -2555,11 +2607,12 @@ function bindCampaignPage(brandId, campId) {
   });
 
   // Campaign nav (body-level so position:fixed works correctly on iOS)
-  injectCampaignNav(brandId, campId, 'doc', () => { aishaEl.style.display = 'flex'; });
+  injectCampaignNav(brandId, campId, 'doc', () => { aishaReturnSheet = null; aishaEl.classList.add('open'); });
 
-  // Aisha sheet close via backdrop
-  document.getElementById('aishaSheetBg')?.addEventListener('click', () => {
-    aishaEl.style.display = 'none';
+  // Aisha back button
+  document.getElementById('aishaBackBtn')?.addEventListener('click', () => {
+    aishaEl.classList.remove('open');
+    if (aishaReturnSheet) { aishaReturnSheet.classList.add('open'); aishaReturnSheet = null; }
   });
 
   // Stage tracker
@@ -2588,19 +2641,6 @@ function bindCampaignPage(brandId, campId) {
   infoSheet.className = 'camp-form-sheet';
   infoSheet.id = 'campInfoSheet';
   infoSheet.innerHTML = `
-    <div class="camp-form-picker" id="campInfoPicker" style="display:none">
-      <div class="camp-form-picker-bg" id="campInfoPickerBg"></div>
-      <div class="camp-form-picker-panel">
-        <div class="camp-form-picker-handle"></div>
-        <div class="camp-form-picker-section-label">QUICK FILL</div>
-        <div class="camp-form-aisha-card">
-          <div class="camp-form-aisha-icon">✦</div>
-          <div class="camp-form-aisha-title">Ask Aisha</div>
-          <div class="camp-form-aisha-desc">Let Aisha fill out your Campaign Overview based on your brand strategy, audience, and goals.</div>
-          <button class="camp-form-aisha-btn" id="campInfoAishaBtn" type="button">Start with Aisha</button>
-        </div>
-      </div>
-    </div>
     <div class="camp-form-sheet-topbar">
       <button class="camp-form-sheet-back" id="campInfoSheetClose">‹</button>
       <div class="camp-form-sheet-title">Campaign Overview</div>
@@ -2654,7 +2694,7 @@ function bindCampaignPage(brandId, campId) {
     </div>
     <div class="camp-form-sheet-footer">
       <button class="camp-save-btn" style="flex:1" id="campInfoSheetSave">Save Overview</button>
-      <button class="camp-form-fab" id="campInfoSheetPlus">+</button>
+      <button class="camp-form-fab" id="campInfoSheetPlus" title="Ask Aisha">✦</button>
     </div>`;
   document.body.appendChild(infoSheet);
 
@@ -2662,19 +2702,6 @@ function bindCampaignPage(brandId, campId) {
   planSheet.className = 'camp-form-sheet';
   planSheet.id = 'campPlanSheet';
   planSheet.innerHTML = `
-    <div class="camp-form-picker" id="campPlanPicker" style="display:none">
-      <div class="camp-form-picker-bg" id="campPlanPickerBg"></div>
-      <div class="camp-form-picker-panel">
-        <div class="camp-form-picker-handle"></div>
-        <div class="camp-form-picker-section-label">QUICK FILL</div>
-        <div class="camp-form-aisha-card">
-          <div class="camp-form-aisha-icon">✦</div>
-          <div class="camp-form-aisha-title">Ask Aisha</div>
-          <div class="camp-form-aisha-desc">Let Aisha build your Content Plan based on your brand's formats, cadence, and pillars.</div>
-          <button class="camp-form-aisha-btn" id="campPlanAishaBtn" type="button">Start with Aisha</button>
-        </div>
-      </div>
-    </div>
     <div class="camp-form-sheet-topbar">
       <button class="camp-form-sheet-back" id="campPlanSheetClose">‹</button>
       <div class="camp-form-sheet-title">Content Plan</div>
@@ -2708,7 +2735,7 @@ function bindCampaignPage(brandId, campId) {
     </div>
     <div class="camp-form-sheet-footer">
       <button class="camp-save-btn" style="flex:1" id="campPlanSheetSave">Save Content Plan</button>
-      <button class="camp-form-fab" id="campPlanSheetPlus">+</button>
+      <button class="camp-form-fab" id="campPlanSheetPlus" title="Ask Aisha">✦</button>
     </div>`;
   document.body.appendChild(planSheet);
 
@@ -2731,24 +2758,29 @@ function bindCampaignPage(brandId, campId) {
     });
   });
 
-  // Open sheets when tapping cards
-  document.getElementById('campInfoCard')?.addEventListener('click', e => {
-    if (e.target.closest('#campInfoDocBtn')) return;
+  // Campaign Overview card buttons
+  document.getElementById('campEditDocBtn')?.addEventListener('click', () => {
     requestAnimationFrame(() => infoSheet.classList.add('open'));
   });
-  document.getElementById('campPlanCard')?.addEventListener('click', e => {
-    if (e.target.closest('#campPlanDocBtn')) return;
-    requestAnimationFrame(() => planSheet.classList.add('open'));
-  });
-
-  // Open Doc buttons on cards (navigate without saving)
-  document.getElementById('campInfoDocBtn')?.addEventListener('click', e => {
-    e.stopPropagation();
+  document.getElementById('campInfoDocBtn')?.addEventListener('click', () => {
     navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=overview`);
   });
-  document.getElementById('campPlanDocBtn')?.addEventListener('click', e => {
-    e.stopPropagation();
-    navigate(`#/doc?brandId=${brandId}&campId=${campId}&type=plan`);
+
+  // Marketing Snapshot — expand/collapse platform rows
+  document.querySelectorAll('#campMktgPlatforms .camp-mktg-row').forEach(row => {
+    const hd   = row.querySelector('.camp-mktg-row-hd');
+    const body = row.querySelector('.camp-mktg-row-body');
+    const chev = row.querySelector('.camp-mktg-chev');
+    hd?.addEventListener('click', () => {
+      const isOpen = body?.style.display !== 'none';
+      if (body) body.style.display = isOpen ? 'none' : 'block';
+      if (chev) chev.style.transform = isOpen ? '' : 'rotate(180deg)';
+    });
+  });
+
+  // Brand Snapshot "View Details" → brand page
+  document.getElementById('campBrandViewDetails')?.addEventListener('click', () => {
+    navigate(`#/brand?id=${brandId}`);
   });
 
   // Close buttons
@@ -2760,31 +2792,16 @@ function bindCampaignPage(brandId, campId) {
   });
 
   // + FAB → show picker
+  // ✦ button → open Aisha full-screen modal, remember which sheet to return to
   document.getElementById('campInfoSheetPlus')?.addEventListener('click', () => {
-    document.getElementById('campInfoPicker').style.display = 'flex';
+    aishaReturnSheet = infoSheet;
+    infoSheet.classList.remove('open');
+    aishaEl.classList.add('open');
   });
   document.getElementById('campPlanSheetPlus')?.addEventListener('click', () => {
-    document.getElementById('campPlanPicker').style.display = 'flex';
-  });
-
-  // Picker bg → dismiss
-  document.getElementById('campInfoPickerBg')?.addEventListener('click', () => {
-    document.getElementById('campInfoPicker').style.display = 'none';
-  });
-  document.getElementById('campPlanPickerBg')?.addEventListener('click', () => {
-    document.getElementById('campPlanPicker').style.display = 'none';
-  });
-
-  // Ask Aisha → close picker, close form sheet, open Aisha sheet
-  document.getElementById('campInfoAishaBtn')?.addEventListener('click', () => {
-    document.getElementById('campInfoPicker').style.display = 'none';
-    infoSheet.classList.remove('open');
-    document.getElementById('aishaSheet').style.display = 'flex';
-  });
-  document.getElementById('campPlanAishaBtn')?.addEventListener('click', () => {
-    document.getElementById('campPlanPicker').style.display = 'none';
+    aishaReturnSheet = planSheet;
     planSheet.classList.remove('open');
-    document.getElementById('aishaSheet').style.display = 'flex';
+    aishaEl.classList.add('open');
   });
 
   // Open Doc from inside sheets (auto-save first)
@@ -2852,16 +2869,6 @@ function bindCampaignPage(brandId, campId) {
     const updatedCampaigns = brand.campaigns.map(c => c.id === campId ? { ...c, ...patch } : c);
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
     planSheet.classList.remove('open');
-  });
-
-  // BRAND SNAPSHOT toggle
-  const campSnapToggle  = document.getElementById('campSnapToggle');
-  const campSnapBody    = document.getElementById('campSnapBody');
-  const campSnapChevron = document.getElementById('campSnapChevron');
-  campSnapToggle?.addEventListener('click', () => {
-    const open = campSnapBody.style.display === 'none';
-    campSnapBody.style.display = open ? 'block' : 'none';
-    campSnapChevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
   });
 
   bindCapture();
@@ -2988,11 +2995,14 @@ function renderDocBlocks(blocks) {
         <div class="doc-media-tap" data-id="${id}">${src ? `<video class="doc-block-vid" src="${src}" controls playsinline></video>` : `<div class="doc-media-placeholder">${vidSVG}<span>Tap to add video</span></div>`}</div>
         </div>`;
     if (type === 'link') return `<div class="doc-block doc-block-link" data-id="${id}" data-type="link">
-        <div class="doc-link-icon">${linkSVG}</div>
-        <div class="doc-link-fields">
-          <input class="doc-link-label" value="${escHtml(label)}" placeholder="Label" style="font-size:16px">
-          <input class="doc-link-url" value="${escHtml(url)}" placeholder="https://…" type="url" style="font-size:16px">
+        <div class="doc-link-edit-row">
+          <div class="doc-link-icon">${linkSVG}</div>
+          <div class="doc-link-fields">
+            <input class="doc-link-label" value="${escHtml(label)}" placeholder="Label" style="font-size:16px">
+            <input class="doc-link-url" value="${escHtml(url)}" placeholder="https://…" type="url" style="font-size:16px">
+          </div>
         </div>
+        <div class="doc-link-preview-wrap"${url ? ` data-preview-url="${escHtml(url)}"` : ''}></div>
         </div>`;
     if (type === 'divider') return `<div class="doc-block doc-block-divider" data-id="${id}" data-type="divider">
         <hr class="doc-divider"></div>`;
@@ -3082,6 +3092,7 @@ function bindDoc(brandId, campId, docType) {
     blocks = newBlocks;
     document.getElementById('docContainer').innerHTML = renderDocBlocks(blocks);
     bindBlockEvents();
+    loadLinkPreviews();
   }
 
   function insertBlock(type, afterId, extra) {
@@ -3113,11 +3124,46 @@ function bindDoc(brandId, campId, docType) {
     });
   }
 
+  async function fetchAndRenderPreview(url, wrap) {
+    if (!url) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = '<div class="doc-link-preview-loading">Loading preview…</div>';
+    try {
+      const res = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (data.status === 'success') {
+        const d = data.data;
+        const imgSrc = d.image?.url;
+        let domain = '';
+        try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch(e) { domain = d.publisher || ''; }
+        wrap.innerHTML = `<div class="doc-link-preview-card">
+          ${imgSrc ? `<img class="doc-link-preview-img" src="${escHtml(imgSrc)}" alt="" loading="lazy">` : ''}
+          <div class="doc-link-preview-info">
+            ${domain ? `<div class="doc-link-preview-domain">${escHtml(domain)}</div>` : ''}
+            ${d.title ? `<div class="doc-link-preview-title">${escHtml(d.title)}</div>` : ''}
+            ${d.description ? `<div class="doc-link-preview-desc">${escHtml(d.description)}</div>` : ''}
+          </div>
+        </div>`;
+      } else { wrap.innerHTML = ''; }
+    } catch(e) { wrap.innerHTML = ''; }
+  }
+
+  async function loadLinkPreviews() {
+    document.querySelectorAll('#docContainer .doc-link-preview-wrap[data-preview-url]').forEach(wrap => {
+      fetchAndRenderPreview(wrap.dataset.previewUrl, wrap);
+    });
+  }
+
   function bindBlockEvents() {
     document.querySelectorAll('#docContainer .doc-block-content').forEach(el => el.addEventListener('input', schedSave));
     document.querySelectorAll('#docContainer .doc-media-tap').forEach(el => el.addEventListener('click', () => handleMediaTap(el.dataset.id)));
     document.querySelectorAll('#docContainer .doc-link-label, #docContainer .doc-link-url').forEach(inp => inp.addEventListener('input', schedSave));
     document.querySelectorAll('#docContainer .doc-block-caption').forEach(el => el.addEventListener('input', schedSave));
+    document.querySelectorAll('#docContainer .doc-link-url').forEach(inp => {
+      inp.addEventListener('blur', () => {
+        const wrap = inp.closest('.doc-block-link')?.querySelector('.doc-link-preview-wrap');
+        if (wrap) { wrap.dataset.previewUrl = inp.value.trim(); fetchAndRenderPreview(inp.value.trim(), wrap); }
+      });
+    });
   }
 
   // Block type picker sheet (step 2)
@@ -3219,6 +3265,7 @@ function bindDoc(brandId, campId, docType) {
   });
 
   bindBlockEvents();
+  loadLinkPreviews();
   document.getElementById('docAddBtn')?.addEventListener('click', showSectionPicker);
 }
 
