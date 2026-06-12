@@ -2458,10 +2458,7 @@ function pageCampaign(brandId, campId) {
     const themes = pData.themes || [];
     const formatsHTML = (pData.formats || []).map((f, i) => {
       const media = FORMAT_MEDIA[f.toLowerCase()] || '';
-      return `<button class="camp-mktg-fmt" type="button" data-fmt-idx="${i}">
-        <span class="camp-mktg-fmt-name">${escHtml(f)}</span>
-        ${media ? `<span class="camp-mktg-fmt-media">${escHtml(media)}</span>` : ''}
-      </button>`;
+      return `<button class="camp-mktg-fmt" type="button" data-fmt-idx="${i}" data-media="${escHtml(media)}">${escHtml(f)}</button>`;
     }).join('');
     return `
       <div class="camp-mktg-row" data-themes="${escHtml(JSON.stringify(themes))}">
@@ -2835,13 +2832,17 @@ function bindCampaignPage(brandId, campId) {
       btn.addEventListener('click', e => {
         e.stopPropagation();
         const idx = parseInt(btn.dataset.fmtIdx, 10);
+        const media = btn.dataset.media || '';
         const wasActive = btn.classList.contains('active');
         row.querySelectorAll('.camp-mktg-fmt').forEach(b => b.classList.remove('active'));
         if (!wasActive) {
           btn.classList.add('active');
           if (preview) {
-            preview.textContent = themes[idx] ? '· ' + themes[idx] : '';
-            preview.style.display = themes[idx] ? 'block' : 'none';
+            const theme = themes[idx] || '';
+            preview.innerHTML = theme
+              ? `<span class="camp-mktg-preview-theme">· ${escHtml(theme)}</span>${media ? `<span class="camp-mktg-preview-media">${escHtml(media)}</span>` : ''}`
+              : '';
+            preview.style.display = theme ? 'flex' : 'none';
           }
         } else {
           if (preview) preview.style.display = 'none';
