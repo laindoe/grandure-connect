@@ -3133,7 +3133,10 @@ function pageCampaign(brandId, campId) {
     linkedin:  'CONNECTIONS',
     patreon:   'PATRONS',
   };
-  const activePlatforms = Object.keys(brand.platformStrategy || {});
+  const campPlatformStr = (campaign.ov_platforms || '').trim();
+  const activePlatforms = campPlatformStr
+    ? campPlatformStr.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+    : Object.keys(brand.platformStrategy || {});
   const analyticsItemsHTML = activePlatforms.length ? activePlatforms.map(p => {
     const m    = MOCK_ANALYTICS[p] || { count:'—', delta:0 };
     const icon = PLATFORM_ICONS[p] || `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>`;
