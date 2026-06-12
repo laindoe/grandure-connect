@@ -3414,11 +3414,9 @@ function pageCampaign(brandId, campId) {
   const totalPosts     = isCurrentPhase ? brand.currentPhase?.totalPosts || 0 : 0;
   const postLabel = totalPosts > 0 ? `${postsCompleted} / ${totalPosts} posts` : '0 posts';
   const nextMarker  = (campaign.mileMarkers || []).find(m => !m.done);
-  const upcomingVal = nextMarker
-    ? escHtml(nextMarker.text) + (nextMarker.date ? ` · ${fromDateInputVal(nextMarker.date)}` : '')
-    : campaign.status === 'active'
-      ? (brand.board?.ready?.[0]?.title || brand.board?.drafting?.[0]?.title || '—')
-      : `Starts ${campaign.startDate}`;
+  const upcomingVal = stageIndex <= 1
+    ? 'Waiting for plan'
+    : (brand.board?.ready?.[0]?.title || brand.board?.drafting?.[0]?.title || 'No posts queued');
   const stageName = stages[stageIndex] || 'Ideation';
 
   // Brand icon
