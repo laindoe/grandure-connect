@@ -2233,11 +2233,16 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId) {
   if (!brand) return pageHome();
 
   const platforms = [...new Set(brand.ideas.map(i => i.platform))];
-  const formats   = [...new Set(brand.ideas.map(i => i.format))];
 
   const fp = filterPlatform || 'all';
-  const ff = filterFormat   || 'all';
   const ft = filterType     || 'all';
+
+  // Format options: use platform definition when a platform is selected, else derive from ideas
+  const platformFormats = fp !== 'all'
+    ? (PLATFORM_FORMATS[fp.toLowerCase()] || [...new Set(brand.ideas.map(i => i.format))])
+    : [...new Set(brand.ideas.map(i => i.format))];
+  // Reset format selection if it doesn't exist on the newly selected platform
+  const ff = platformFormats.includes(filterFormat) ? filterFormat : 'all';
 
   const filtered = brand.ideas.filter(i =>
     (fp === 'all' || i.platform === fp) &&
@@ -2272,15 +2277,15 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId) {
       <div class="filter-section">
         <div style="color:#555;font-size:10px;letter-spacing:2px">PLATFORM</div>
         <div class="filter-chips">
-          <button class="filter-chip ${fp==='all'?'active':''}" onclick="vaultFilter('${id}','all','${ff}','${ft}','${campId||''}')" >All</button>
+          <button class="filter-chip ${fp==='all'?'active':''}" onclick="vaultFilter('${id}','all','all','${ft}','${campId||''}')">All</button>
           ${platforms.map(p => `
-            <button class="filter-chip ${fp===p?'active':''}" onclick="vaultFilter('${id}','${p}','${ff}','${ft}','${campId||''}')">${PLATFORM_SHORT[p] || p}</button>
+            <button class="filter-chip ${fp===p?'active':''}" onclick="vaultFilter('${id}','${p}','all','${ft}','${campId||''}')">${PLATFORM_SHORT[p] || p}</button>
           `).join('')}
         </div>
         <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">FORMAT</div>
         <div class="filter-chips">
-          <button class="filter-chip ${ff==='all'?'active':''}" onclick="vaultFilter('${id}','${fp}','all','${ft}','${campId||''}')" >All</button>
-          ${formats.map(f => `
+          <button class="filter-chip ${ff==='all'?'active':''}" onclick="vaultFilter('${id}','${fp}','all','${ft}','${campId||''}')">All</button>
+          ${platformFormats.map(f => `
             <button class="filter-chip ${ff===f?'active':''}" onclick="vaultFilter('${id}','${fp}','${f}','${ft}','${campId||''}')">${f}</button>
           `).join('')}
         </div>
