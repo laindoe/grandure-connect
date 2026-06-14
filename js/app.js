@@ -3447,7 +3447,7 @@ function pageCampaign(brandId, campId) {
   const postsCompleted = isCurrentPhase ? brand.currentPhase?.postsCompleted || 0 : 0;
   const totalPosts     = isCurrentPhase ? brand.currentPhase?.totalPosts || 0 : 0;
   const postLabel = totalPosts > 0 ? `${postsCompleted} / ${totalPosts} posts` : '0 posts';
-  const nextMarker  = (campaign.mileMarkers || []).find(m => !m.done);
+  const nextMarker  = (campaign.mileMarkers || []).filter(m => !m.done).sort((a,b) => (a.date||'9') < (b.date||'9') ? -1 : 1)[0];
   const upcomingVal = stageIndex <= 1
     ? 'Waiting for plan'
     : (brand.board?.ready?.[0]?.title || brand.board?.drafting?.[0]?.title || 'No posts queued');
@@ -3655,7 +3655,7 @@ function pageCampaign(brandId, campId) {
           ${stageTrackerHTML}
         </div>
         ${(() => {
-          const nextM = (campaign.mileMarkers || []).find(m => !m.done);
+          const nextM = (campaign.mileMarkers || []).filter(m => !m.done).sort((a,b) => (a.date||'9') < (b.date||'9') ? -1 : 1)[0];
           if (!nextM) return '';
           const checkSVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
           // Color matches the campaign days-left pill so both indicators stay in sync
