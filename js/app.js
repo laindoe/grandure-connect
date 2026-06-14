@@ -2293,21 +2293,21 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId, fil
             <button class="filter-chip ${ff===f?'active':''}" onclick="${vf(fp,f,ft,fc)}">${f}</button>
           `).join('')}
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
-          <div style="color:#555;font-size:10px;letter-spacing:2px">TYPE</div>
-          ${campaigns.length ? `
-          <button id="vaultCampFilterBtn"
-            data-fp="${fp}" data-ff="${ff}" data-ft="${ft}" data-fc="${fc}" data-nav-camp="${campId||''}" data-brand-id="${id}"
-            style="background:${fc!=='all'?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.07)'};border:none;border-radius:20px;padding:5px 11px 5px 10px;color:${fc!=='all'?'#fff':'rgba(255,255,255,0.5)'};font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="18" x2="12" y2="18" stroke-width="3"/></svg>
-            ${fc==='all' ? 'Campaign' : escHtml(fc.length > 18 ? fc.slice(0,16)+'…' : fc)}
-          </button>` : ''}
-        </div>
+        <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">TYPE</div>
         <div class="filter-chips">
           ${['all','Image','Video','Text','Audio'].map(t => `
             <button class="filter-chip ${ft===t?'active':''}" onclick="${vf(fp,ff,t,fc)}">${t==='all'?'All':t}</button>
           `).join('')}
         </div>
+        ${campaigns.length ? `
+        <div style="margin-top:10px;display:flex;justify-content:flex-end">
+          <button id="vaultCampFilterBtn"
+            data-fp="${fp}" data-ff="${ff}" data-ft="${ft}" data-fc="${fc}" data-nav-camp="${campId||''}" data-brand-id="${id}"
+            style="background:${fc!=='all'?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.07)'};border:none;border-radius:20px;padding:5px 11px 5px 10px;color:${fc!=='all'?'#fff':'rgba(255,255,255,0.5)'};font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="18" x2="12" y2="18" stroke-width="3"/></svg>
+            ${fc==='all' ? 'Campaign' : escHtml(fc.length > 18 ? fc.slice(0,16)+'…' : fc)}
+          </button>
+        </div>` : ''}
       </div>
       <div style="padding:16px">${ideasHTML}</div>
     </div>
