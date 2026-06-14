@@ -4032,21 +4032,23 @@ function bindCampaignPage(brandId, campId) {
   // Save settings
   settingsSaveBtn.addEventListener('click', () => {
     const newPlatforms = settingsPlatHidden.value;
+    const freshBrand = getBrand(brandId);
+    const liveMarkers = (freshBrand?.campaigns||[]).find(c => c.id === campId)?.mileMarkers || [];
     const newMarkers = Array.from(settingsMileList.querySelectorAll('.settings-mile-row')).map(row => {
-      const existing = existingMarkers.find(m => m.id === row.dataset.markerId);
+      const live = liveMarkers.find(m => m.id === row.dataset.markerId);
       return {
-        id: row.dataset.markerId,
+        id:   row.dataset.markerId || uid(),
         text: row.dataset.text || '',
         date: row.dataset.date || '',
-        done: existing?.done || false,
+        done: live?.done || false,
       };
     }).filter(m => m.text);
 
-    const updatedCampaigns = brand.campaigns.map(c =>
+    const updatedCampaigns = (freshBrand?.campaigns||[]).map(c =>
       c.id === campId ? { ...c, ov_platforms: newPlatforms, mileMarkers: newMarkers } : c
     );
     saveBrandOverride(brandId, { campaigns: updatedCampaigns });
-    moreEl.style.display = 'none';
+    moreEl.remove();
     document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
     bindCampaignPage(brandId, campId);
   });
