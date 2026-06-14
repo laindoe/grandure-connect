@@ -3458,8 +3458,11 @@ function injectCampaignNav(brandId, campId, activeTab, onAisha) {
   document.getElementById('campNavVisual')?.addEventListener('click', () => navigate(visualHref));
   document.getElementById('campNavCal')?.addEventListener('click',    () => navigate(calHref));
   document.getElementById('campNavAisha')?.addEventListener('click',  () => {
-    if (onAisha) { onAisha(); }
-    else if (campId) { navigate(`#/campaign?brandId=${brandId}&id=${campId}`); }
+    if (onAisha) { onAisha(); return; }
+    if (!campId) return;
+    const existing = document.getElementById('aishaSheet');
+    const aishaEl = existing || ensureAishaSheet(brandId, campId);
+    if (aishaEl) openAishaMini(aishaEl);
   });
 }
 
@@ -3483,6 +3486,75 @@ function campaignNavHTML(brandId, campId) {
 /* ═══════════════════════════════════════
    AISHA MINI POPUP
 ═══════════════════════════════════════ */
+function openPlatformSetupSheet(brandId, parentEl) {
+  document.getElementById('platSetupSheet')?.remove();
+  const b = getBrand(brandId);
+  const accounts = b?.socialAccounts || {};
+  const sendSVG = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+  const sheet = document.createElement('div');
+  sheet.id = 'platSetupSheet';
+  sheet.style.cssText = 'position:fixed;inset:0;z-index:500;background:#0a0a0a;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0)';
+
+  const platformRows = ALL_PLATFORMS.map(p => {
+    const key = p.toLowerCase();
+    const acct = accounts[key] || {};
+    return `
+      <div style="border-bottom:1px solid rgba(255,255,255,0.05);padding:16px 0" data-plat-key="${key}">
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:10px">${p}</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <input class="notion-input plat-handle-input" data-plat="${key}" placeholder="@handle" value="${escHtml(acct.handle||'')}" style="font-size:14px">
+          <input class="notion-input plat-url-input" data-plat="${key}" type="url" placeholder="Profile URL" value="${escHtml(acct.url||'')}" style="font-size:14px">
+          <input class="notion-input plat-apikey-input" data-plat="${key}" type="password" placeholder="API key / token (optional)" value="${escHtml(acct.apiKey||'')}" style="font-size:14px">
+        </div>
+      </div>`;
+  }).join('');
+
+  sheet.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px 12px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0">
+      <button id="platSetupBack" type="button" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:16px;padding:0;cursor:pointer">Cancel</button>
+      <div style="font-size:16px;font-weight:700;color:#fff">Platform Setup</div>
+      <button id="platSetupSave" type="button" style="background:none;border:none;color:#fff;font-size:16px;font-weight:700;padding:0;cursor:pointer">Save</button>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:0 20px;overscroll-behavior:contain;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))">
+      <div style="font-size:12px;color:rgba(255,255,255,0.3);padding:14px 0 6px;line-height:1.5">Add your handles, profile URLs, and API tokens for each platform you use. API tokens enable analytics and scheduling integrations.</div>
+      ${platformRows}
+    </div>
+  `;
+
+  document.body.appendChild(sheet);
+
+  sheet.querySelector('#platSetupBack')?.addEventListener('click', () => sheet.remove());
+  sheet.querySelector('#platSetupSave')?.addEventListener('click', () => {
+    const updatedAccounts = { ...(getBrand(brandId)?.socialAccounts || {}) };
+    sheet.querySelectorAll('[data-plat-key]').forEach(row => {
+      const key = row.dataset.platKey;
+      updatedAccounts[key] = {
+        handle: row.querySelector('.plat-handle-input')?.value.trim() || '',
+        url:    row.querySelector('.plat-url-input')?.value.trim() || '',
+        apiKey: row.querySelector('.plat-apikey-input')?.value.trim() || '',
+      };
+    });
+    saveBrandOverride(brandId, { socialAccounts: updatedAccounts });
+    sheet.remove();
+  });
+}
+
+function ensureAishaSheet(brandId, campId) {
+  document.getElementById('aishaSheet')?.remove();
+  const brand = getBrand(brandId);
+  const campaign = (brand?.campaigns || []).find(c => c.id === campId);
+  if (!brand || !campaign) return null;
+  const el = document.createElement('div');
+  el.className = 'aisha-sheet';
+  el.id = 'aishaSheet';
+  el.innerHTML = aishaBlockHTML();
+  document.body.appendChild(el);
+  bindAisha(brand, campaign, brandId, campId);
+  document.getElementById('aishaBackBtn')?.addEventListener('click', () => el.classList.remove('open'));
+  return el;
+}
+
 function openAishaMini(aishaEl) {
   document.getElementById('aishaMiniSheet')?.remove();
 
@@ -4003,6 +4075,10 @@ function bindCampaignPage(brandId, campId) {
             <button type="button" class="platform-pill${activePlats.includes(p)?' active':''}" data-platform="${p}">${p}</button>
           `).join('')}
         </div>
+        <button id="campSettingsSetupLink" type="button" style="margin-top:14px;background:none;border:none;padding:0;color:rgba(255,255,255,0.35);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07M19.07 4.93A10 10 0 0 1 4.93 19.07"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+          Set up platform accounts
+        </button>
       </div>
 
       <!-- MILE MARKERS -->
@@ -4144,60 +4220,13 @@ function bindCampaignPage(brandId, campId) {
 
   moreEl.querySelectorAll('#settingsPlatformPills .platform-pill').forEach(pill => {
     pill.addEventListener('click', () => {
-      const platName = pill.dataset.platform;
-      const socialAccounts = getBrand(brandId)?.socialAccounts || {};
-      const acct = socialAccounts[platName.toLowerCase()] || {};
-      let active = pill.classList.contains('active');
-
-      const modal = document.createElement('div');
-      modal.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
-      modal.innerHTML = `
-        <div style="background:#1c1c1e;border-radius:20px;width:calc(100% - 48px);max-width:360px;padding:24px;border:1px solid rgba(255,255,255,0.1)">
-          <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:20px">${platName}</div>
-          <div style="margin-bottom:14px">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.8px;margin-bottom:6px">HANDLE</div>
-            <input id="platHandle" type="text" value="${escHtml(acct.handle||'')}" placeholder="@username" class="notion-input" style="width:100%;font-size:15px;box-sizing:border-box">
-          </div>
-          <div style="margin-bottom:16px">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.8px;margin-bottom:6px">PROFILE URL</div>
-            <input id="platUrl" type="url" value="${escHtml(acct.url||'')}" placeholder="https://..." class="notion-input" style="width:100%;font-size:15px;box-sizing:border-box">
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid rgba(255,255,255,0.06)">
-            <span style="font-size:14px;font-weight:500;color:#fff">Active for this campaign</span>
-            <button id="platActiveToggle" type="button" style="width:46px;height:28px;border-radius:100px;border:none;cursor:pointer;padding:3px;background:${active?'#34c759':'rgba(255,255,255,0.15)'}">
-              <div style="width:22px;height:22px;border-radius:50%;background:#fff;transform:translateX(${active?'18px':'0'});transition:transform 0.2s"></div>
-            </button>
-          </div>
-          <div style="display:flex;gap:10px;margin-top:16px">
-            <button id="platCancel" style="flex:1;padding:12px;border-radius:12px;background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.6);font-size:15px;font-weight:600;cursor:pointer">Cancel</button>
-            <button id="platSave" style="flex:1;padding:12px;border-radius:12px;background:#fff;border:none;color:#000;font-size:15px;font-weight:700;cursor:pointer">Save</button>
-          </div>
-        </div>`;
-      document.body.appendChild(modal);
-      setTimeout(() => modal.querySelector('#platHandle').focus(), 50);
-
-      const toggleBtn = modal.querySelector('#platActiveToggle');
-      const knob = toggleBtn.querySelector('div');
-      toggleBtn.addEventListener('click', () => {
-        active = !active;
-        toggleBtn.style.background = active ? '#34c759' : 'rgba(255,255,255,0.15)';
-        knob.style.transform = `translateX(${active ? '18px' : '0'})`;
-      });
-
-      modal.querySelector('#platCancel').addEventListener('click', () => modal.remove());
-      modal.querySelector('#platSave').addEventListener('click', () => {
-        const handle = modal.querySelector('#platHandle').value.trim();
-        const url    = modal.querySelector('#platUrl').value.trim();
-        // Save account info to brand
-        const b = getBrand(brandId);
-        const accounts = { ...(b?.socialAccounts || {}), [platName.toLowerCase()]: { handle, url } };
-        saveBrandOverride(brandId, { socialAccounts: accounts });
-        // Update pill active state + hidden input
-        pill.classList.toggle('active', active);
-        updatePlatHidden();
-        modal.remove();
-      });
+      pill.classList.toggle('active');
+      updatePlatHidden();
     });
+  });
+
+  moreEl.querySelector('#campSettingsSetupLink')?.addEventListener('click', () => {
+    openPlatformSetupSheet(brandId, moreEl);
   });
 
   // Save settings
