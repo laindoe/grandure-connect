@@ -2293,20 +2293,21 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId, fil
             <button class="filter-chip ${ff===f?'active':''}" onclick="${vf(fp,f,ft,fc)}">${f}</button>
           `).join('')}
         </div>
-        <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">TYPE</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+          <div style="color:#555;font-size:10px;letter-spacing:2px">TYPE</div>
+          ${campaigns.length ? `
+          <button id="vaultCampFilterBtn"
+            data-fp="${fp}" data-ff="${ff}" data-ft="${ft}" data-fc="${fc}" data-nav-camp="${campId||''}" data-brand-id="${id}"
+            style="background:${fc!=='all'?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.07)'};border:none;border-radius:20px;padding:5px 11px 5px 10px;color:${fc!=='all'?'#fff':'rgba(255,255,255,0.5)'};font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="18" x2="12" y2="18" stroke-width="3"/></svg>
+            ${fc==='all' ? 'Campaign' : escHtml(fc.length > 18 ? fc.slice(0,16)+'…' : fc)}
+          </button>` : ''}
+        </div>
         <div class="filter-chips">
           ${['all','Image','Video','Text','Audio'].map(t => `
             <button class="filter-chip ${ft===t?'active':''}" onclick="${vf(fp,ff,t,fc)}">${t==='all'?'All':t}</button>
           `).join('')}
         </div>
-        ${campaigns.length ? `
-        <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">CAMPAIGN</div>
-        <div class="filter-chips">
-          <button class="filter-chip ${fc==='all'?'active':''}" onclick="${vf(fp,ff,ft,'all')}">All</button>
-          ${campaigns.map(c => `
-            <button class="filter-chip ${fc===c?'active':''}" onclick="${vf(fp,ff,ft,c)}">${escHtml(c)}</button>
-          `).join('')}
-        </div>` : ''}
       </div>
       <div style="padding:16px">${ideasHTML}</div>
     </div>
@@ -2346,6 +2347,49 @@ function bindVaultPage(brandId) {
   document.querySelectorAll('.idea-card[data-idea-id]').forEach(card => {
     card.addEventListener('click', () => openIdeaDetail(card.dataset.brandId, card.dataset.ideaId));
   });
+
+  const campBtn = document.getElementById('vaultCampFilterBtn');
+  if (campBtn) {
+    campBtn.addEventListener('click', () => {
+      const { fp, ff, ft, fc, navCamp } = campBtn.dataset;
+      const brand = getBrand(brandId);
+      const campaigns = [...new Set((brand?.ideas||[]).map(i => i.campaign).filter(Boolean))];
+
+      document.getElementById('vaultCampSheet')?.remove();
+      const sheet = document.createElement('div');
+      sheet.id = 'vaultCampSheet';
+      sheet.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,0.55)';
+
+      const rowStyle = (active) =>
+        `padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.07);color:${active?'#fff':'rgba(255,255,255,0.6)'};font-size:15px;font-weight:${active?'600':'400'};display:flex;align-items:center;justify-content:space-between;cursor:pointer`;
+      const checkSVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+      sheet.innerHTML = `
+        <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px;max-height:65vh;display:flex;flex-direction:column">
+          <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;flex-shrink:0">Filter by Campaign</div>
+          <div style="flex:1;overflow-y:auto;overscroll-behavior:contain">
+            <div data-camp-val="all" style="${rowStyle(fc==='all')}">
+              <span>All Campaigns</span>${fc==='all'?checkSVG:''}
+            </div>
+            ${campaigns.map(c => `
+            <div data-camp-val="${escHtml(c)}" style="${rowStyle(fc===c)}">
+              <span>${escHtml(c)}</span>${fc===c?checkSVG:''}
+            </div>`).join('')}
+          </div>
+        </div>`;
+
+      document.body.appendChild(sheet);
+
+      sheet.addEventListener('click', e => {
+        if (e.target === sheet) { sheet.remove(); return; }
+        const row = e.target.closest('[data-camp-val]');
+        if (row) {
+          sheet.remove();
+          window.vaultFilter(brandId, fp, ff, ft, navCamp || null, row.dataset.campVal);
+        }
+      });
+    });
+  }
 }
 
 function openIdeaDetail(brandId, ideaId) {
