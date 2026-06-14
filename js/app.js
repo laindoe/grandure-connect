@@ -2913,6 +2913,10 @@ function pageVisualPlanner(brandId, campId) {
     return icons[p] || `<span style="font-size:10px;font-weight:700">${(p[0]||'').toUpperCase()}</span>`;
   }
 
+  const isStory = f => /stor/i.test(f);
+  const isReel  = f => /reel|short video|^short$|long video|long-form/i.test(f);
+  const isFeed  = f => !isStory(f) && !isReel(f);
+
   function sectionHTML(platform) {
     const pData = brand.platformStrategy[platform]||{};
     const formats = pData.formats||[];
@@ -2920,44 +2924,74 @@ function pageVisualPlanner(brandId, campId) {
     const items = (brand.scheduledPosts||[]).filter(i => i.platform===platform && (!campId||!i.campaignId||i.campaignId===campId));
     let html = '';
 
-    // Stories row
-    const storyFmts = formats.filter(f=>/stor/i.test(f));
+    // Stories — vertical portrait cards
+    const storyFmts = formats.filter(isStory);
     if (storyFmts.length) {
-      const storyItems = items.filter(i=>/stor/i.test(i.format));
+      const storyItems = items.filter(i=>isStory(i.format));
       html += `
         <div class="planner-section">
           <div class="planner-section-label">STORIES</div>
           <div class="planner-stories-row">
             ${storyItems.map(it=>`
               <div class="planner-story-slot" data-id="${it.id}" data-platform="${platform}" draggable="true">
-                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<div class="planner-story-placeholder"></div>`}
+                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:''}
               </div>`).join('')}
             <button class="planner-add-story planner-add-item" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(storyFmts))}">+</button>
           </div>
         </div>`;
     }
 
-    // Feed grid
-    const feedFmts = formats.filter(f=>!/stor/i.test(f));
-    if (feedFmts.length) {
-      const feedItems = items.filter(i=>!/stor/i.test(i.format));
-      const isYT = platform==='youtube';
-      const cols = isYT ? 2 : 3;
-      const ratio = isYT ? 'youtube' : (platform==='tiktok' ? 'portrait' : 'square');
+    // Reels — vertical portrait cards
+    const reelFmts = formats.filter(isReel);
+    if (reelFmts.length) {
+      const reelItems = items.filter(i=>isReel(i.format));
       html += `
         <div class="planner-section">
-          <div class="planner-section-label">FEED</div>
-          <div class="planner-grid planner-cols-${cols}" id="feedGrid">
-            ${feedItems.map(it=>{
-              const fl=it.format.toLowerCase();
-              const badge=/reel|short|long-form|video/.test(fl)?'▶':/carousel/.test(fl)?'⊞':'';
-              return `
+          <div class="planner-section-label">REELS</div>
+          <div class="planner-reels-row">
+            ${reelItems.map(it=>`
+              <div class="planner-reel-slot" data-id="${it.id}" data-platform="${platform}" draggable="true">
+                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<span class="planner-fmt-hint">▶ ${escHtml(it.format)}</span>`}
+              </div>`).join('')}
+            <button class="planner-add-reel planner-add-item" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(reelFmts))}">+</button>
+          </div>
+        </div>`;
+    }
+
+    // Feed — single grid or carousel toggle
+    const feedFmts = formats.filter(isFeed);
+    if (feedFmts.length) {
+      const feedItems = items.filter(i=>isFeed(i.format));
+      const isYT = platform==='youtube';
+      const cols = isYT ? 2 : 3;
+      const ratio = isYT ? 'youtube' : 'square';
+      html += `
+        <div class="planner-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="planner-section-label" style="margin-bottom:0">FEED</div>
+            <div class="planner-feed-toggle">
+              <button class="planner-feed-btn active" data-feed-view="single">Single</button>
+              <button class="planner-feed-btn" data-feed-view="carousel">Carousel</button>
+            </div>
+          </div>
+          <div class="planner-feed-single">
+            <div class="planner-grid planner-cols-${cols}">
+              ${feedItems.map(it=>`
                 <div class="planner-grid-item planner-ratio-${ratio}" data-id="${it.id}" data-platform="${platform}" draggable="true">
                   ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<div class="planner-slot-placeholder"><span class="planner-fmt-hint">${escHtml(it.format)}</span></div>`}
-                  ${badge?`<div class="planner-grid-badge">${badge}</div>`:''}
-                </div>`;
-            }).join('')}
-            <button class="planner-grid-add planner-add-item planner-ratio-${ratio}" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(feedFmts))}"><span>+</span></button>
+                  ${/carousel/i.test(it.format)?`<div class="planner-grid-badge">⊞</div>`:''}
+                </div>`).join('')}
+              <button class="planner-grid-add planner-add-item planner-ratio-${ratio}" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(feedFmts))}"><span>+</span></button>
+            </div>
+          </div>
+          <div class="planner-feed-carousel" style="display:none">
+            <div class="planner-carousel-row">
+              ${feedItems.map(it=>`
+                <div class="planner-carousel-card" data-id="${it.id}" data-platform="${platform}" draggable="true">
+                  ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<span class="planner-fmt-hint">${escHtml(it.format)}</span>`}
+                </div>`).join('')}
+              <button class="planner-add-carousel planner-add-item" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(feedFmts))}">+</button>
+            </div>
           </div>
         </div>`;
     }
@@ -3001,6 +3035,10 @@ function bindVisualPlanner(brandId, campId) {
     return icons[p]||`<span style="font-size:10px;font-weight:700">${(p[0]||'').toUpperCase()}</span>`;
   }
 
+  const _isStory = f => /stor/i.test(f);
+  const _isReel  = f => /reel|short video|^short$|long video|long-form/i.test(f);
+  const _isFeed  = f => !_isStory(f) && !_isReel(f);
+
   function renderContent() {
     const b = getBrand(brandId);
     if (!b||!content) return;
@@ -3009,48 +3047,93 @@ function bindVisualPlanner(brandId, campId) {
     const items = (b.scheduledPosts||[]).filter(i=>i.platform===activePlatform&&(!campId||!i.campaignId||i.campaignId===campId));
     let html = '';
 
-    const storyFmts = formats.filter(f=>/stor/i.test(f));
+    // Stories — vertical portrait
+    const storyFmts = formats.filter(_isStory);
     if (storyFmts.length) {
-      const storyItems = items.filter(i=>/stor/i.test(i.format));
+      const storyItems = items.filter(i=>_isStory(i.format));
       html += `
         <div class="planner-section">
           <div class="planner-section-label">STORIES</div>
           <div class="planner-stories-row">
             ${storyItems.map(it=>`
               <div class="planner-story-slot" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
-                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<div class="planner-story-placeholder"></div>`}
+                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:''}
               </div>`).join('')}
             <button class="planner-add-story planner-add-item" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(storyFmts))}">+</button>
           </div>
         </div>`;
     }
 
-    const feedFmts = formats.filter(f=>!/stor/i.test(f));
-    if (feedFmts.length) {
-      const feedItems = items.filter(i=>!/stor/i.test(i.format));
-      const isYT = activePlatform==='youtube';
-      const cols = isYT?2:3;
-      const ratio = isYT?'youtube':(activePlatform==='tiktok'?'portrait':'square');
+    // Reels — vertical portrait
+    const reelFmts = formats.filter(_isReel);
+    if (reelFmts.length) {
+      const reelItems = items.filter(i=>_isReel(i.format));
       html += `
         <div class="planner-section">
-          <div class="planner-section-label">FEED</div>
-          <div class="planner-grid planner-cols-${cols}">
-            ${feedItems.map(it=>{
-              const fl=it.format.toLowerCase();
-              const badge=/reel|short|long-form|video/.test(fl)?'▶':/carousel/.test(fl)?'⊞':'';
-              return `
+          <div class="planner-section-label">REELS</div>
+          <div class="planner-reels-row">
+            ${reelItems.map(it=>`
+              <div class="planner-reel-slot" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
+                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<span class="planner-fmt-hint">▶ ${escHtml(it.format)}</span>`}
+              </div>`).join('')}
+            <button class="planner-add-reel planner-add-item" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(reelFmts))}">+</button>
+          </div>
+        </div>`;
+    }
+
+    // Feed — single / carousel toggle
+    const feedFmts = formats.filter(_isFeed);
+    if (feedFmts.length) {
+      const feedItems = items.filter(i=>_isFeed(i.format));
+      const isYT = activePlatform==='youtube';
+      const cols = isYT?2:3;
+      const ratio = isYT?'youtube':'square';
+      html += `
+        <div class="planner-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="planner-section-label" style="margin-bottom:0">FEED</div>
+            <div class="planner-feed-toggle">
+              <button class="planner-feed-btn active" data-feed-view="single">Single</button>
+              <button class="planner-feed-btn" data-feed-view="carousel">Carousel</button>
+            </div>
+          </div>
+          <div class="planner-feed-single">
+            <div class="planner-grid planner-cols-${cols}">
+              ${feedItems.map(it=>`
                 <div class="planner-grid-item planner-ratio-${ratio}" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
                   ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<div class="planner-slot-placeholder"><span class="planner-fmt-hint">${escHtml(it.format)}</span></div>`}
-                  ${badge?`<div class="planner-grid-badge">${badge}</div>`:''}
-                </div>`;
-            }).join('')}
-            <button class="planner-grid-add planner-add-item planner-ratio-${ratio}" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(feedFmts))}"><span>+</span></button>
+                  ${/carousel/i.test(it.format)?`<div class="planner-grid-badge">⊞</div>`:''}
+                </div>`).join('')}
+              <button class="planner-grid-add planner-add-item planner-ratio-${ratio}" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(feedFmts))}"><span>+</span></button>
+            </div>
+          </div>
+          <div class="planner-feed-carousel" style="display:none">
+            <div class="planner-carousel-row">
+              ${feedItems.map(it=>`
+                <div class="planner-carousel-card" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
+                  ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<span class="planner-fmt-hint">${escHtml(it.format)}</span>`}
+                </div>`).join('')}
+              <button class="planner-add-carousel planner-add-item" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(feedFmts))}">+</button>
+            </div>
           </div>
         </div>`;
     }
 
     content.innerHTML = html || `<div class="planner-empty">No content yet</div>`;
+    bindFeedToggle();
     bindDragDrop();
+  }
+
+  function bindFeedToggle() {
+    content.querySelectorAll('.planner-feed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const section = btn.closest('.planner-section');
+        const view = btn.dataset.feedView;
+        section.querySelectorAll('.planner-feed-btn').forEach(b => b.classList.toggle('active', b === btn));
+        section.querySelector('.planner-feed-single').style.display  = view === 'single'   ? '' : 'none';
+        section.querySelector('.planner-feed-carousel').style.display = view === 'carousel' ? '' : 'none';
+      });
+    });
   }
 
   // Platform tabs
