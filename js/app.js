@@ -2270,13 +2270,7 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId) {
         <div style="width:36px"></div>
       </div>
       <div class="filter-section">
-        <div style="color:#555;font-size:10px;letter-spacing:2px">TYPE</div>
-        <div class="filter-chips">
-          ${['all','Image','Video','Text','Audio'].map(t => `
-            <button class="filter-chip ${ft===t?'active':''}" onclick="vaultFilter('${id}','${fp}','${ff}','${t}','${campId||''}')">${t==='all'?'All':t}</button>
-          `).join('')}
-        </div>
-        <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">PLATFORM</div>
+        <div style="color:#555;font-size:10px;letter-spacing:2px">PLATFORM</div>
         <div class="filter-chips">
           <button class="filter-chip ${fp==='all'?'active':''}" onclick="vaultFilter('${id}','all','${ff}','${ft}','${campId||''}')" >All</button>
           ${platforms.map(p => `
@@ -2288,6 +2282,12 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId) {
           <button class="filter-chip ${ff==='all'?'active':''}" onclick="vaultFilter('${id}','${fp}','all','${ft}','${campId||''}')" >All</button>
           ${formats.map(f => `
             <button class="filter-chip ${ff===f?'active':''}" onclick="vaultFilter('${id}','${fp}','${f}','${ft}','${campId||''}')">${f}</button>
+          `).join('')}
+        </div>
+        <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">TYPE</div>
+        <div class="filter-chips">
+          ${['all','Image','Video','Text','Audio'].map(t => `
+            <button class="filter-chip ${ft===t?'active':''}" onclick="vaultFilter('${id}','${fp}','${ff}','${t}','${campId||''}')">${t==='all'?'All':t}</button>
           `).join('')}
         </div>
       </div>
