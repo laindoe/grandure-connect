@@ -2,6 +2,7 @@
 
 const PLATFORM_LABELS = { instagram: 'Instagram', threads: 'Threads', youtube: 'YouTube', tiktok: 'TikTok', twitter: 'X' };
 const PLATFORM_SHORT  = { instagram: 'IG', threads: 'TH', youtube: 'YT', tiktok: 'TK', twitter: 'X' };
+const ALL_PLATFORMS   = ['Instagram','TikTok','YouTube','Facebook','X','LinkedIn','Threads','Pinterest','Snapchat','Email','Patreon','Discord'];
 
 /* ── Auto-update poller ── */
 (function startUpdatePoller() {
@@ -4033,7 +4034,7 @@ function bindCampaignPage(brandId, campId) {
   moreEl.id = 'campMoreSheet';
   moreEl.style.cssText = 'position:fixed;inset:0;z-index:300;background:#000;display:none;flex-direction:column';
 
-  const ALL_PLATFORMS = ['Instagram','TikTok','YouTube','Facebook','X','LinkedIn','Threads','Pinterest','Snapchat','Email','Patreon','Discord'];
+  // ALL_PLATFORMS is defined at module scope
   const activePlats = (campaign.ov_platforms || '').split(',').map(s => s.trim()).filter(Boolean);
 
   const existingMarkers = campaign.mileMarkers || [];
