@@ -2928,10 +2928,19 @@ function pageVisualPlanner(brandId, campId) {
     const storyFmts = formats.filter(isStory);
     if (storyFmts.length) {
       const storyItems = items.filter(i=>isStory(i.format));
+      const highlights = (brand.plannerHighlights||{})[platform] || [];
       html += `
         <div class="planner-section">
           <div class="planner-section-label">STORIES</div>
-          <div class="planner-stories-row">
+          <div class="planner-highlights-row">
+            ${highlights.map(h=>`
+              <button class="planner-highlight-circle planner-open-highlight" data-platform="${h.platform||platform}" data-highlight-id="${h.id}" title="${escHtml(h.name)}">
+                <div class="img-wrap">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">`:''}</div>
+                <span class="planner-highlight-label">${escHtml(h.name.length>8?h.name.slice(0,7)+'…':h.name)}</span>
+              </button>`).join('')}
+            <button class="planner-highlight-add planner-add-highlight" data-platform="${platform}">+</button>
+          </div>
+          <div class="planner-stories-row" style="margin-top:14px">
             ${storyItems.map(it=>`
               <div class="planner-story-slot" data-id="${it.id}" data-platform="${platform}" draggable="true">
                 ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:''}
@@ -3051,10 +3060,19 @@ function bindVisualPlanner(brandId, campId) {
     const storyFmts = formats.filter(_isStory);
     if (storyFmts.length) {
       const storyItems = items.filter(i=>_isStory(i.format));
+      const highlights = (b.plannerHighlights||{})[activePlatform] || [];
       html += `
         <div class="planner-section">
           <div class="planner-section-label">STORIES</div>
-          <div class="planner-stories-row">
+          <div class="planner-highlights-row">
+            ${highlights.map(h=>`
+              <button class="planner-highlight-circle planner-open-highlight" data-platform="${activePlatform}" data-highlight-id="${h.id}" title="${escHtml(h.name)}">
+                ${h.cover?`<img src="${escHtml(h.cover)}" alt="">`:''}
+                <span class="planner-highlight-label">${escHtml(h.name.length>8?h.name.slice(0,7)+'…':h.name)}</span>
+              </button>`).join('')}
+            <button class="planner-highlight-add planner-add-highlight" data-platform="${activePlatform}">+</button>
+          </div>
+          <div class="planner-stories-row" style="margin-top:14px">
             ${storyItems.map(it=>`
               <div class="planner-story-slot" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
                 ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:''}
@@ -3132,6 +3150,102 @@ function bindVisualPlanner(brandId, campId) {
         section.querySelectorAll('.planner-feed-btn').forEach(b => b.classList.toggle('active', b === btn));
         section.querySelector('.planner-feed-single').style.display  = view === 'single'   ? '' : 'none';
         section.querySelector('.planner-feed-carousel').style.display = view === 'carousel' ? '' : 'none';
+      });
+    });
+
+    // Highlight circles
+    content.querySelectorAll('.planner-add-highlight').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const platform = btn.dataset.platform;
+        const name = prompt('Highlight name:');
+        if (!name?.trim()) return;
+        const b = getBrand(brandId);
+        const highlights = { ...(b.plannerHighlights||{}) };
+        highlights[platform] = [...(highlights[platform]||[]), { id: uid(), name: name.trim(), cover: '', stories: [] }];
+        saveBrandOverride(brandId, { plannerHighlights: highlights });
+        renderContent();
+      });
+    });
+
+    content.querySelectorAll('.planner-open-highlight').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const platform = btn.dataset.platform;
+        const hid = btn.dataset.highlightId;
+        const b = getBrand(brandId);
+        const highlights = (b.plannerHighlights||{})[platform]||[];
+        const h = highlights.find(x=>x.id===hid);
+        if (!h) return;
+        openHighlightSheet(brandId, platform, h);
+      });
+    });
+  }
+
+  function openHighlightSheet(bId, platform, highlight) {
+    document.getElementById('highlightSheet')?.remove();
+    const sheet = document.createElement('div');
+    sheet.id = 'highlightSheet';
+    sheet.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,0.5)';
+    const stories = highlight.stories||[];
+    sheet.innerHTML = `
+      <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));max-height:75vh;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
+          <div style="font-size:16px;font-weight:700;color:#fff">${escHtml(highlight.name)}</div>
+          <button id="highlightClose" type="button" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+        </div>
+        <div style="flex:1;overflow-y:auto;overscroll-behavior:contain">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;padding-bottom:8px">
+            ${stories.map((s,i)=>`
+              <div style="width:88px;height:156px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;flex-shrink:0">
+                ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:''}
+                <button data-story-del="${i}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+              </div>`).join('')}
+            <button id="highlightAddStory" type="button" style="width:88px;height:156px;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:22px;flex-shrink:0;cursor:pointer">+</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(sheet);
+    sheet.addEventListener('click', e => { if (e.target===sheet) sheet.remove(); });
+    sheet.querySelector('#highlightClose')?.addEventListener('click', () => sheet.remove());
+
+    sheet.querySelector('#highlightAddStory')?.addEventListener('click', () => {
+      const fi = document.createElement('input');
+      fi.type='file'; fi.accept='image/*';
+      fi.onchange = () => {
+        const file = fi.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const b2 = getBrand(bId);
+          const hl = { ...(b2.plannerHighlights||{}) };
+          const list = [...(hl[platform]||[])];
+          const idx = list.findIndex(x=>x.id===highlight.id);
+          if (idx<0) return;
+          list[idx] = { ...list[idx], stories: [...(list[idx].stories||[]), { thumbnail: ev.target.result }] };
+          hl[platform] = list;
+          saveBrandOverride(bId, { plannerHighlights: hl });
+          sheet.remove();
+          renderContent();
+        };
+        reader.readAsDataURL(file);
+      };
+      fi.click();
+    });
+
+    sheet.querySelectorAll('[data-story-del]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const i = +btn.dataset.storyDel;
+        const b2 = getBrand(bId);
+        const hl = { ...(b2.plannerHighlights||{}) };
+        const list = [...(hl[platform]||[])];
+        const idx = list.findIndex(x=>x.id===highlight.id);
+        if (idx<0) return;
+        const updStories = [...(list[idx].stories||[])];
+        updStories.splice(i,1);
+        list[idx] = { ...list[idx], stories: updStories };
+        hl[platform] = list;
+        saveBrandOverride(bId, { plannerHighlights: hl });
+        sheet.remove();
+        renderContent();
       });
     });
   }
