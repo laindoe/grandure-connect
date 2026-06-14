@@ -2301,7 +2301,7 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId, fil
         </div>
       </div>
       ${campaigns.length ? `
-      <div style="padding:8px 16px;display:flex;justify-content:flex-start">
+      <div style="padding:8px 16px;display:flex;justify-content:flex-end">
         <button id="vaultCampFilterBtn"
           data-fp="${fp}" data-ff="${ff}" data-ft="${ft}" data-fc="${fc}" data-nav-camp="${campId||''}" data-brand-id="${id}"
           style="background:${fc!=='all'?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.07)'};border:none;border-radius:20px;padding:8px 16px 8px 14px;color:${fc!=='all'?'#fff':'rgba(255,255,255,0.5)'};font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer">
