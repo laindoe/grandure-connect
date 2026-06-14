@@ -137,8 +137,9 @@ function render() {
     app.innerHTML = pageSeason(params.id);
     injectCampaignNav(params.id, params.campId || null, null);
   } else if (path === '/vault') {
-    app.innerHTML = pageIdeaVault(params.id);
+    app.innerHTML = pageIdeaVault(params.id, null, null, null, params.campId || null);
     bindVaultPage(params.id);
+    injectCampaignNav(params.id, params.campId || null, 'ideas');
   } else if (path === '/analytics') {
     app.innerHTML = pageAnalytics(params.brandId, params.campId, params.platform);
   } else if (path === '/inspiration') {
@@ -2214,7 +2215,20 @@ function pageSeason(id) {
 /* ═══════════════════════════════════════
    PAGE: IDEA VAULT
 ═══════════════════════════════════════ */
-function pageIdeaVault(id, filterPlatform, filterFormat) {
+const FORMAT_TYPE = {
+  'Reel':'Video','Short Video':'Video','Long Video':'Video','Long-form':'Video',
+  'Short':'Video','Duet':'Video','Stitch':'Video','Series':'Video','Live':'Video',
+  'Carousel':'Image','Static Post':'Image','Pin':'Image','Idea Pin':'Image',
+  'Image Post':'Image','Photo Mode':'Image','Story':'Image','Guide':'Image',
+  'Thread':'Text','Tweet':'Text','Post':'Text','Article':'Text','Newsletter':'Text',
+  'Reply':'Text','Quote':'Text','Poll':'Text','Document':'Text',
+  'DM Note':'Text','Community Post':'Text','Announcement':'Text',
+  'Promotional':'Text','Drip':'Text','Tier Update':'Text','Exclusive':'Text',
+  'Episode':'Audio','Podcast':'Audio','Teaser':'Audio','Interview':'Audio',
+  'Roundtable':'Audio','Space':'Audio','Board':'Image',
+};
+
+function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId) {
   const brand = getBrand(id);
   if (!brand) return pageHome();
 
@@ -2223,10 +2237,12 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
 
   const fp = filterPlatform || 'all';
   const ff = filterFormat   || 'all';
+  const ft = filterType     || 'all';
 
   const filtered = brand.ideas.filter(i =>
     (fp === 'all' || i.platform === fp) &&
-    (ff === 'all' || i.format === ff)
+    (ff === 'all' || i.format === ff) &&
+    (ft === 'all' || FORMAT_TYPE[i.format] === ft)
   );
 
   const ideasHTML = filtered.length ? filtered.map(idea => `
@@ -2241,10 +2257,12 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
     </div>
   `).join('') : '<div class="empty-card" style="margin-top:20px">No ideas match this filter</div>';
 
+  const backHref = campId ? `#/campaign?brandId=${id}&id=${campId}` : `#/brand?id=${id}`;
+
   return `
     <div class="page" style="padding-bottom:120px">
       <div class="back-header">
-        <button class="back-btn" data-href="#/brand?id=${id}">‹</button>
+        <button class="back-btn" data-href="${backHref}">‹</button>
         <div class="back-header-center">
           <div class="back-header-label">IDEA VAULT</div>
           <div class="back-header-title">${brand.name}</div>
@@ -2252,18 +2270,24 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
         <div style="width:36px"></div>
       </div>
       <div class="filter-section">
-        <div style="color:#555;font-size:10px;letter-spacing:2px">PLATFORM</div>
+        <div style="color:#555;font-size:10px;letter-spacing:2px">TYPE</div>
         <div class="filter-chips">
-          <button class="filter-chip ${fp==='all'?'active':''}" onclick="vaultFilter('${id}','all','${ff}')">All</button>
+          ${['all','Image','Video','Text','Audio'].map(t => `
+            <button class="filter-chip ${ft===t?'active':''}" onclick="vaultFilter('${id}','${fp}','${ff}','${t}','${campId||''}')">${t==='all'?'All':t}</button>
+          `).join('')}
+        </div>
+        <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">PLATFORM</div>
+        <div class="filter-chips">
+          <button class="filter-chip ${fp==='all'?'active':''}" onclick="vaultFilter('${id}','all','${ff}','${ft}','${campId||''}')" >All</button>
           ${platforms.map(p => `
-            <button class="filter-chip ${fp===p?'active':''}" onclick="vaultFilter('${id}','${p}','${ff}')">${PLATFORM_SHORT[p] || p}</button>
+            <button class="filter-chip ${fp===p?'active':''}" onclick="vaultFilter('${id}','${p}','${ff}','${ft}','${campId||''}')">${PLATFORM_SHORT[p] || p}</button>
           `).join('')}
         </div>
         <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">FORMAT</div>
         <div class="filter-chips">
-          <button class="filter-chip ${ff==='all'?'active':''}" onclick="vaultFilter('${id}','${fp}','all')">All</button>
+          <button class="filter-chip ${ff==='all'?'active':''}" onclick="vaultFilter('${id}','${fp}','all','${ft}','${campId||''}')" >All</button>
           ${formats.map(f => `
-            <button class="filter-chip ${ff===f?'active':''}" onclick="vaultFilter('${id}','${fp}','${f}')">${f}</button>
+            <button class="filter-chip ${ff===f?'active':''}" onclick="vaultFilter('${id}','${fp}','${f}','${ft}','${campId||''}')">${f}</button>
           `).join('')}
         </div>
       </div>
@@ -2273,11 +2297,12 @@ function pageIdeaVault(id, filterPlatform, filterFormat) {
   `;
 }
 
-window.vaultFilter = function(id, platform, format) {
-  const { params } = parseHash();
-  document.getElementById('app').innerHTML = pageIdeaVault(id, platform, format);
+window.vaultFilter = function(id, platform, format, type, campId) {
+  const camp = campId || null;
+  document.getElementById('app').innerHTML = pageIdeaVault(id, platform, format, type, camp);
   bindCapture(); bindNav();
   bindVaultPage(id);
+  injectCampaignNav(id, camp, 'ideas');
 };
 
 const PLATFORM_FORMATS = {
