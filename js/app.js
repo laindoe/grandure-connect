@@ -2360,14 +2360,14 @@ function bindVaultPage(brandId) {
       document.getElementById('vaultCampSheet')?.remove();
       const sheet = document.createElement('div');
       sheet.id = 'vaultCampSheet';
-      sheet.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,0.55)';
+      sheet.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);padding:24px';
 
       const rowStyle = (active) =>
         `padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.07);color:${active?'#fff':'rgba(255,255,255,0.6)'};font-size:15px;font-weight:${active?'600':'400'};display:flex;align-items:center;justify-content:space-between;cursor:pointer`;
       const checkSVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
       sheet.innerHTML = `
-        <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px;max-height:65vh;display:flex;flex-direction:column">
+        <div style="background:#1c1c1e;border-radius:20px;padding:20px;width:100%;max-width:360px;max-height:70vh;display:flex;flex-direction:column">
           <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;flex-shrink:0">Filter by Campaign</div>
           <div style="flex:1;overflow-y:auto;overscroll-behavior:contain">
             <div data-camp-val="all" style="${rowStyle(fc==='all')}">
