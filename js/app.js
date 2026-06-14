@@ -3189,7 +3189,12 @@ function bindVisualPlanner(brandId, campId) {
     sheet.innerHTML = `
       <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));max-height:75vh;display:flex;flex-direction:column">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
-          <div style="font-size:16px;font-weight:700;color:#fff">${escHtml(highlight.name)}</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <button id="highlightCoverBtn" type="button" style="width:52px;height:52px;border-radius:50%;border:2px dashed rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);overflow:hidden;flex-shrink:0;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:18px">
+              ${highlight.cover?`<img src="${escHtml(highlight.cover)}" style="width:100%;height:100%;object-fit:cover" alt="">`:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'}
+            </button>
+            <div style="font-size:16px;font-weight:700;color:#fff">${escHtml(highlight.name)}</div>
+          </div>
           <button id="highlightClose" type="button" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
         </div>
         <div style="flex:1;overflow-y:auto;overscroll-behavior:contain">
@@ -3206,6 +3211,30 @@ function bindVisualPlanner(brandId, campId) {
     document.body.appendChild(sheet);
     sheet.addEventListener('click', e => { if (e.target===sheet) sheet.remove(); });
     sheet.querySelector('#highlightClose')?.addEventListener('click', () => sheet.remove());
+
+    sheet.querySelector('#highlightCoverBtn')?.addEventListener('click', () => {
+      const fi = document.createElement('input');
+      fi.type = 'file'; fi.accept = 'image/*';
+      fi.onchange = () => {
+        const file = fi.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const b2 = getBrand(bId);
+          const hl = { ...(b2.plannerHighlights||{}) };
+          const list = [...(hl[platform]||[])];
+          const idx = list.findIndex(x=>x.id===highlight.id);
+          if (idx < 0) return;
+          list[idx] = { ...list[idx], cover: ev.target.result };
+          hl[platform] = list;
+          saveBrandOverride(bId, { plannerHighlights: hl });
+          const coverBtn = sheet.querySelector('#highlightCoverBtn');
+          if (coverBtn) coverBtn.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover" alt="">`;
+          renderContent();
+        };
+        reader.readAsDataURL(file);
+      };
+      fi.click();
+    });
 
     sheet.querySelector('#highlightAddStory')?.addEventListener('click', () => {
       const fi = document.createElement('input');
