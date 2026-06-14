@@ -137,7 +137,7 @@ function render() {
     app.innerHTML = pageSeason(params.id);
     injectCampaignNav(params.id, params.campId || null, null);
   } else if (path === '/vault') {
-    app.innerHTML = pageIdeaVault(params.id, null, null, null, params.campId || null);
+    app.innerHTML = pageIdeaVault(params.id, null, null, null, params.campId || null, null);
     bindVaultPage(params.id);
     injectCampaignNav(params.id, params.campId || null, 'ideas');
   } else if (path === '/analytics') {
@@ -2228,14 +2228,16 @@ const FORMAT_TYPE = {
   'Roundtable':'Audio','Space':'Audio','Board':'Image',
 };
 
-function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId) {
+function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId, filterCampaign) {
   const brand = getBrand(id);
   if (!brand) return pageHome();
 
   const platforms = [...new Set(brand.ideas.map(i => i.platform))];
+  const campaigns = [...new Set(brand.ideas.map(i => i.campaign).filter(Boolean))];
 
-  const fp = filterPlatform || 'all';
-  const ft = filterType     || 'all';
+  const fp = filterPlatform  || 'all';
+  const ft = filterType      || 'all';
+  const fc = filterCampaign  || 'all';
 
   // Format options: use platform definition when a platform is selected, else derive from ideas
   const platformFormats = fp !== 'all'
@@ -2247,7 +2249,8 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId) {
   const filtered = brand.ideas.filter(i =>
     (fp === 'all' || i.platform === fp) &&
     (ff === 'all' || i.format === ff) &&
-    (ft === 'all' || FORMAT_TYPE[i.format] === ft)
+    (ft === 'all' || FORMAT_TYPE[i.format] === ft) &&
+    (fc === 'all' || i.campaign === fc)
   );
 
   const ideasHTML = filtered.length ? filtered.map(idea => `
@@ -2263,6 +2266,7 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId) {
   `).join('') : '<div class="empty-card" style="margin-top:20px">No ideas match this filter</div>';
 
   const backHref = campId ? `#/campaign?brandId=${id}&id=${campId}` : `#/brand?id=${id}`;
+  const vf = (p,f,t,c) => `vaultFilter('${id}','${p}','${f}','${t}','${campId||''}','${c}')`;
 
   return `
     <div class="page" style="padding-bottom:120px">
@@ -2277,24 +2281,32 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId) {
       <div class="filter-section">
         <div style="color:#555;font-size:10px;letter-spacing:2px">PLATFORM</div>
         <div class="filter-chips">
-          <button class="filter-chip ${fp==='all'?'active':''}" onclick="vaultFilter('${id}','all','all','${ft}','${campId||''}')">All</button>
+          <button class="filter-chip ${fp==='all'?'active':''}" onclick="${vf('all','all',ft,fc)}">All</button>
           ${platforms.map(p => `
-            <button class="filter-chip ${fp===p?'active':''}" onclick="vaultFilter('${id}','${p}','all','${ft}','${campId||''}')">${PLATFORM_SHORT[p] || p}</button>
+            <button class="filter-chip ${fp===p?'active':''}" onclick="${vf(p,'all',ft,fc)}">${PLATFORM_SHORT[p] || p}</button>
           `).join('')}
         </div>
         <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">FORMAT</div>
         <div class="filter-chips">
-          <button class="filter-chip ${ff==='all'?'active':''}" onclick="vaultFilter('${id}','${fp}','all','${ft}','${campId||''}')">All</button>
+          <button class="filter-chip ${ff==='all'?'active':''}" onclick="${vf(fp,'all',ft,fc)}">All</button>
           ${platformFormats.map(f => `
-            <button class="filter-chip ${ff===f?'active':''}" onclick="vaultFilter('${id}','${fp}','${f}','${ft}','${campId||''}')">${f}</button>
+            <button class="filter-chip ${ff===f?'active':''}" onclick="${vf(fp,f,ft,fc)}">${f}</button>
           `).join('')}
         </div>
         <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">TYPE</div>
         <div class="filter-chips">
           ${['all','Image','Video','Text','Audio'].map(t => `
-            <button class="filter-chip ${ft===t?'active':''}" onclick="vaultFilter('${id}','${fp}','${ff}','${t}','${campId||''}')">${t==='all'?'All':t}</button>
+            <button class="filter-chip ${ft===t?'active':''}" onclick="${vf(fp,ff,t,fc)}">${t==='all'?'All':t}</button>
           `).join('')}
         </div>
+        ${campaigns.length ? `
+        <div style="color:#555;font-size:10px;letter-spacing:2px;margin-top:10px">CAMPAIGN</div>
+        <div class="filter-chips">
+          <button class="filter-chip ${fc==='all'?'active':''}" onclick="${vf(fp,ff,ft,'all')}">All</button>
+          ${campaigns.map(c => `
+            <button class="filter-chip ${fc===c?'active':''}" onclick="${vf(fp,ff,ft,c)}">${escHtml(c)}</button>
+          `).join('')}
+        </div>` : ''}
       </div>
       <div style="padding:16px">${ideasHTML}</div>
     </div>
@@ -2302,9 +2314,9 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId) {
   `;
 }
 
-window.vaultFilter = function(id, platform, format, type, campId) {
+window.vaultFilter = function(id, platform, format, type, campId, filterCamp) {
   const camp = campId || null;
-  document.getElementById('app').innerHTML = pageIdeaVault(id, platform, format, type, camp);
+  document.getElementById('app').innerHTML = pageIdeaVault(id, platform, format, type, camp, filterCamp || 'all');
   bindCapture(); bindNav();
   bindVaultPage(id);
   injectCampaignNav(id, camp, 'ideas');
