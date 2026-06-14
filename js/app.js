@@ -3457,7 +3457,10 @@ function injectCampaignNav(brandId, campId, activeTab, onAisha) {
   document.getElementById('campNavIdeas')?.addEventListener('click',  () => navigate(ideasHref));
   document.getElementById('campNavVisual')?.addEventListener('click', () => navigate(visualHref));
   document.getElementById('campNavCal')?.addEventListener('click',    () => navigate(calHref));
-  document.getElementById('campNavAisha')?.addEventListener('click',  () => { if (onAisha) onAisha(); });
+  document.getElementById('campNavAisha')?.addEventListener('click',  () => {
+    if (onAisha) { onAisha(); }
+    else if (campId) { navigate(`#/campaign?brandId=${brandId}&id=${campId}`); }
+  });
 }
 
 function campaignNavHTML(brandId, campId) {
@@ -3521,11 +3524,13 @@ function openAishaMini(aishaEl) {
   }
   renderMiniChat();
 
-  backdrop.addEventListener('click', e => {
-    if (!document.getElementById('aishaMiniInner')?.contains(e.target)) {
-      backdrop.remove();
-    }
-  });
+  setTimeout(() => {
+    backdrop.addEventListener('click', e => {
+      if (!document.getElementById('aishaMiniInner')?.contains(e.target)) {
+        backdrop.remove();
+      }
+    });
+  }, 350);
 
   document.getElementById('aishaMiniExpand')?.addEventListener('click', () => {
     backdrop.remove();
