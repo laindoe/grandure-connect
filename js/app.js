@@ -3655,27 +3655,34 @@ function pageCampaign(brandId, campId) {
           ${stageTrackerHTML}
         </div>
         ${(() => {
-          const nextM = (campaign.mileMarkers || []).filter(m => !m.done).sort((a,b) => (a.date||'9') < (b.date||'9') ? -1 : 1)[0];
-          if (!nextM) return '';
+          const markers = campaign.mileMarkers || [];
+          if (!markers.length) return '';
           const checkSVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.95)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
           // Color matches the campaign days-left pill so both indicators stay in sync
           const _cls = daysLeftLabel?.cls || 'green';
           const cardBg     = _cls === 'green'  ? '#009B48'              : _cls === 'yellow' ? 'rgba(255,204,0,0.88)' : 'rgba(255,69,58,0.9)';
           const cardBorder = _cls === 'green'  ? '#00c860'              : _cls === 'yellow' ? 'rgba(255,204,0,1)'    : 'rgba(255,69,58,1)';
+          const undone = markers.filter(m => !m.done).sort((a,b) => (a.date||'9') < (b.date||'9') ? -1 : 1);
+          const done   = markers.filter(m =>  m.done);
+          const sorted = [...undone, ...done];
           return `
             <div style="padding-top:12px">
-              <div class="camp-hero-next-label" style="margin-bottom:6px">MILE MARKER</div>
-              <div class="camp-mile-next" style="display:flex;align-items:center;gap:12px;background:${cardBg};border-color:${cardBorder}">
-                <button type="button" id="campHeroCheckBtn" data-marker-id="${nextM.id}"
-                  style="width:26px;height:26px;border-radius:100px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.1);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
-                  ${nextM.done ? checkSVG : ''}
-                </button>
-                <div style="flex:1;min-width:0">
-                  <div class="camp-mile-next-text">${escHtml(nextM.text)}</div>
-                  ${nextM.date ? `<div class="camp-mile-next-eta">ETA ${fromDateInputVal(nextM.date)}</div>` : ''}
-                </div>
+              <div class="camp-hero-next-label" style="margin-bottom:6px">MILE MARKERS</div>
+              <div class="camp-mile-next" style="background:${cardBg};border-color:${cardBorder};padding:0;overflow:hidden">
+                ${sorted.map((m, i) => `
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;${i < sorted.length-1 ? 'border-bottom:1px solid rgba(255,255,255,0.12);' : ''}${m.done ? 'opacity:0.4;' : ''}">
+                    <button type="button" class="campHeroCheckBtn" data-marker-id="${m.id}"
+                      style="width:22px;height:22px;border-radius:100px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
+                      ${m.done ? checkSVG : ''}
+                    </button>
+                    <div style="flex:1;min-width:0">
+                      <div class="camp-mile-next-text"${m.done ? ' style="text-decoration:line-through"' : ''}>${escHtml(m.text)}</div>
+                      ${m.date ? `<div class="camp-mile-next-eta">ETA ${fromDateInputVal(m.date)}</div>` : ''}
+                    </div>
+                  </div>`).join('')}
               </div>
             </div>`;
+        })()}
         })()}
       </div>
 
@@ -4368,15 +4375,17 @@ function bindCampaignPage(brandId, campId) {
     });
   });
 
-  // Next checkpoint check-off
-  document.getElementById('campHeroCheckBtn')?.addEventListener('click', () => {
-    const mid = document.getElementById('campHeroCheckBtn').dataset.markerId;
-    const b = getBrand(brandId);
-    const markers = ((b?.campaigns||[]).find(c=>c.id===campId)?.mileMarkers||[])
-      .map(m => m.id === mid ? { ...m, done: !m.done } : m);
-    saveMileMarkers(markers);
-    document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
-    bindCampaignPage(brandId, campId);
+  // Mile marker check-off (all markers)
+  document.querySelectorAll('.campHeroCheckBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mid = btn.dataset.markerId;
+      const b = getBrand(brandId);
+      const markers = ((b?.campaigns||[]).find(c=>c.id===campId)?.mileMarkers||[])
+        .map(m => m.id === mid ? { ...m, done: !m.done } : m);
+      saveMileMarkers(markers);
+      document.getElementById('app').innerHTML = pageCampaign(brandId, campId);
+      bindCampaignPage(brandId, campId);
+    });
   });
 
   // Brand Snapshot "View Details" → brand page
