@@ -272,6 +272,7 @@ let _aishaMessages = []; // { role: 'aisha'|'user', text }
 let _aishaWizardStep = -1; // -1=idle, 0-6=wizard, 7=done
 let _aishaAnswers = {};
 let _aishaGenerated = null; // { strategy, contentPlan }
+let _processAishaInput = null;
 
 const AISHA_WIZARD_QS = [
   { id: 'goal', q: "What's the main goal of this campaign?", multi: false,
@@ -2827,6 +2828,7 @@ function bindAisha(brand, campaign, brandId, campId) {
       renderAishaChat();
     }
   }
+  _processAishaInput = processAishaInput;
 
   // Restore options if wizard is mid-flow after a re-render
   if (_aishaWizardStep >= 0 && _aishaWizardStep < AISHA_WIZARD_QS.length) {
@@ -3473,6 +3475,77 @@ function campaignNavHTML(brandId, campId) {
       <button class="nav-btn" id="campNavCal">${calSVG}</button>
     </nav>
   `;
+}
+
+/* ═══════════════════════════════════════
+   AISHA MINI POPUP
+═══════════════════════════════════════ */
+function openAishaMini(aishaEl) {
+  document.getElementById('aishaMiniSheet')?.remove();
+
+  const sendSVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+
+  const backdrop = document.createElement('div');
+  backdrop.id = 'aishaMiniSheet';
+  backdrop.style.cssText = 'position:fixed;inset:0;z-index:240;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,0.45)';
+
+  backdrop.innerHTML = `
+    <div id="aishaMiniInner" style="background:#1c1c1e;border-radius:20px 20px 0 0;display:flex;flex-direction:column;max-height:55vh;padding-bottom:env(safe-area-inset-bottom,0px)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="color:#c8a0ff;font-size:18px">✦</span>
+          <span style="color:#fff;font-size:16px;font-weight:700">Aisha</span>
+        </div>
+        <button id="aishaMiniExpand" type="button" style="background:rgba(124,58,173,0.25);border:1px solid rgba(180,120,255,0.3);border-radius:100px;padding:7px 16px;color:#c8a0ff;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Start Wizard ›</button>
+      </div>
+      <div id="aishaMiniChat" style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain;min-height:80px"></div>
+      <div style="display:flex;gap:8px;align-items:center;padding:10px 16px 14px;border-top:1px solid rgba(255,255,255,0.07);flex-shrink:0">
+        <input id="aishaMiniInput" type="text" placeholder="Ask Aisha…" style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 13px;color:#fff;font-size:16px;font-family:inherit;outline:none">
+        <button id="aishaMiniSend" type="button" style="width:36px;height:36px;border-radius:50%;background:rgba(124,58,173,0.3);border:1px solid rgba(180,120,255,0.2);display:flex;align-items:center;justify-content:center;color:#c8a0ff;flex-shrink:0;cursor:pointer">${sendSVG}</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(backdrop);
+
+  function renderMiniChat() {
+    const chatEl = document.getElementById('aishaMiniChat');
+    if (!chatEl) return;
+    chatEl.innerHTML = _aishaMessages.map(m =>
+      `<div style="max-width:90%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.55;word-break:break-word;${m.role==='aisha'
+        ? 'background:rgba(124,58,173,0.15);border:1px solid rgba(124,58,173,0.2);align-self:flex-start;border-bottom-left-radius:4px;color:#ddd'
+        : 'background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);align-self:flex-end;border-bottom-right-radius:4px;color:#fff'
+      }">${m.text.replace(/\n/g,'<br>')}</div>`
+    ).join('');
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+  renderMiniChat();
+
+  backdrop.addEventListener('click', e => {
+    if (!document.getElementById('aishaMiniInner')?.contains(e.target)) {
+      backdrop.remove();
+    }
+  });
+
+  document.getElementById('aishaMiniExpand')?.addEventListener('click', () => {
+    backdrop.remove();
+    aishaEl.classList.add('open');
+    setTimeout(() => document.getElementById('aishaWizardBtn')?.click(), 150);
+  });
+
+  function sendMini() {
+    const input = document.getElementById('aishaMiniInput');
+    const text = input?.value.trim();
+    if (!text) return;
+    input.value = '';
+    if (_processAishaInput) {
+      _processAishaInput(text);
+      setTimeout(renderMiniChat, 100);
+    }
+  }
+
+  document.getElementById('aishaMiniSend')?.addEventListener('click', sendMini);
+  document.getElementById('aishaMiniInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') sendMini(); });
 }
 
 /* ═══════════════════════════════════════
@@ -4171,7 +4244,7 @@ function bindCampaignPage(brandId, campId) {
   });
 
   // Campaign nav (body-level so position:fixed works correctly on iOS)
-  injectCampaignNav(brandId, campId, 'doc', () => { aishaReturnSheet = null; aishaEl.classList.add('open'); });
+  injectCampaignNav(brandId, campId, 'doc', () => { aishaReturnSheet = null; openAishaMini(aishaEl); });
 
   // Aisha back button
   document.getElementById('aishaBackBtn')?.addEventListener('click', () => {
