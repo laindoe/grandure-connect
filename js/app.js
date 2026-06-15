@@ -4316,9 +4316,9 @@ function pageCalendar(brandId, campId) {
         <div style="width:36px"></div>
       </div>
       <div class="cal-view-switcher">
-        <button class="cal-view-btn active" data-view="month">Month</button>
-        <button class="cal-view-btn" data-view="week">Week</button>
         <button class="cal-view-btn" data-view="list">List</button>
+        <button class="cal-view-btn" data-view="week">Week</button>
+        <button class="cal-view-btn active" data-view="month">Month</button>
       </div>
       <div id="calBody" class="cal-body">
         ${calMonthHTML(brand, campId, today.getFullYear(), today.getMonth())}
