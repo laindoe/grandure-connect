@@ -2278,7 +2278,7 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId, fil
           <div class="back-header-label">IDEA VAULT</div>
           <div class="back-header-title">${brand.name}</div>
         </div>
-        <div style="width:36px"></div>
+        <button id="vaultAddIdea" type="button" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
       </div>
       <div class="filter-section">
         <div style="color:#555;font-size:10px;letter-spacing:2px">PLATFORM</div>
@@ -2348,6 +2348,17 @@ function buildFormatOptions(platform, current) {
 function bindVaultPage(brandId) {
   document.querySelectorAll('.idea-card[data-idea-id]').forEach(card => {
     card.addEventListener('click', () => openIdeaDetail(card.dataset.brandId, card.dataset.ideaId));
+  });
+
+  document.getElementById('vaultAddIdea')?.addEventListener('click', () => {
+    const overlay = document.getElementById('captureOverlay');
+    if (!overlay) return;
+    const brandSel = overlay.querySelector('#captureBrandSel');
+    brandSel.innerHTML = '<option value="">— Select brand —</option>' +
+      BRANDS.map(b => `<option value="${b.id}"${b.id===brandId?' selected':''}>${escHtml(b.name)}</option>`).join('');
+    brandSel.value = brandId;
+    brandSel.dispatchEvent(new Event('change'));
+    overlay.style.display = 'flex';
   });
 
   const campBtn = document.getElementById('vaultCampFilterBtn');
