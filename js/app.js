@@ -3319,7 +3319,7 @@ function bindVisualPlanner(brandId, campId) {
             ${trashSVG}
             <span style="color:#fff;font-size:10px;font-weight:700;pointer-events:none">Delete</span>
           </div>
-          <div data-swipe-face data-item-id="${escHtml(id)}" style="position:absolute;inset:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;will-change:transform;cursor:pointer;touch-action:pan-y">
+          <div data-swipe-face data-item-id="${escHtml(id)}" style="position:absolute;inset:0;background:#1c1c1e;border:1px solid rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;will-change:transform;cursor:pointer;touch-action:pan-y">
             ${thumbHtml}
           </div>
         </div>`;
