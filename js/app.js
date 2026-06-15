@@ -4676,21 +4676,28 @@ function openAishaMini(aishaEl) {
 ═══════════════════════════════════════ */
 function openAishaSelector(brandId, campId) {
   document.getElementById('aishaSelector')?.remove();
+  document.getElementById('aishaSheet')?.remove(); // avoid duplicate IDs in DOM
+
+  const rBrandId = brandId || BRANDS[0]?.id;
+  const rCampId  = campId  || getBrand(rBrandId)?.campaigns?.[0]?.id;
 
   const overlay = document.createElement('div');
   overlay.id = 'aishaSelector';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:300;background:#0a0a0f;display:flex;flex-direction:column;overflow:hidden';
 
+  const sendSVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+
   overlay.innerHTML = `
-    <div style="position:relative;flex:1;min-height:0;background-color:#1a0a2e;background-image:url('img/aisha.jpeg');background-size:cover;background-position:center top">
+    <div id="aishaImgWrap" style="position:relative;flex:1;min-height:0;background-color:#1a0a2e;background-image:url('img/aisha.jpeg');background-size:cover;background-position:center top;transition:flex .3s ease">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,transparent 25%,rgba(10,10,15,0.6) 65%,#0a0a0f 100%)"></div>
       <button id="aishaSelectorClose" style="position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
-      <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px 16px;text-align:center">
+      <div id="aishaTitleWrap" style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px 16px;text-align:center;transition:opacity .2s">
         <div style="font-size:54px;font-weight:900;font-style:italic;background:linear-gradient(135deg,#c8a0ff 0%,#9055e5 60%,#6c28d9 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px;line-height:1">Ai'SHA</div>
         <div style="color:rgba(255,255,255,0.45);font-size:10px;font-weight:700;letter-spacing:3.5px;margin-top:5px">CREATIVE DIRECTOR AI</div>
       </div>
     </div>
-    <div style="padding:16px 20px calc(32px + env(safe-area-inset-bottom,0px));background:#0a0a0f;display:flex;flex-direction:column;gap:10px">
+
+    <div id="aishaModePanel" style="padding:16px 20px calc(32px + env(safe-area-inset-bottom,0px));background:#0a0a0f;display:flex;flex-direction:column;gap:10px">
       <button id="aishaVoiceBtn" style="width:100%;background:rgba(124,58,173,0.15);border:1px solid rgba(180,120,255,0.2);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left">
         <div style="width:44px;height:44px;border-radius:12px;background:rgba(124,58,173,0.25);border:1px solid rgba(180,120,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c8a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
@@ -4712,31 +4719,62 @@ function openAishaSelector(brandId, campId) {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
+
+    <div id="aishaChatPanel" style="display:none;flex-direction:column;background:#0a0a0f;flex:0 0 62%">
+      <div style="display:flex;align-items:center;padding:10px 16px 8px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0">
+        <button id="aishaBackToModes" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:15px;cursor:pointer;padding:4px 12px 4px 0;display:flex;align-items:center;gap:4px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </button>
+        <div style="flex:1;text-align:center;color:rgba(255,255,255,0.4);font-size:11px;font-weight:700;letter-spacing:2px;margin-right:52px">ASK AISHA</div>
+      </div>
+      <div id="aishaChat" class="aisha-chat"></div>
+      <div id="aishaOptsWrap" class="aisha-opts-wrap" style="display:none">
+        <div id="aishaOptsGrid" class="aisha-opts-grid"></div>
+        <button id="aishaOptsDone" class="aisha-opts-done" style="display:none">Done ›</button>
+      </div>
+      <div class="aisha-input-row">
+        <input id="aishaInput" class="aisha-input" type="text" placeholder="Ask Aisha about this campaign…" style="font-size:16px">
+        <button id="aishaSendBtn" class="aisha-send" type="button">${sendSVG}</button>
+      </div>
+    </div>
   `;
 
   document.body.appendChild(overlay);
 
-  overlay.querySelector('#aishaSelectorClose')?.addEventListener('click', () => overlay.remove());
+  const imgWrap   = overlay.querySelector('#aishaImgWrap');
+  const titleWrap = overlay.querySelector('#aishaTitleWrap');
+  const modePanel = overlay.querySelector('#aishaModePanel');
+  const chatPanel = overlay.querySelector('#aishaChatPanel');
+  let chatBound = false;
 
-  overlay.querySelector('#aishaVoiceBtn')?.addEventListener('click', () => {
-    overlay.remove();
-    openAishaVoice();
-  });
-
-  overlay.querySelector('#aishaTextBtn')?.addEventListener('click', () => {
-    overlay.remove();
-    if (brandId && campId) {
-      const sheet = ensureAishaSheet(brandId, campId);
-      if (sheet) openAishaMini(sheet);
-    } else {
-      const firstBrand = BRANDS[0];
-      const firstCamp  = firstBrand?.campaigns?.[0];
-      if (firstBrand && firstCamp) {
-        const sheet = ensureAishaSheet(firstBrand.id, firstCamp.id);
-        if (sheet) openAishaMini(sheet);
+  function showChat() {
+    imgWrap.style.flex = '0 0 36%';
+    titleWrap.style.opacity = '0';
+    modePanel.style.display = 'none';
+    chatPanel.style.display = 'flex';
+    if (!chatBound) {
+      chatBound = true;
+      if (rBrandId && rCampId) {
+        const b = getBrand(rBrandId);
+        const c = (b?.campaigns || []).find(x => x.id === rCampId);
+        if (b && c) bindAisha(b, c, rBrandId, rCampId);
       }
     }
-  });
+    setTimeout(() => overlay.querySelector('#aishaInput')?.focus(), 150);
+  }
+
+  function showModes() {
+    imgWrap.style.flex = '1';
+    titleWrap.style.opacity = '';
+    modePanel.style.display = 'flex';
+    chatPanel.style.display = 'none';
+  }
+
+  overlay.querySelector('#aishaSelectorClose')?.addEventListener('click', () => overlay.remove());
+  overlay.querySelector('#aishaVoiceBtn')?.addEventListener('click', () => { overlay.remove(); openAishaVoice(); });
+  overlay.querySelector('#aishaTextBtn')?.addEventListener('click', showChat);
+  overlay.querySelector('#aishaBackToModes')?.addEventListener('click', showModes);
 }
 
 function openAishaVoice() {
