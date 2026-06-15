@@ -2432,12 +2432,28 @@ function openIdeaDetail(brandId, ideaId) {
     </div>`).join('');
 
   const mediaFiles = idea.mediaFiles || [];
-  const mediaListHTML = mediaFiles.length ? mediaFiles.map((m, i) => `
-    <div class="idea-media-item" data-media-idx="${i}">
-      <span class="idea-media-icon">${m.type==='audio'?'🎵':m.type==='video'?'🎬':'🖼'}</span>
+
+  function openImagePreview(src) {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center';
+    ov.innerHTML = `
+      <img src="${escHtml(src)}" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px">
+      <button style="position:absolute;top:max(20px,env(safe-area-inset-top,20px));right:20px;background:rgba(255,255,255,0.12);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>`;
+    ov.addEventListener('click', () => ov.remove());
+    document.body.appendChild(ov);
+  }
+
+  const mediaListHTML = mediaFiles.length ? mediaFiles.map((m, i) => {
+    const isImg = m.type === 'image' && m.dataUrl;
+    return `
+    <div class="idea-media-item" data-media-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:6px 0">
+      ${isImg
+        ? `<img src="${escHtml(m.dataUrl)}" data-preview="${escHtml(m.dataUrl)}" class="idea-thumb" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer">`
+        : `<div style="width:48px;height:48px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${m.type==='audio'?'♪':m.type==='video'?'▶':'📄'}</div>`}
       <span class="idea-media-name" style="flex:1;font-size:12px;color:rgba(255,255,255,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(m.name||'File')}</span>
-      <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;padding:0 4px">×</button>
-    </div>`).join('') : '';
+      <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;padding:0 4px;cursor:pointer">×</button>
+    </div>`;
+  }).join('') : '';
 
   sheetEl.innerHTML = `
     <div style="position:absolute;inset:0;background:rgba(0,0,0,0.6)" id="ideaDetailBg"></div>
@@ -2510,16 +2526,21 @@ function openIdeaDetail(brandId, ideaId) {
   const mediaList = sheetEl.querySelector('#ideaMediaList');
   let currentMediaFiles = [...mediaFiles];
 
-  function addMediaItem(file, type) {
-    currentMediaFiles.push({ name: file.name, type, size: file.size });
+  function addMediaItem(file, type, dataUrl) {
+    const idx = currentMediaFiles.length;
+    currentMediaFiles.push({ name: file.name, type, size: file.size, dataUrl: dataUrl || null });
     const item = document.createElement('div');
     item.className = 'idea-media-item';
-    item.dataset.mediaIdx = currentMediaFiles.length - 1;
-    item.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 0';
+    item.dataset.mediaIdx = idx;
+    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 0';
+    const isImg = type === 'image' && dataUrl;
     item.innerHTML = `
-      <span class="idea-media-icon" style="font-size:16px">${type==='audio'?'🎵':type==='video'?'🎬':'🖼'}</span>
+      ${isImg
+        ? `<img src="${dataUrl}" class="idea-thumb" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer">`
+        : `<div style="width:48px;height:48px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${type==='audio'?'♪':type==='video'?'▶':'📄'}</div>`}
       <span style="flex:1;font-size:12px;color:rgba(255,255,255,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(file.name)}</span>
-      <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:16px;padding:0 4px">×</button>`;
+      <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;padding:0 4px;cursor:pointer">×</button>`;
+    if (isImg) item.querySelector('.idea-thumb').addEventListener('click', () => openImagePreview(dataUrl));
     item.querySelector('.idea-media-del').addEventListener('click', () => {
       currentMediaFiles.splice(parseInt(item.dataset.mediaIdx), 1);
       item.remove();
@@ -2527,9 +2548,19 @@ function openIdeaDetail(brandId, ideaId) {
     mediaList.appendChild(item);
   }
 
-  sheetEl.querySelector('#ideaUploadImage').addEventListener('change', e => { if(e.target.files[0]) addMediaItem(e.target.files[0], 'image'); });
+  sheetEl.querySelector('#ideaUploadImage').addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => addMediaItem(file, 'image', ev.target.result);
+    reader.readAsDataURL(file);
+  });
   sheetEl.querySelector('#ideaUploadVideo').addEventListener('change', e => { if(e.target.files[0]) addMediaItem(e.target.files[0], 'video'); });
   sheetEl.querySelector('#ideaUploadAudio').addEventListener('change', e => { if(e.target.files[0]) addMediaItem(e.target.files[0], 'audio'); });
+
+  // Existing saved images — thumbnail click to preview
+  mediaList.querySelectorAll('.idea-thumb[data-preview]').forEach(img => {
+    img.addEventListener('click', () => openImagePreview(img.dataset.preview));
+  });
 
   // Delete existing media items
   mediaList.querySelectorAll('.idea-media-del').forEach(btn => {
