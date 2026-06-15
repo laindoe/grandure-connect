@@ -561,13 +561,17 @@ function bindCapture() {
   };
 
   const open = () => {
-    // Refresh brand options in case new brands were added
     const brandSel = overlay.querySelector('#captureBrandSel');
     const currentVal = brandSel.value;
     brandSel.innerHTML = '<option value="">— Select brand —</option>' +
       BRANDS.map(b => `<option value="${b.id}"${b.id===currentVal?' selected':''}>${escHtml(b.name)}</option>`).join('');
+    if (!currentVal && BRANDS.length === 1) {
+      brandSel.value = BRANDS[0].id;
+      brandSel.dispatchEvent(new Event('change'));
+    }
     overlay.style.display = 'flex';
   };
+  window._openCapture = open;
   const close = () => { overlay.style.display = 'none'; };
 
   document.getElementById('navCapture')?.addEventListener('click', open);
@@ -943,7 +947,7 @@ function bindHomeDock() {
         const firstCamp  = firstBrand?.campaigns?.[0];
         openAishaSelector(firstBrand?.id, firstCamp?.id);
       } else if (action === 'capture') {
-        document.getElementById('captureOverlay').style.display = 'flex';
+        if (window._openCapture) window._openCapture();
       }
     });
   });
