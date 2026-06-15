@@ -3327,9 +3327,9 @@ function bindVisualPlanner(brandId, campId) {
       const size = h === 'aspect' ? `width:${w};aspect-ratio:4/5` : `width:${w};height:${h}`;
       return `
         <div style="position:relative;${size};flex-shrink:0;border-radius:10px;overflow:hidden">
-          <div data-swipe-del="${escHtml(id)}" style="position:absolute;right:0;top:0;bottom:0;width:72px;background:#b71c1c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;border-radius:0 10px 10px 0">
-            ${trashSVG}
-            <span style="color:#fff;font-size:10px;font-weight:700;pointer-events:none">Delete</span>
+          <div data-swipe-del="${escHtml(id)}" style="position:absolute;right:0;top:0;bottom:0;width:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e53935" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            <span style="color:#e53935;font-size:10px;font-weight:700;pointer-events:none">Delete</span>
           </div>
           <div data-swipe-face data-item-id="${escHtml(id)}" style="position:absolute;inset:0;background:#1c1c1e;border:1px solid rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;will-change:transform;cursor:pointer;touch-action:pan-y">
             ${thumbHtml}
