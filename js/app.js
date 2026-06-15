@@ -2442,11 +2442,14 @@ function openIdeaDetail(brandId, ideaId) {
 
   const mediaListHTML = mediaFiles.length ? mediaFiles.map((m, i) => {
     const isImg = m.type === 'image' && m.dataUrl;
-    return `
-    <div class="idea-media-item" data-media-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:6px 0">
-      ${isImg
-        ? `<img src="${escHtml(m.dataUrl)}" data-preview="${escHtml(m.dataUrl)}" class="idea-thumb" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer">`
-        : `<div style="width:48px;height:48px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${m.type==='audio'?'♪':m.type==='video'?'▶':'📄'}</div>`}
+    if (isImg) {
+      return `<div class="idea-media-item idea-media-img" data-media-idx="${i}" style="position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;cursor:pointer">
+        <img src="${escHtml(m.dataUrl)}" data-preview="${escHtml(m.dataUrl)}" class="idea-thumb" style="width:100%;height:100%;object-fit:cover;display:block">
+        <button type="button" class="idea-media-del" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:22px;height:22px;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+      </div>`;
+    }
+    return `<div class="idea-media-item idea-media-file" data-media-idx="${i}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:10px;grid-column:1/-1">
+      <div style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${m.type==='audio'?'♪':m.type==='video'?'▶':'📄'}</div>
       <span class="idea-media-name" style="flex:1;font-size:12px;color:rgba(255,255,255,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(m.name||'File')}</span>
       <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;padding:0 4px;cursor:pointer">×</button>
     </div>`;
@@ -2483,7 +2486,7 @@ function openIdeaDetail(brandId, ideaId) {
         <!-- Media Uploads -->
         <div class="notion-field">
           <div class="notion-label">MEDIA</div>
-          <div id="ideaMediaList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">${mediaListHTML}</div>
+          <div id="ideaMediaList" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">${mediaListHTML}</div>
           <div style="display:flex;gap:8px">
             <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 0;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:12px;color:rgba(255,255,255,0.45);cursor:pointer">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> Image
@@ -2529,15 +2532,22 @@ function openIdeaDetail(brandId, ideaId) {
     const item = document.createElement('div');
     item.className = 'idea-media-item';
     item.dataset.mediaIdx = idx;
-    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 0';
     const isImg = type === 'image' && dataUrl;
-    item.innerHTML = `
-      ${isImg
-        ? `<img src="${dataUrl}" class="idea-thumb" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer">`
-        : `<div style="width:48px;height:48px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${type==='audio'?'♪':type==='video'?'▶':'📄'}</div>`}
-      <span style="flex:1;font-size:12px;color:rgba(255,255,255,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(file.name)}</span>
-      <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;padding:0 4px;cursor:pointer">×</button>`;
-    if (isImg) item.querySelector('.idea-thumb').addEventListener('click', () => openImagePreview(dataUrl));
+    if (isImg) {
+      item.className += ' idea-media-img';
+      item.style.cssText = 'position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;cursor:pointer';
+      item.innerHTML = `
+        <img src="${dataUrl}" class="idea-thumb" style="width:100%;height:100%;object-fit:cover;display:block">
+        <button type="button" class="idea-media-del" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:22px;height:22px;color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>`;
+      item.querySelector('.idea-thumb').addEventListener('click', () => openImagePreview(dataUrl));
+    } else {
+      item.className += ' idea-media-file';
+      item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,0.04);border-radius:10px;grid-column:1/-1';
+      item.innerHTML = `
+        <div style="width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${type==='audio'?'♪':type==='video'?'▶':'📄'}</div>
+        <span style="flex:1;font-size:12px;color:rgba(255,255,255,0.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(file.name)}</span>
+        <button type="button" class="idea-media-del" style="background:none;border:none;color:rgba(255,255,255,0.3);font-size:18px;padding:0 4px;cursor:pointer">×</button>`;
+    }
     item.querySelector('.idea-media-del').addEventListener('click', () => {
       currentMediaFiles.splice(parseInt(item.dataset.mediaIdx), 1);
       item.remove();
