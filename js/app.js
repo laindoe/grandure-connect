@@ -3990,7 +3990,7 @@ function openScheduleSheet(brandId, campId, opts, onDone) {
     });
   }
 
-  document.getElementById('schedSave')?.addEventListener('click', () => {
+  function doSave() {
     const dateVal = document.getElementById('schedDate')?.value;
     if (!dateVal) { document.getElementById('schedDate').style.borderBottomColor = 'rgba(255,100,100,0.6)'; return; }
     const b2 = getBrand(brandId);
@@ -4005,7 +4005,12 @@ function openScheduleSheet(brandId, campId, opts, onDone) {
     }
     overlay.remove();
     if (onDone) onDone();
-  });
+  }
+
+  if (isUpdate) {
+    document.getElementById('schedDate')?.addEventListener('change', doSave);
+  }
+  document.getElementById('schedSave')?.addEventListener('click', doSave);
   document.getElementById('schedCancel')?.addEventListener('click', () => overlay.remove());
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 }
