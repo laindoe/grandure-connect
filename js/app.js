@@ -3962,6 +3962,7 @@ function openScheduleSheet(brandId, campId, opts, onDone) {
       </div>` : ''}
       <button class="sched-save" id="schedSave">Schedule</button>
       <button class="add-post-cancel" id="schedCancel">Cancel</button>
+      ${!isUpdate ? `<button id="schedFromPlanner" style="width:100%;margin-top:6px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:rgba(255,255,255,0.45);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px">Pick from Planner ›</button>` : ''}
     </div>`;
   document.getElementById('app').appendChild(overlay);
 
@@ -4011,8 +4012,88 @@ function openScheduleSheet(brandId, campId, opts, onDone) {
     document.getElementById('schedDate')?.addEventListener('change', doSave);
   }
   document.getElementById('schedSave')?.addEventListener('click', doSave);
+  if (!isUpdate) {
+    document.getElementById('schedFromPlanner')?.addEventListener('click', () => {
+      const prefilledDate = document.getElementById('schedDate')?.value;
+      overlay.remove();
+      openPlannerPicker(brandId, campId, post => {
+        if (prefilledDate) {
+          const b2 = getBrand(brandId);
+          if (!b2) return;
+          const posts = (b2.scheduledPosts || []).map(p => p.id === post.id ? { ...p, scheduledDate: prefilledDate } : p);
+          saveBrandOverride(brandId, { scheduledPosts: posts });
+          if (onDone) onDone();
+        } else {
+          openScheduleSheet(brandId, campId, { existingPostId: post.id, date: post.scheduledDate || '' }, onDone);
+        }
+      });
+    });
+  }
   document.getElementById('schedCancel')?.addEventListener('click', () => overlay.remove());
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+function openPlannerPicker(brandId, campId, onPick) {
+  document.getElementById('plannerPicker')?.remove();
+  const b = getBrand(brandId);
+  if (!b) return;
+
+  const posts = (b.scheduledPosts || []).filter(p => !campId || p.campaignId === campId);
+
+  const grouped = {};
+  posts.forEach(p => {
+    if (!grouped[p.platform]) grouped[p.platform] = [];
+    grouped[p.platform].push(p);
+  });
+
+  function postThumb(p) {
+    const src = p.thumbnail || p.slides?.[0]?.dataUrl;
+    return src
+      ? `<img src="${escHtml(src)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" alt="">`
+      : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.15);font-size:22px">+</div>`;
+  }
+
+  const platformSections = Object.entries(grouped).map(([plat, platPosts]) => `
+    <div style="margin-bottom:20px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:10px">${PLAT_DISPLAY_NAMES[plat] || plat}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${platPosts.map(p => `
+          <button class="picker-post-btn" data-post-id="${escHtml(p.id)}" style="position:relative;aspect-ratio:4/5;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);overflow:hidden;cursor:pointer;padding:0">
+            ${postThumb(p)}
+            ${p.title ? `<div style="position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,0.75));font-size:9px;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left">${escHtml(p.title)}</div>` : ''}
+            ${p.format ? `<div style="position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:8px;color:rgba(255,255,255,0.6);font-weight:600">${escHtml(p.format)}</div>` : ''}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  const sheet = document.createElement('div');
+  sheet.id = 'plannerPicker';
+  sheet.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.6);display:flex;flex-direction:column;justify-content:flex-end';
+  sheet.innerHTML = `
+    <div style="background:#1c1c1e;border-radius:20px 20px 0 0;max-height:78vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0">
+        <div style="font-size:16px;font-weight:700;color:#fff">Pick from Planner</div>
+        <button id="plannerPickerClose" style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:24px;line-height:1;cursor:pointer;padding:0">×</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px 20px;overscroll-behavior:contain">
+        ${posts.length ? platformSections : '<div style="color:rgba(255,255,255,0.25);font-size:14px;text-align:center;padding:48px 0">No posts in planner yet</div>'}
+      </div>
+    </div>`;
+
+  document.body.appendChild(sheet);
+
+  sheet.querySelector('#plannerPickerClose')?.addEventListener('click', () => sheet.remove());
+  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
+  sheet.querySelectorAll('.picker-post-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const post = (getBrand(brandId)?.scheduledPosts || []).find(p => p.id === btn.dataset.postId);
+      if (!post) return;
+      sheet.remove();
+      onPick(post);
+    });
+  });
 }
 
 /* ═══════════════════════════════════════
