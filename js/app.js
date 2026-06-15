@@ -2983,56 +2983,54 @@ function pageVisualPlanner(brandId, campId) {
     if (!formats.length) return `<div class="planner-empty">No formats set for ${escHtml(PLAT_DISPLAY_NAMES[platform]||platform)}</div>`;
     const items = (brand.scheduledPosts||[]).filter(i => i.platform===platform && (!campId||!i.campaignId||i.campaignId===campId));
     const highlights = (brand.plannerHighlights||{})[platform] || [];
+    const chev = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
 
-    function colCard(it, shape) {
-      return it.thumbnail
-        ? `<div class="planner-card ${shape}" style="overflow:hidden"><img src="${escHtml(it.thumbnail)}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`
-        : `<div class="planner-card ${shape}"></div>`;
+    function thumbs(list, shape) {
+      return list.map(it => it.thumbnail
+        ? `<div class="planner-thumb ${shape}" style="overflow:hidden"><img src="${escHtml(it.thumbnail)}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`
+        : `<div class="planner-thumb ${shape}"></div>`
+      ).join('');
     }
 
-    let cols = '';
+    let html = '';
 
     const storyFmts = formats.filter(isStory);
     if (storyFmts.length) {
       const storyItems = items.filter(i=>isStory(i.format));
-      const circles = highlights.slice(0,3).map(h =>
-        `<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);flex-shrink:0;overflow:hidden">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover">`:'&nbsp;'}</div>`
+      const circles = highlights.map(h =>
+        `<div class="planner-thumb circle" style="overflow:hidden">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover">`:''}</div>`
       ).join('');
-      cols += `<div class="planner-col" data-section="stories" data-platform="${platform}">
-        <div class="planner-col-hd"><div class="planner-col-name">STORIES</div><div class="planner-col-ct">${storyItems.length} stories · ${highlights.length} highlights</div></div>
-        <div class="planner-col-body">
-          ${highlights.length ? `<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">${circles}</div>` : ''}
-          ${storyItems.map(it=>colCard(it,'portrait')).join('')}
-          ${!storyItems.length && !highlights.length ? '<div class="planner-col-empty">Empty</div>' : ''}
-        </div>
+      html += `<div class="planner-sec-card" data-section="stories" data-platform="${platform}">
+        <div class="planner-sec-hd"><div><div class="planner-sec-label">STORIES</div><div class="planner-sec-count">${storyItems.length} stories · ${highlights.length} highlights</div></div><div class="planner-sec-chev">${chev}</div></div>
+        ${(highlights.length || storyItems.length)
+          ? `<div class="planner-thumb-row">${circles}${thumbs(storyItems,'portrait')}<div class="planner-thumb portrait planner-thumb-add">+</div></div>`
+          : `<div class="planner-sec-empty">Tap to add stories</div>`}
       </div>`;
     }
 
     const reelFmts = formats.filter(isReel);
     if (reelFmts.length) {
       const reelItems = items.filter(i=>isReel(i.format));
-      cols += `<div class="planner-col" data-section="reels" data-platform="${platform}">
-        <div class="planner-col-hd"><div class="planner-col-name">REELS</div><div class="planner-col-ct">${reelItems.length} clips</div></div>
-        <div class="planner-col-body">
-          ${reelItems.map(it=>colCard(it,'portrait')).join('')}
-          ${!reelItems.length ? '<div class="planner-col-empty">Empty</div>' : ''}
-        </div>
+      html += `<div class="planner-sec-card" data-section="reels" data-platform="${platform}">
+        <div class="planner-sec-hd"><div><div class="planner-sec-label">REELS</div><div class="planner-sec-count">${reelItems.length} clips</div></div><div class="planner-sec-chev">${chev}</div></div>
+        ${reelItems.length
+          ? `<div class="planner-thumb-row">${thumbs(reelItems,'portrait')}<div class="planner-thumb portrait planner-thumb-add">+</div></div>`
+          : `<div class="planner-sec-empty">Tap to add clips</div>`}
       </div>`;
     }
 
     const feedFmts = formats.filter(isFeed);
     if (feedFmts.length) {
       const feedItems = items.filter(i=>isFeed(i.format));
-      cols += `<div class="planner-col" data-section="feed" data-platform="${platform}">
-        <div class="planner-col-hd"><div class="planner-col-name">FEED</div><div class="planner-col-ct">${feedItems.length} posts</div></div>
-        <div class="planner-col-body">
-          ${feedItems.map(it=>colCard(it,'square')).join('')}
-          ${!feedItems.length ? '<div class="planner-col-empty">Empty</div>' : ''}
-        </div>
+      html += `<div class="planner-sec-card" data-section="feed" data-platform="${platform}">
+        <div class="planner-sec-hd"><div><div class="planner-sec-label">FEED</div><div class="planner-sec-count">${feedItems.length} posts</div></div><div class="planner-sec-chev">${chev}</div></div>
+        ${feedItems.length
+          ? `<div class="planner-thumb-row">${thumbs(feedItems,'square')}<div class="planner-thumb square planner-thumb-add">+</div></div>`
+          : `<div class="planner-sec-empty">Tap to add posts</div>`}
       </div>`;
     }
 
-    return `<div class="planner-cols">${cols}</div>`;
+    return html || `<div class="planner-empty">No content yet</div>`;
   }
 
   const tabsHTML = platforms.map(p=>`
@@ -3082,54 +3080,52 @@ function bindVisualPlanner(brandId, campId) {
     const formats = pData.formats||[];
     const items = (b.scheduledPosts||[]).filter(i=>i.platform===activePlatform&&(!campId||!i.campaignId||i.campaignId===campId));
     const highlights = (b.plannerHighlights||{})[activePlatform]||[];
+    const chev = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
 
-    function colCard(it, shape) {
-      return it.thumbnail
-        ? `<div class="planner-card ${shape}" style="overflow:hidden"><img src="${escHtml(it.thumbnail)}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`
-        : `<div class="planner-card ${shape}"></div>`;
+    function thumbs(list, shape) {
+      return list.map(it => it.thumbnail
+        ? `<div class="planner-thumb ${shape}" style="overflow:hidden"><img src="${escHtml(it.thumbnail)}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`
+        : `<div class="planner-thumb ${shape}"></div>`
+      ).join('');
     }
 
-    let cols = '';
+    let html = '';
     const storyFmts = formats.filter(_isStory);
     if (storyFmts.length) {
       const storyItems = items.filter(i=>_isStory(i.format));
-      const circles = highlights.slice(0,3).map(h =>
-        `<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);flex-shrink:0;overflow:hidden">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover">`:'&nbsp;'}</div>`
+      const circles = highlights.map(h =>
+        `<div class="planner-thumb circle" style="overflow:hidden">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover">`:''}</div>`
       ).join('');
-      cols += `<div class="planner-col" data-section="stories" data-platform="${activePlatform}">
-        <div class="planner-col-hd"><div class="planner-col-name">STORIES</div><div class="planner-col-ct">${storyItems.length} stories · ${highlights.length} highlights</div></div>
-        <div class="planner-col-body">
-          ${highlights.length ? `<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">${circles}</div>` : ''}
-          ${storyItems.map(it=>colCard(it,'portrait')).join('')}
-          ${!storyItems.length && !highlights.length ? '<div class="planner-col-empty">Empty</div>' : ''}
-        </div>
+      html += `<div class="planner-sec-card" data-section="stories" data-platform="${activePlatform}">
+        <div class="planner-sec-hd"><div><div class="planner-sec-label">STORIES</div><div class="planner-sec-count">${storyItems.length} stories · ${highlights.length} highlights</div></div><div class="planner-sec-chev">${chev}</div></div>
+        ${(highlights.length || storyItems.length)
+          ? `<div class="planner-thumb-row">${circles}${thumbs(storyItems,'portrait')}<div class="planner-thumb portrait planner-thumb-add">+</div></div>`
+          : `<div class="planner-sec-empty">Tap to add stories</div>`}
       </div>`;
     }
     const reelFmts = formats.filter(_isReel);
     if (reelFmts.length) {
       const reelItems = items.filter(i=>_isReel(i.format));
-      cols += `<div class="planner-col" data-section="reels" data-platform="${activePlatform}">
-        <div class="planner-col-hd"><div class="planner-col-name">REELS</div><div class="planner-col-ct">${reelItems.length} clips</div></div>
-        <div class="planner-col-body">
-          ${reelItems.map(it=>colCard(it,'portrait')).join('')}
-          ${!reelItems.length ? '<div class="planner-col-empty">Empty</div>' : ''}
-        </div>
+      html += `<div class="planner-sec-card" data-section="reels" data-platform="${activePlatform}">
+        <div class="planner-sec-hd"><div><div class="planner-sec-label">REELS</div><div class="planner-sec-count">${reelItems.length} clips</div></div><div class="planner-sec-chev">${chev}</div></div>
+        ${reelItems.length
+          ? `<div class="planner-thumb-row">${thumbs(reelItems,'portrait')}<div class="planner-thumb portrait planner-thumb-add">+</div></div>`
+          : `<div class="planner-sec-empty">Tap to add clips</div>`}
       </div>`;
     }
     const feedFmts = formats.filter(_isFeed);
     if (feedFmts.length) {
       const feedItems = items.filter(i=>_isFeed(i.format));
-      cols += `<div class="planner-col" data-section="feed" data-platform="${activePlatform}">
-        <div class="planner-col-hd"><div class="planner-col-name">FEED</div><div class="planner-col-ct">${feedItems.length} posts</div></div>
-        <div class="planner-col-body">
-          ${feedItems.map(it=>colCard(it,'square')).join('')}
-          ${!feedItems.length ? '<div class="planner-col-empty">Empty</div>' : ''}
-        </div>
+      html += `<div class="planner-sec-card" data-section="feed" data-platform="${activePlatform}">
+        <div class="planner-sec-hd"><div><div class="planner-sec-label">FEED</div><div class="planner-sec-count">${feedItems.length} posts</div></div><div class="planner-sec-chev">${chev}</div></div>
+        ${feedItems.length
+          ? `<div class="planner-thumb-row">${thumbs(feedItems,'square')}<div class="planner-thumb square planner-thumb-add">+</div></div>`
+          : `<div class="planner-sec-empty">Tap to add posts</div>`}
       </div>`;
     }
-    content.innerHTML = cols ? `<div class="planner-cols">${cols}</div>` : `<div class="planner-empty">No content yet</div>`;
-    content.querySelectorAll('.planner-col').forEach(col => {
-      col.addEventListener('click', () => openPlannerSectionPage(brandId, campId, col.dataset.platform, col.dataset.section, renderContent));
+    content.innerHTML = html || `<div class="planner-empty">No content yet</div>`;
+    content.querySelectorAll('.planner-sec-card').forEach(card => {
+      card.addEventListener('click', () => openPlannerSectionPage(brandId, campId, card.dataset.platform, card.dataset.section, renderContent));
     });
   }
 
@@ -3570,9 +3566,9 @@ function bindVisualPlanner(brandId, campId) {
     }
   }
 
-  // Bind initial static columns (rendered by sectionHTML on page load)
-  content?.querySelectorAll('.planner-col').forEach(col => {
-    col.addEventListener('click', () => openPlannerSectionPage(brandId, campId, col.dataset.platform, col.dataset.section, renderContent));
+  // Bind initial static cards (rendered by sectionHTML on page load)
+  content?.querySelectorAll('.planner-sec-card').forEach(card => {
+    card.addEventListener('click', () => openPlannerSectionPage(brandId, campId, card.dataset.platform, card.dataset.section, renderContent));
   });
 
   // Platform tabs
