@@ -3721,33 +3721,19 @@ function bindVisualPlanner(brandId, campId) {
         });
 
         body.querySelector('#secAddFeed')?.addEventListener('click', () => {
-          if (isCarousel) {
-            const b3 = getBrand(bId);
-            const fmt = ((b3.platformStrategy[platform]||{}).formats||[]).find(f=>_isFeed(f)) || 'Post';
-            const newPost = { id:uid(), platform, format:fmt, title:'', thumbnail:null, slides:[], scheduledDate:null, campaignId:cId||null, order:(b3.scheduledPosts||[]).length };
-            saveBrandOverride(bId, { scheduledPosts:[...(b3.scheduledPosts||[]), newPost] });
-            renderFeed();
-            openCarouselEditor(newPost.id);
-          } else {
-            pickImage(dataUrl => {
-              const b3 = getBrand(bId);
-              const fmt = ((b3.platformStrategy[platform]||{}).formats||[]).find(f=>_isFeed(f)) || 'Post';
-              saveBrandOverride(bId, { scheduledPosts:[...(b3.scheduledPosts||[]), { id:uid(), platform, format:fmt, title:'', thumbnail:dataUrl, scheduledDate:null, campaignId:cId||null, order:(b3.scheduledPosts||[]).length }] });
-              renderFeed();
-            });
-          }
+          openThumbnailMenu(null, bId, cId, platform, isCarousel, renderFeed);
         });
 
         bindSwipeFaces(
           id => {
-            if (isCarousel) {
-              openCarouselEditor(id);
+            const b3 = getBrand(bId);
+            const post = (b3.scheduledPosts||[]).find(p => p.id === id);
+            if (!post) return;
+            const hasThumbnail = isCarousel ? (post.slides?.length > 0 || !!post.thumbnail) : !!post.thumbnail;
+            if (hasThumbnail) {
+              openPostDetailView(id, bId);
             } else {
-              pickImage(dataUrl => {
-                const b3 = getBrand(bId);
-                saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===id?{...p,thumbnail:dataUrl}:p) });
-                renderFeed();
-              });
+              openThumbnailMenu(id, bId, cId, platform, isCarousel, renderFeed);
             }
           },
           id => {
@@ -4022,6 +4008,185 @@ function openPostDetails(postId, brandId, onSave) {
     if (onSave) onSave();
   });
   sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
+}
+
+function openThumbnailMenu(postId, bId, cId, platform, isCarousel, onDone) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.5);display:flex;flex-direction:column;justify-content:flex-end';
+
+  function getOrCreatePost() {
+    if (postId) return postId;
+    const b3 = getBrand(bId);
+    const fmt = ((b3.platformStrategy[platform]||{}).formats||[]).find(f => _isFeed(f)) || 'Post';
+    const newId = uid();
+    saveBrandOverride(bId, { scheduledPosts:[...(b3.scheduledPosts||[]), { id:newId, platform, format:fmt, title:'', thumbnail:null, slides:[], scheduledDate:null, campaignId:cId||null }] });
+    postId = newId;
+    return newId;
+  }
+
+  function chevron() {
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>`;
+  }
+
+  overlay.innerHTML = `
+    <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)">
+      <div style="color:#fff;font-size:16px;font-weight:700;padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.07)">Add Post</div>
+      <button id="tmOpt1" type="button" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;background:none;border:none;width:100%;text-align:left">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px;color:#fff">Add Image / Placeholder</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Upload or set a placeholder image</div>
+        </div>
+        ${chevron()}
+      </button>
+      <button id="tmOpt2" type="button" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;background:none;border:none;width:100%;text-align:left">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(124,58,173,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c8a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px;color:#fff">Schedule</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Pick a date and time for this post</div>
+        </div>
+        ${chevron()}
+      </button>
+      <button id="tmOpt3" type="button" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;background:none;border:none;width:100%;text-align:left">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:15px;color:#fff">Add Details</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Title, notes, linked idea and more</div>
+        </div>
+        ${chevron()}
+      </button>
+      <button id="tmCancel" type="button" style="width:100%;background:none;border:none;color:rgba(255,255,255,0.4);font-size:15px;padding:16px;cursor:pointer">Cancel</button>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#tmOpt1').addEventListener('click', () => {
+    overlay.remove();
+    const pid = getOrCreatePost();
+    if (isCarousel) {
+      openCarouselEditor(pid);
+    } else {
+      pickImage(dataUrl => {
+        const b3 = getBrand(bId);
+        saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===pid?{...p,thumbnail:dataUrl}:p) });
+        if (onDone) onDone();
+      });
+    }
+  });
+
+  overlay.querySelector('#tmOpt2').addEventListener('click', () => {
+    overlay.remove();
+    const pid = getOrCreatePost();
+    const b3 = getBrand(bId);
+    const post = (b3.scheduledPosts||[]).find(p=>p.id===pid);
+    openScheduleSheet(bId, cId, { existingPostId: pid, date: post?.scheduledDate||'' }, onDone);
+  });
+
+  overlay.querySelector('#tmOpt3').addEventListener('click', () => {
+    overlay.remove();
+    const pid = getOrCreatePost();
+    openPostDetails(pid, bId, onDone);
+  });
+
+  overlay.querySelector('#tmCancel').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+function openPostDetailView(postId, brandId) {
+  const b = getBrand(brandId);
+  if (!b) return;
+  const post = (b.scheduledPosts||[]).find(p=>p.id===postId);
+  if (!post) return;
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:380;background:#0a0a0f;display:flex;flex-direction:column;overflow-y:auto';
+
+  const fmtDate = d => {
+    if (!d) return 'Not scheduled';
+    try { return new Date(d).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}); } catch(e) { return d; }
+  };
+
+  const idea = post.ideaId ? (b.ideas||[]).find(i=>i.id===post.ideaId) : null;
+
+  const heroHTML = post.thumbnail
+    ? `<img src="${escHtml(post.thumbnail)}" style="width:100%;max-height:320px;object-fit:cover;display:block" alt="">`
+    : `<div style="background:rgba(255,255,255,0.05);height:200px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:14px">No image yet</div>`;
+
+  const chipStyle = 'display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);margin-right:6px';
+  const chipsHTML = `
+    <div style="padding:12px 16px 4px;display:flex;flex-wrap:wrap;gap:6px">
+      ${post.platform ? `<span style="${chipStyle}">${escHtml(post.platform)}</span>` : ''}
+      ${post.format ? `<span style="${chipStyle}">${escHtml(post.format)}</span>` : ''}
+      <span style="${chipStyle}">${fmtDate(post.scheduledDate)}</span>
+    </div>`;
+
+  const titleHTML = post.title ? `
+    <div style="padding:16px 16px 8px">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.08em;margin-bottom:6px">TITLE</div>
+      <div style="font-size:16px;color:#fff;font-weight:600">${escHtml(post.title)}</div>
+    </div>` : '';
+
+  const notesHTML = post.notes ? `
+    <div style="padding:16px 16px 8px">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.08em;margin-bottom:6px">NOTES</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.8);white-space:pre-wrap">${escHtml(post.notes)}</div>
+    </div>` : '';
+
+  let ideaHTML = '';
+  if (idea) {
+    const refsHTML = idea.references ? `
+      <div style="margin-top:8px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.08em;margin-bottom:4px">REFERENCES</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);white-space:pre-wrap">${escHtml(idea.references)}</div>
+      </div>` : (idea.notes ? `
+      <div style="margin-top:8px">
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);white-space:pre-wrap">${escHtml(idea.notes)}</div>
+      </div>` : '');
+    ideaHTML = `
+      <div style="padding:16px 16px 8px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.08em;margin-bottom:6px">IDEA</div>
+        <div style="font-size:15px;color:#fff;font-weight:600">${escHtml(idea.title||'')}</div>
+        ${refsHTML}
+      </div>`;
+  }
+
+  const slides = post.slides||[];
+  const galleryHTML = slides.length > 1 ? `
+    <div style="padding:16px 16px 8px">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.08em;margin-bottom:10px">GALLERY</div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px">
+        ${slides.map(sl=>`<img src="${escHtml(sl.dataUrl||'')}" style="width:60px;height:80px;border-radius:6px;object-fit:cover;flex-shrink:0" alt="">`).join('')}
+      </div>
+    </div>` : '';
+
+  overlay.innerHTML = `
+    <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0">
+      <button id="pdvBack" type="button" style="background:none;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 12px 0 0">‹</button>
+      <div style="flex:1;text-align:center;font-size:16px;font-weight:700;color:#fff">${escHtml(post.title||'Post Details')}</div>
+      <button id="pdvDots" type="button" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0 0 0 12px;letter-spacing:1px;font-weight:900">···</button>
+    </div>
+    <div style="flex:1">
+      ${heroHTML}
+      ${chipsHTML}
+      ${titleHTML}
+      ${notesHTML}
+      ${ideaHTML}
+      ${galleryHTML}
+      <div style="padding:24px 16px;text-align:center;font-size:12px;color:rgba(255,255,255,0.25)">Tap ··· to edit</div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#pdvBack').addEventListener('click', () => overlay.remove());
+  overlay.querySelector('#pdvDots').addEventListener('click', () => {
+    openPostMenu(postId, brandId, null, () => { overlay.remove(); openPostDetailView(postId, brandId); });
+  });
 }
 
 function openIdeaPicker(brandId, onPick) {
