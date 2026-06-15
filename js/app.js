@@ -4395,6 +4395,18 @@ function calListHTML(brand, campId) {
   const addBtn = `<button class="cal-add-btn" id="calAddPost">+ Schedule Post</button>`;
   if (!posts.length) return `<div class="cal-empty-msg">No scheduled posts yet</div>${addBtn}`;
 
+  function statusPills(p) {
+    const cur = p.postStatus || 'Production';
+    return ['Production','Scheduled','Posted'].map(s => {
+      const on = cur === s;
+      let col;
+      if (s === 'Production') col = on ? 'background:rgba(251,146,60,0.2);border-color:rgba(251,146,60,0.5);color:#fb923c' : 'background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.3)';
+      else if (s === 'Scheduled') col = on ? 'background:rgba(124,58,173,0.25);border-color:rgba(180,120,255,0.4);color:#c8a0ff' : 'background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.3)';
+      else col = on ? 'background:rgba(34,197,94,0.18);border-color:rgba(34,197,94,0.45);color:#4ade80' : 'background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.3)';
+      return `<button class="cal-status-pill" data-post-id="${escHtml(p.id)}" data-status="${s}" style="${col};border-style:solid;border-width:1px;border-radius:100px;padding:4px 11px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">${s}</button>`;
+    }).join('');
+  }
+
   const byDate={};
   posts.forEach(p=>{ if(!byDate[p.scheduledDate])byDate[p.scheduledDate]=[]; byDate[p.scheduledDate].push(p); });
   const rows=Object.entries(byDate).map(([date,ps])=>{
@@ -4402,7 +4414,7 @@ function calListHTML(brand, campId) {
     const lbl=new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
     return `
       <div class="cal-list-date-hdr">${escHtml(lbl)}</div>
-      ${ps.map(p=>`<div class="cal-list-item"><div class="cal-list-platform-dot" style="background:${PLAT_DOT_COLORS[p.platform]||'#888'}"></div><div style="flex:1"><div class="cal-list-title">${escHtml(p.title||'Untitled')}</div><div class="cal-list-fmt">${escHtml(p.format)}</div></div></div>`).join('')}`;
+      ${ps.map(p=>`<div class="cal-list-item"><div class="cal-list-platform-dot" style="background:${PLAT_DOT_COLORS[p.platform]||'#888'}"></div><div style="flex:1"><div class="cal-list-title">${escHtml(p.title||'Untitled')}</div><div class="cal-list-fmt">${escHtml(p.format)}</div><div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${statusPills(p)}</div></div></div>`).join('')}`;
   }).join('');
   return `${rows}${addBtn}`;
 }
@@ -4438,6 +4450,16 @@ function bindCalendar(brandId, campId) {
       rerender();
     });
     document.getElementById('calAddPost')?.addEventListener('click',()=>showSchedSheet(null));
+    body?.querySelectorAll('.cal-status-pill').forEach(btn=>{
+      btn.addEventListener('click',e=>{
+        e.stopPropagation();
+        const b=getBrand(brandId);
+        if(!b) return;
+        const posts=(b.scheduledPosts||[]).map(p=>p.id===btn.dataset.postId?{...p,postStatus:btn.dataset.status}:p);
+        saveBrandOverride(brandId,{scheduledPosts:posts});
+        rerender();
+      });
+    });
     body?.addEventListener('click',e=>{
       const cell=e.target.closest('.cal-day-cell[data-date]');
       if(cell&&!e.target.closest('#calAddPost')) showSchedSheet(cell.dataset.date);
