@@ -2301,15 +2301,23 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId, fil
     (fc === 'all' || i.campaign === fc)
   );
 
+  const calSVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
   const ideasHTML = filtered.length ? filtered.map(idea => `
     <div class="idea-card" data-idea-id="${idea.id}" data-brand-id="${id}" style="cursor:pointer">
-      <div class="idea-card-meta">
-        <span class="chip">${PLATFORM_SHORT[idea.platform] || idea.platform}</span>
-        <span class="chip">${idea.format}</span>
-        ${idea.campaign ? `<span class="chip" style="color:rgba(255,255,255,0.35)">${escHtml(idea.campaign)}</span>` : ''}
+      <div style="display:flex;align-items:flex-start;gap:6px">
+        <div style="flex:1;min-width:0">
+          <div class="idea-card-meta">
+            <span class="chip">${PLATFORM_SHORT[idea.platform] || idea.platform}</span>
+            <span class="chip">${idea.format}</span>
+            ${idea.campaign ? `<span class="chip" style="color:rgba(255,255,255,0.35)">${escHtml(idea.campaign)}</span>` : ''}
+          </div>
+          <div class="idea-title">${escHtml(idea.title)}</div>
+          ${(idea.links||[]).length ? `<div class="idea-link-count">${idea.links.length} link${idea.links.length===1?'':'s'}</div>` : ''}
+        </div>
+        <button class="idea-cal-btn" data-idea-id="${idea.id}" style="flex-shrink:0;background:none;border:none;padding:6px 2px;cursor:pointer;color:rgba(255,255,255,0.22);line-height:0;margin-top:1px" title="Schedule">
+          ${calSVG}
+        </button>
       </div>
-      <div class="idea-title">${escHtml(idea.title)}</div>
-      ${(idea.links||[]).length ? `<div class="idea-link-count">${idea.links.length} link${idea.links.length===1?'':'s'}</div>` : ''}
     </div>
   `).join('') : '<div class="empty-card" style="margin-top:20px">No ideas match this filter</div>';
 
@@ -2393,6 +2401,19 @@ function buildFormatOptions(platform, current) {
 }
 
 function bindVaultPage(brandId) {
+  document.querySelectorAll('.idea-cal-btn[data-idea-id]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idea = (getBrand(brandId)?.ideas || []).find(i => i.id === btn.dataset.ideaId);
+      if (!idea) return;
+      openScheduleSheet(brandId, idea.campaignId || null, {
+        title: idea.title,
+        platform: idea.platform,
+        format: idea.format,
+      });
+    });
+  });
+
   document.querySelectorAll('.idea-card[data-idea-id]').forEach(card => {
     card.addEventListener('click', () => openIdeaDetail(card.dataset.brandId, card.dataset.ideaId));
   });
@@ -3664,17 +3685,22 @@ function bindVisualPlanner(brandId, campId) {
         const isCarousel = feedView === 'carousel';
 
         function thumbHTML(s) {
+          const dateLabel = s.scheduledDate
+            ? new Date(s.scheduledDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            : '+ DATE';
+          const calBadge = `<button class="planner-sched-btn" data-post-id="${escHtml(s.id)}" style="position:absolute;bottom:5px;left:5px;z-index:2;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:3px 8px;color:${s.scheduledDate?'#7dd3fc':'rgba(255,255,255,0.35)'};font-size:9px;font-weight:700;letter-spacing:0.3px;cursor:pointer;line-height:1.3">${escHtml(dateLabel)}</button>`;
           if (isCarousel) {
             const sl = s.slides || (s.thumbnail ? [{ dataUrl: s.thumbnail }] : []);
             const first = sl[0]?.dataUrl;
             return `${first
               ? `<img src="${escHtml(first)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
               : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`}
-              ${sl.length > 1 ? `<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:10px;color:#fff;font-weight:700;pointer-events:none">${sl.length}</div>` : ''}`;
+              ${sl.length > 1 ? `<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:10px;color:#fff;font-weight:700;pointer-events:none">${sl.length}</div>` : ''}
+              ${calBadge}`;
           }
-          return s.thumbnail
+          return `${s.thumbnail
             ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
-            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`;
+            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`}${calBadge}`;
         }
 
         body.innerHTML = `
@@ -3732,6 +3758,21 @@ function bindVisualPlanner(brandId, campId) {
             renderFeed();
           }
         );
+
+        body.querySelectorAll('.planner-sched-btn').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const post = (getBrand(bId)?.scheduledPosts || []).find(p => p.id === btn.dataset.postId);
+            if (!post) return;
+            openScheduleSheet(bId, cId || null, {
+              title: post.title,
+              platform: post.platform,
+              format: post.format,
+              date: post.scheduledDate || '',
+              existingPostId: post.id,
+            }, renderFeed);
+          });
+        });
       }
       renderFeed();
     }
@@ -3880,6 +3921,93 @@ function bindVisualPlanner(brandId, campId) {
   }
 
   bindDragDrop();
+}
+
+/* ═══════════════════════════════════════
+   SCHEDULE SHEET (global — called from calendar, vault, planner)
+═══════════════════════════════════════ */
+function openScheduleSheet(brandId, campId, opts, onDone) {
+  opts = opts || {};
+  document.getElementById('schedSheet')?.remove();
+  const b = getBrand(brandId);
+  if (!b) return;
+
+  const platforms = Object.keys(b.platformStrategy || {});
+  let selPlat = (opts.platform && platforms.includes(opts.platform)) ? opts.platform : (platforms[0] || 'instagram');
+  function fmtsForPlat(p) { return b.platformStrategy[p]?.formats || []; }
+  const initFmts = fmtsForPlat(selPlat);
+  let selFmt = (opts.format && initFmts.includes(opts.format)) ? opts.format : (initFmts[0] || 'Post');
+  const isUpdate = !!opts.existingPostId;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'schedSheet';
+  overlay.className = 'add-post-overlay';
+  overlay.innerHTML = `
+    <div class="sched-sheet">
+      <div class="sched-title">${isUpdate ? 'Set Date' : 'Schedule Post'}</div>
+      ${!isUpdate ? `<div class="notion-field"><div class="notion-label">TITLE</div><input class="notion-input" id="schedTitle" placeholder="Post title" value="${escHtml(opts.title || '')}"></div>` : ''}
+      <div class="notion-field"><div class="notion-label">DATE</div><input type="date" class="notion-input notion-date" id="schedDate" value="${opts.date || ''}"></div>
+      ${!isUpdate ? `
+      <div class="notion-field">
+        <div class="notion-label">PLATFORM</div>
+        <div class="add-post-format-row" id="schedPlatRow">
+          ${platforms.map(p => `<button class="add-post-fmt-btn${p===selPlat?' active':''}" data-plat="${p}">${PLAT_DISPLAY_NAMES[p]||p}</button>`).join('')}
+        </div>
+      </div>
+      <div class="notion-field">
+        <div class="notion-label">FORMAT</div>
+        <div class="add-post-format-row" id="schedFmtRow">
+          ${initFmts.map(f => `<button class="add-post-fmt-btn${f===selFmt?' active':''}" data-fmt="${escHtml(f)}">${escHtml(f)}</button>`).join('')}
+        </div>
+      </div>` : ''}
+      <button class="sched-save" id="schedSave">Schedule</button>
+      <button class="add-post-cancel" id="schedCancel">Cancel</button>
+    </div>`;
+  document.getElementById('app').appendChild(overlay);
+
+  function rebindFmts() {
+    overlay.querySelectorAll('#schedFmtRow .add-post-fmt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        overlay.querySelectorAll('#schedFmtRow .add-post-fmt-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); selFmt = btn.dataset.fmt;
+      });
+    });
+  }
+  if (!isUpdate) {
+    rebindFmts();
+    overlay.querySelectorAll('#schedPlatRow .add-post-fmt-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        overlay.querySelectorAll('#schedPlatRow .add-post-fmt-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); selPlat = btn.dataset.plat;
+        const fmts = fmtsForPlat(selPlat);
+        selFmt = fmts[0] || 'Post';
+        const fmtRow = overlay.querySelector('#schedFmtRow');
+        if (fmtRow) {
+          fmtRow.innerHTML = fmts.map((f,i) => `<button class="add-post-fmt-btn${i===0?' active':''}" data-fmt="${escHtml(f)}">${escHtml(f)}</button>`).join('');
+          rebindFmts();
+        }
+      });
+    });
+  }
+
+  document.getElementById('schedSave')?.addEventListener('click', () => {
+    const dateVal = document.getElementById('schedDate')?.value;
+    if (!dateVal) { document.getElementById('schedDate').style.borderBottomColor = 'rgba(255,100,100,0.6)'; return; }
+    const b2 = getBrand(brandId);
+    if (!b2) return;
+    if (isUpdate) {
+      const posts = (b2.scheduledPosts || []).map(p => p.id === opts.existingPostId ? { ...p, scheduledDate: dateVal } : p);
+      saveBrandOverride(brandId, { scheduledPosts: posts });
+    } else {
+      const title = document.getElementById('schedTitle')?.value.trim();
+      const newPost = { id: uid(), title: title || '', platform: selPlat, format: selFmt, scheduledDate: dateVal, campaignId: campId || null, thumbnail: opts.thumbnail || null };
+      saveBrandOverride(brandId, { scheduledPosts: [...(b2.scheduledPosts || []), newPost] });
+    }
+    overlay.remove();
+    if (onDone) onDone();
+  });
+  document.getElementById('schedCancel')?.addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 }
 
 /* ═══════════════════════════════════════
@@ -4040,74 +4168,7 @@ function bindCalendar(brandId, campId) {
   });
 
   function showSchedSheet(date) {
-    document.getElementById('schedSheet')?.remove();
-    const b=getBrand(brandId);
-    if(!b) return;
-    const platforms=Object.keys(b.platformStrategy||{});
-    let selPlat=platforms[0]||'instagram';
-    let selFmt=(b.platformStrategy[selPlat]?.formats||[])[0]||'Post';
-
-    function fmtsForPlat(p){ return b.platformStrategy[p]?.formats||[]; }
-
-    const overlay=document.createElement('div');
-    overlay.id='schedSheet';
-    overlay.className='add-post-overlay';
-    overlay.innerHTML=`
-      <div class="sched-sheet">
-        <div class="sched-title">Schedule Post</div>
-        <div class="notion-field"><div class="notion-label">TITLE</div><input class="notion-input" id="schedTitle" placeholder="Post title"></div>
-        <div class="notion-field"><div class="notion-label">DATE</div><input type="date" class="notion-input notion-date" id="schedDate" value="${date||''}"></div>
-        <div class="notion-field">
-          <div class="notion-label">PLATFORM</div>
-          <div class="add-post-format-row" id="schedPlatRow">
-            ${platforms.map((p,i)=>`<button class="add-post-fmt-btn${i===0?' active':''}" data-plat="${p}">${PLAT_DISPLAY_NAMES[p]||p}</button>`).join('')}
-          </div>
-        </div>
-        <div class="notion-field">
-          <div class="notion-label">FORMAT</div>
-          <div class="add-post-format-row" id="schedFmtRow">
-            ${fmtsForPlat(selPlat).map((f,i)=>`<button class="add-post-fmt-btn${i===0?' active':''}" data-fmt="${escHtml(f)}">${escHtml(f)}</button>`).join('')}
-          </div>
-        </div>
-        <button class="sched-save" id="schedSave">Schedule</button>
-        <button class="add-post-cancel" id="schedCancel">Cancel</button>
-      </div>`;
-    document.getElementById('app').appendChild(overlay);
-
-    function rebindFmts() {
-      overlay.querySelectorAll('#schedFmtRow .add-post-fmt-btn').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          overlay.querySelectorAll('#schedFmtRow .add-post-fmt-btn').forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active'); selFmt=btn.dataset.fmt;
-        });
-      });
-    }
-    rebindFmts();
-
-    overlay.querySelectorAll('#schedPlatRow .add-post-fmt-btn').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        overlay.querySelectorAll('#schedPlatRow .add-post-fmt-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active'); selPlat=btn.dataset.plat;
-        const fmts=fmtsForPlat(selPlat);
-        selFmt=fmts[0]||'Post';
-        const fmtRow=overlay.querySelector('#schedFmtRow');
-        if(fmtRow){ fmtRow.innerHTML=fmts.map((f,i)=>`<button class="add-post-fmt-btn${i===0?' active':''}" data-fmt="${escHtml(f)}">${escHtml(f)}</button>`).join(''); rebindFmts(); }
-      });
-    });
-
-    document.getElementById('schedSave')?.addEventListener('click',()=>{
-      const title=document.getElementById('schedTitle')?.value.trim();
-      const dateVal=document.getElementById('schedDate')?.value;
-      if(!dateVal){ document.getElementById('schedDate').style.borderBottomColor='rgba(255,100,100,0.6)'; return; }
-      const b2=getBrand(brandId);
-      if(!b2) return;
-      const newPost={id:uid(),title:title||'',platform:selPlat,format:selFmt,scheduledDate:dateVal,campaignId:campId||null,thumbnail:null};
-      saveBrandOverride(brandId,{scheduledPosts:[...(b2.scheduledPosts||[]),newPost]});
-      overlay.remove();
-      rerender();
-    });
-    document.getElementById('schedCancel')?.addEventListener('click',()=>overlay.remove());
-    overlay.addEventListener('click',e=>{ if(e.target===overlay) overlay.remove(); });
+    openScheduleSheet(brandId, campId, { date: date || '' }, rerender);
   }
 
   bindBodyClicks();
