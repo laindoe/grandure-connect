@@ -528,9 +528,6 @@ function homeDockHTML() {
           <button class="lightning-menu-item" data-lm="capture">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 13h7l-1 9 10-12h-7z"/></svg> Capture Idea
           </button>
-          <button class="lightning-menu-item" data-lm="vault">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a7 7 0 017 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 017-7z"/><circle cx="12" cy="9" r="2.5"/></svg> Idea Vault
-          </button>
         </div>
         <button class="nav-btn nav-btn-center" id="dockCapture">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -945,9 +942,6 @@ function bindHomeDock() {
         }
       } else if (action === 'capture') {
         document.getElementById('captureOverlay').style.display = 'flex';
-      } else if (action === 'vault') {
-        const firstBrand = BRANDS[0];
-        if (firstBrand) navigate(`/vault?id=${firstBrand.id}`);
       }
     });
   });
