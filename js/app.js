@@ -3246,12 +3246,98 @@ function bindVisualPlanner(brandId, campId) {
 
     function pickImage(cb) { pendingSecCb = cb; secFile.click(); }
 
+    const trashSVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+
+    function swipeCard(id, w, h, thumbHtml) {
+      const size = h === 'aspect' ? `width:${w};aspect-ratio:4/5` : `width:${w};height:${h}`;
+      return `
+        <div style="position:relative;${size};flex-shrink:0;border-radius:10px;overflow:hidden">
+          <div data-swipe-del="${escHtml(id)}" style="position:absolute;right:0;top:0;bottom:0;width:72px;background:#b71c1c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;border-radius:0 10px 10px 0">
+            ${trashSVG}
+            <span style="color:#fff;font-size:10px;font-weight:700;pointer-events:none">Delete</span>
+          </div>
+          <div data-swipe-face data-item-id="${escHtml(id)}" style="position:absolute;inset:0;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;will-change:transform;cursor:pointer;touch-action:pan-y">
+            ${thumbHtml}
+          </div>
+        </div>`;
+    }
+
+    function bindSwipeFaces(onTapId, onDelId) {
+      let openFace = null;
+      const SNAP = 72;
+
+      function closeFace(face) {
+        if (!face) return;
+        face.style.transition = 'transform 0.2s ease';
+        face.style.transform = 'translateX(0)';
+        openFace = null;
+      }
+
+      body.querySelectorAll('[data-swipe-face]').forEach(face => {
+        let startX = 0, startY = 0, curDx = 0, tracking = false;
+
+        face.addEventListener('touchstart', e => {
+          if (openFace && openFace !== face) closeFace(openFace);
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          curDx = 0; tracking = true;
+          face.style.transition = 'none';
+        }, { passive: true });
+
+        face.addEventListener('touchmove', e => {
+          if (!tracking) return;
+          const dx = e.touches[0].clientX - startX;
+          const dy = e.touches[0].clientY - startY;
+          if (Math.abs(dy) > Math.abs(dx) && Math.abs(curDx) < 5) { tracking = false; return; }
+          if (dx > 0 && Math.abs(curDx) < 5) return;
+          curDx = Math.max(Math.min(dx, 0), -SNAP);
+          face.style.transform = `translateX(${curDx}px)`;
+        }, { passive: true });
+
+        face.addEventListener('touchend', () => {
+          if (!tracking) return;
+          tracking = false;
+          face.style.transition = 'transform 0.2s ease';
+          if (curDx < -30) {
+            face.style.transform = `translateX(-${SNAP}px)`;
+            openFace = face;
+          } else {
+            face.style.transform = 'translateX(0)';
+            if (openFace === face) openFace = null;
+          }
+        }, { passive: true });
+
+        face.addEventListener('touchcancel', () => {
+          tracking = false;
+          face.style.transition = 'transform 0.2s ease';
+          face.style.transform = 'translateX(0)';
+          if (openFace === face) openFace = null;
+        }, { passive: true });
+
+        face.addEventListener('click', () => {
+          if (openFace === face) { closeFace(face); return; }
+          onTapId(face.dataset.itemId);
+        });
+      });
+
+      body.querySelectorAll('[data-swipe-del]').forEach(del => {
+        del.addEventListener('click', e => {
+          e.stopPropagation();
+          openFace = null;
+          onDelId(del.dataset.swipeDel);
+        });
+      });
+    }
+
     // ── STORIES ──────────────────────────────────────────
     if (sectionType === 'stories') {
       function renderStories() {
         const b2 = getBrand(bId);
         const highlights = (b2.plannerHighlights||{})[platform]||[];
         const storyItems = (b2.scheduledPosts||[]).filter(i=>i.platform===platform && _isStory(i.format) && (!cId||i.campaignId===cId));
+        const thumb = s => s.thumbnail
+          ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
+          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`;
 
         body.innerHTML = `
           <div style="margin-bottom:28px">
@@ -3273,11 +3359,7 @@ function bindVisualPlanner(brandId, campId) {
           <div>
             <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:12px">STORIES</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              ${storyItems.map(s=>`
-                <div data-story-id="${escHtml(s.id)}" style="width:88px;height:156px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;flex-shrink:0;cursor:pointer">
-                  ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>'}
-                  <button data-story-del="${escHtml(s.id)}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
-                </div>`).join('')}
+              ${storyItems.map(s=>swipeCard(s.id,'88px','156px',thumb(s))).join('')}
               <button id="secAddStory" type="button" style="width:88px;height:156px;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;flex-shrink:0;cursor:pointer">+</button>
             </div>
           </div>`;
@@ -3310,25 +3392,18 @@ function bindVisualPlanner(brandId, campId) {
           });
         });
 
-        body.querySelectorAll('[data-story-id]').forEach(card => {
-          card.addEventListener('click', e => {
-            if (e.target.closest('[data-story-del]')) return;
-            pickImage(dataUrl => {
-              const b3 = getBrand(bId);
-              saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===card.dataset.storyId?{...p,thumbnail:dataUrl}:p) });
-              renderStories();
-            });
-          });
-        });
-
-        body.querySelectorAll('[data-story-del]').forEach(btn => {
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
+        bindSwipeFaces(
+          id => pickImage(dataUrl => {
             const b3 = getBrand(bId);
-            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).filter(p=>p.id!==btn.dataset.storyDel) });
+            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===id?{...p,thumbnail:dataUrl}:p) });
             renderStories();
-          });
-        });
+          }),
+          id => {
+            const b3 = getBrand(bId);
+            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).filter(p=>p.id!==id) });
+            renderStories();
+          }
+        );
       }
       renderStories();
 
@@ -3337,14 +3412,13 @@ function bindVisualPlanner(brandId, campId) {
       function renderReels() {
         const b2 = getBrand(bId);
         const reelItems = (b2.scheduledPosts||[]).filter(i=>i.platform===platform && _isReel(i.format) && (!cId||i.campaignId===cId));
+        const thumb = s => s.thumbnail
+          ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
+          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`;
 
         body.innerHTML = `
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${reelItems.map(s=>`
-              <div data-reel-id="${escHtml(s.id)}" style="width:88px;height:156px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;flex-shrink:0;cursor:pointer">
-                ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>'}
-                <button data-reel-del="${escHtml(s.id)}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
-              </div>`).join('')}
+            ${reelItems.map(s=>swipeCard(s.id,'88px','156px',thumb(s))).join('')}
             <button id="secAddReel" type="button" style="width:88px;height:156px;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;flex-shrink:0;cursor:pointer">+</button>
           </div>`;
 
@@ -3357,25 +3431,18 @@ function bindVisualPlanner(brandId, campId) {
           });
         });
 
-        body.querySelectorAll('[data-reel-id]').forEach(card => {
-          card.addEventListener('click', e => {
-            if (e.target.closest('[data-reel-del]')) return;
-            pickImage(dataUrl => {
-              const b3 = getBrand(bId);
-              saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===card.dataset.reelId?{...p,thumbnail:dataUrl}:p) });
-              renderReels();
-            });
-          });
-        });
-
-        body.querySelectorAll('[data-reel-del]').forEach(btn => {
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
+        bindSwipeFaces(
+          id => pickImage(dataUrl => {
             const b3 = getBrand(bId);
-            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).filter(p=>p.id!==btn.dataset.reelDel) });
+            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===id?{...p,thumbnail:dataUrl}:p) });
             renderReels();
-          });
-        });
+          }),
+          id => {
+            const b3 = getBrand(bId);
+            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).filter(p=>p.id!==id) });
+            renderReels();
+          }
+        );
       }
       renderReels();
 
@@ -3387,6 +3454,9 @@ function bindVisualPlanner(brandId, campId) {
         const b2 = getBrand(bId);
         const feedItems = (b2.scheduledPosts||[]).filter(i=>i.platform===platform && _isFeed(i.format) && (!cId||i.campaignId===cId));
         const isCarousel = feedView === 'carousel';
+        const thumb = s => s.thumbnail
+          ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
+          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`;
 
         body.innerHTML = `
           <div style="display:flex;gap:6px;margin-bottom:16px">
@@ -3395,19 +3465,11 @@ function bindVisualPlanner(brandId, campId) {
           </div>
           ${isCarousel ? `
             <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px">
-              ${feedItems.map(s=>`
-                <div data-feed-id="${escHtml(s.id)}" style="width:140px;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;flex-shrink:0;cursor:pointer">
-                  ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>'}
-                  <button data-feed-del="${escHtml(s.id)}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
-                </div>`).join('')}
+              ${feedItems.map(s=>swipeCard(s.id,'140px','aspect',thumb(s))).join('')}
               <button id="secAddFeed" type="button" style="width:140px;aspect-ratio:4/5;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;flex-shrink:0;cursor:pointer">+</button>
             </div>` : `
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              ${feedItems.map(s=>`
-                <div data-feed-id="${escHtml(s.id)}" style="width:calc(50% - 4px);aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;cursor:pointer">
-                  ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>'}
-                  <button data-feed-del="${escHtml(s.id)}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
-                </div>`).join('')}
+              ${feedItems.map(s=>swipeCard(s.id,'calc(50% - 4px)','aspect',thumb(s))).join('')}
               <button id="secAddFeed" type="button" style="width:calc(50% - 4px);aspect-ratio:4/5;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;cursor:pointer">+</button>
             </div>`}`;
 
@@ -3424,25 +3486,18 @@ function bindVisualPlanner(brandId, campId) {
           });
         });
 
-        body.querySelectorAll('[data-feed-id]').forEach(card => {
-          card.addEventListener('click', e => {
-            if (e.target.closest('[data-feed-del]')) return;
-            pickImage(dataUrl => {
-              const b3 = getBrand(bId);
-              saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===card.dataset.feedId?{...p,thumbnail:dataUrl}:p) });
-              renderFeed();
-            });
-          });
-        });
-
-        body.querySelectorAll('[data-feed-del]').forEach(btn => {
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
+        bindSwipeFaces(
+          id => pickImage(dataUrl => {
             const b3 = getBrand(bId);
-            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).filter(p=>p.id!==btn.dataset.feedDel) });
+            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===id?{...p,thumbnail:dataUrl}:p) });
             renderFeed();
-          });
-        });
+          }),
+          id => {
+            const b3 = getBrand(bId);
+            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).filter(p=>p.id!==id) });
+            renderFeed();
+          }
+        );
       }
       renderFeed();
     }
