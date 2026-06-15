@@ -3001,9 +3001,15 @@ function pageVisualPlanner(brandId, campId) {
         `<div class="planner-thumb circle" style="overflow:hidden">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover">`:''}</div>`
       ).join('');
       html += `<div class="planner-sec-card" data-section="stories" data-platform="${platform}">
-        <div class="planner-sec-hd"><div><div class="planner-sec-label">STORIES</div><div class="planner-sec-count">${storyItems.length} stories · ${highlights.length} highlights</div></div><div class="planner-sec-chev">${chev}</div></div>
-        ${(highlights.length || storyItems.length)
-          ? `<div class="planner-thumb-row">${circles}${thumbs(storyItems,'portrait')}<div class="planner-thumb portrait planner-thumb-add">+</div></div>`
+        <div class="planner-sec-hd"><div><div class="planner-sec-label">HIGHLIGHTS</div><div class="planner-sec-count">${highlights.length} highlights</div></div><div class="planner-sec-chev">${chev}</div></div>
+        ${highlights.length
+          ? `<div class="planner-thumb-row">${circles}<div class="planner-thumb circle planner-thumb-add" style="font-size:18px">+</div></div>`
+          : `<div class="planner-sec-empty">Tap to add highlights</div>`}
+      </div>
+      <div class="planner-sec-card" data-section="stories" data-platform="${platform}">
+        <div class="planner-sec-hd"><div><div class="planner-sec-label">STORIES</div><div class="planner-sec-count">${storyItems.length} stories</div></div><div class="planner-sec-chev">${chev}</div></div>
+        ${storyItems.length
+          ? `<div class="planner-thumb-row">${thumbs(storyItems,'portrait')}<div class="planner-thumb portrait planner-thumb-add">+</div></div>`
           : `<div class="planner-sec-empty">Tap to add stories</div>`}
       </div>`;
     }
@@ -3097,9 +3103,15 @@ function bindVisualPlanner(brandId, campId) {
         `<div class="planner-thumb circle" style="overflow:hidden">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover">`:''}</div>`
       ).join('');
       html += `<div class="planner-sec-card" data-section="stories" data-platform="${activePlatform}">
-        <div class="planner-sec-hd"><div><div class="planner-sec-label">STORIES</div><div class="planner-sec-count">${storyItems.length} stories · ${highlights.length} highlights</div></div><div class="planner-sec-chev">${chev}</div></div>
-        ${(highlights.length || storyItems.length)
-          ? `<div class="planner-thumb-row">${circles}${thumbs(storyItems,'portrait')}<div class="planner-thumb portrait planner-thumb-add">+</div></div>`
+        <div class="planner-sec-hd"><div><div class="planner-sec-label">HIGHLIGHTS</div><div class="planner-sec-count">${highlights.length} highlights</div></div><div class="planner-sec-chev">${chev}</div></div>
+        ${highlights.length
+          ? `<div class="planner-thumb-row">${circles}<div class="planner-thumb circle planner-thumb-add" style="font-size:18px">+</div></div>`
+          : `<div class="planner-sec-empty">Tap to add highlights</div>`}
+      </div>
+      <div class="planner-sec-card" data-section="stories" data-platform="${activePlatform}">
+        <div class="planner-sec-hd"><div><div class="planner-sec-label">STORIES</div><div class="planner-sec-count">${storyItems.length} stories</div></div><div class="planner-sec-chev">${chev}</div></div>
+        ${storyItems.length
+          ? `<div class="planner-thumb-row">${thumbs(storyItems,'portrait')}<div class="planner-thumb portrait planner-thumb-add">+</div></div>`
           : `<div class="planner-sec-empty">Tap to add stories</div>`}
       </div>`;
     }
