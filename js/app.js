@@ -3685,10 +3685,7 @@ function bindVisualPlanner(brandId, campId) {
         const isCarousel = feedView === 'carousel';
 
         function thumbHTML(s) {
-          const dateLabel = s.scheduledDate
-            ? new Date(s.scheduledDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-            : '+ DATE';
-          const calBadge = `<button class="planner-sched-btn" data-post-id="${escHtml(s.id)}" style="position:absolute;bottom:5px;left:5px;z-index:2;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:3px 8px;color:${s.scheduledDate?'#7dd3fc':'rgba(255,255,255,0.35)'};font-size:9px;font-weight:700;letter-spacing:0.3px;cursor:pointer;line-height:1.3">${escHtml(dateLabel)}</button>`;
+          const dotsBtn = `<button class="planner-post-menu-btn" data-post-id="${escHtml(s.id)}" style="position:absolute;top:5px;right:5px;z-index:2;width:26px;height:26px;border-radius:7px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:15px;line-height:0;cursor:pointer;display:flex;align-items:center;justify-content:center;letter-spacing:1px;font-weight:900">···</button>`;
           if (isCarousel) {
             const sl = s.slides || (s.thumbnail ? [{ dataUrl: s.thumbnail }] : []);
             const first = sl[0]?.dataUrl;
@@ -3696,11 +3693,11 @@ function bindVisualPlanner(brandId, campId) {
               ? `<img src="${escHtml(first)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
               : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`}
               ${sl.length > 1 ? `<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:10px;color:#fff;font-weight:700;pointer-events:none">${sl.length}</div>` : ''}
-              ${calBadge}`;
+              ${dotsBtn}`;
           }
           return `${s.thumbnail
             ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
-            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`}${calBadge}`;
+            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`}${dotsBtn}`;
         }
 
         body.innerHTML = `
@@ -3759,18 +3756,10 @@ function bindVisualPlanner(brandId, campId) {
           }
         );
 
-        body.querySelectorAll('.planner-sched-btn').forEach(btn => {
+        body.querySelectorAll('.planner-post-menu-btn').forEach(btn => {
           btn.addEventListener('click', e => {
             e.stopPropagation();
-            const post = (getBrand(bId)?.scheduledPosts || []).find(p => p.id === btn.dataset.postId);
-            if (!post) return;
-            openScheduleSheet(bId, cId || null, {
-              title: post.title,
-              platform: post.platform,
-              format: post.format,
-              date: post.scheduledDate || '',
-              existingPostId: post.id,
-            }, renderFeed);
+            openPostMenu(btn.dataset.postId, bId, cId || null, renderFeed);
           });
         });
       }
@@ -3921,6 +3910,96 @@ function bindVisualPlanner(brandId, campId) {
   }
 
   bindDragDrop();
+}
+
+/* ═══════════════════════════════════════
+   PLANNER POST ACTION MENU
+═══════════════════════════════════════ */
+function openPostMenu(postId, brandId, campId, onRefresh) {
+  document.getElementById('postMenu')?.remove();
+  const b = getBrand(brandId);
+  const post = (b?.scheduledPosts || []).find(p => p.id === postId);
+  if (!post) return;
+
+  const calSVG = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+  const editSVG = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+
+  const dateLabel = post.scheduledDate
+    ? new Date(post.scheduledDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null;
+
+  const sheet = document.createElement('div');
+  sheet.id = 'postMenu';
+  sheet.style.cssText = 'position:fixed;inset:0;z-index:450;background:rgba(0,0,0,0.5);display:flex;flex-direction:column;justify-content:flex-end';
+  sheet.innerHTML = `
+    <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)">
+      <div style="padding:14px 20px 12px;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <div style="font-size:14px;font-weight:600;color:#fff">${escHtml(post.title || post.format || 'Post')}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px">${PLAT_DISPLAY_NAMES[post.platform] || post.platform} · ${escHtml(post.format)}${dateLabel ? ' · ' + dateLabel : ''}</div>
+      </div>
+      <button id="postMenuSchedule" style="width:100%;padding:16px 20px;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.06);color:#fff;font-size:15px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px">
+        ${calSVG} Schedule
+      </button>
+      <button id="postMenuDetails" style="width:100%;padding:16px 20px;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.06);color:#fff;font-size:15px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px">
+        ${editSVG} Add Details
+      </button>
+      <button id="postMenuCancel" style="width:100%;padding:15px 20px;background:none;border:none;color:rgba(255,255,255,0.35);font-size:14px;cursor:pointer">Cancel</button>
+    </div>`;
+
+  document.body.appendChild(sheet);
+
+  sheet.querySelector('#postMenuSchedule')?.addEventListener('click', () => {
+    sheet.remove();
+    openScheduleSheet(brandId, campId, { existingPostId: post.id, date: post.scheduledDate || '' }, onRefresh);
+  });
+  sheet.querySelector('#postMenuDetails')?.addEventListener('click', () => {
+    sheet.remove();
+    openPostDetails(postId, brandId, onRefresh);
+  });
+  sheet.querySelector('#postMenuCancel')?.addEventListener('click', () => sheet.remove());
+  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
+}
+
+function openPostDetails(postId, brandId, onSave) {
+  document.getElementById('postDetails')?.remove();
+  const b = getBrand(brandId);
+  const post = (b?.scheduledPosts || []).find(p => p.id === postId);
+  if (!post) return;
+
+  const sheet = document.createElement('div');
+  sheet.id = 'postDetails';
+  sheet.style.cssText = 'position:fixed;inset:0;z-index:450;background:rgba(0,0,0,0.5);display:flex;flex-direction:column;justify-content:flex-end';
+  sheet.innerHTML = `
+    <div style="background:#1c1c1e;border-radius:20px 20px 0 0;max-height:75vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0">
+        <div style="font-size:16px;font-weight:700;color:#fff">Post Details</div>
+        <button id="postDetailsSave" style="background:rgba(255,255,255,0.1);border:none;border-radius:20px;padding:7px 18px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Save</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:20px;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">TITLE</div>
+          <input id="postDetailsTitle" type="text" value="${escHtml(post.title || '')}" placeholder="Add a title…" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;-webkit-appearance:none">
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">NOTES</div>
+          <textarea id="postDetailsNotes" placeholder="Add notes…" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:none;min-height:100px;box-sizing:border-box;-webkit-appearance:none">${escHtml(post.notes || '')}</textarea>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(sheet);
+
+  sheet.querySelector('#postDetailsSave')?.addEventListener('click', () => {
+    const title = sheet.querySelector('#postDetailsTitle')?.value.trim();
+    const notes = sheet.querySelector('#postDetailsNotes')?.value.trim();
+    const b2 = getBrand(brandId);
+    if (!b2) return;
+    const posts = (b2.scheduledPosts || []).map(p => p.id === postId ? { ...p, title, notes } : p);
+    saveBrandOverride(brandId, { scheduledPosts: posts });
+    sheet.remove();
+    if (onSave) onSave();
+  });
+  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
 }
 
 /* ═══════════════════════════════════════
