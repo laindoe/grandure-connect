@@ -4112,18 +4112,26 @@ function openScheduleSheet(brandId, campId, opts, onDone) {
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 }
 
-function openPlannerPicker(brandId, campId, onPick) {
+function openPlannerPicker(brandId, campId, onPick, onManual) {
   document.getElementById('plannerPicker')?.remove();
   const b = getBrand(brandId);
   if (!b) return;
 
-  const posts = (b.scheduledPosts || []).filter(p => !campId || p.campaignId === campId);
+  const allPosts = (b.scheduledPosts || []).filter(p => !campId || p.campaignId === campId);
+  const platforms = [...new Set(allPosts.map(p => p.platform))];
+  let selPlat = 'all';
+  let selFmt  = 'all';
 
-  const grouped = {};
-  posts.forEach(p => {
-    if (!grouped[p.platform]) grouped[p.platform] = [];
-    grouped[p.platform].push(p);
-  });
+  function filteredPosts() {
+    return allPosts.filter(p =>
+      (selPlat === 'all' || p.platform === selPlat) &&
+      (selFmt  === 'all' || p.format  === selFmt)
+    );
+  }
+  function availFmts() {
+    const base = selPlat === 'all' ? allPosts : allPosts.filter(p => p.platform === selPlat);
+    return [...new Set(base.map(p => p.format).filter(Boolean))];
+  }
 
   function postThumb(p) {
     const src = p.thumbnail || p.slides?.[0]?.dataUrl;
@@ -4132,47 +4140,65 @@ function openPlannerPicker(brandId, campId, onPick) {
       : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.15);font-size:22px">+</div>`;
   }
 
-  const platformSections = Object.entries(grouped).map(([plat, platPosts]) => `
-    <div style="margin-bottom:20px">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:10px">${PLAT_DISPLAY_NAMES[plat] || plat}</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-        ${platPosts.map(p => `
-          <button class="picker-post-btn" data-post-id="${escHtml(p.id)}" style="position:relative;aspect-ratio:4/5;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);overflow:hidden;cursor:pointer;padding:0">
-            ${postThumb(p)}
-            ${p.title ? `<div style="position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,0.75));font-size:9px;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left">${escHtml(p.title)}</div>` : ''}
-            ${p.format ? `<div style="position:absolute;top:5px;left:5px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:8px;color:rgba(255,255,255,0.6);font-weight:600">${escHtml(p.format)}</div>` : ''}
-          </button>
-        `).join('')}
+  function bodyHTML() {
+    const posts = filteredPosts();
+    const fmts  = availFmts();
+    return `
+      <div style="display:flex;gap:6px;padding-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch">
+        ${['all',...platforms].map(p=>`<button class="pp-plat" data-plat="${p}" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:${selPlat===p?'rgba(255,255,255,0.12)':'transparent'};color:${selPlat===p?'#fff':'rgba(255,255,255,0.4)'};font-size:12px;font-weight:600;cursor:pointer">${p==='all'?'All':PLAT_DISPLAY_NAMES[p]||p}</button>`).join('')}
       </div>
-    </div>
-  `).join('');
+      ${fmts.length > 1 ? `<div style="display:flex;gap:6px;padding-bottom:12px;flex-wrap:wrap">
+        ${['all',...fmts].map(f=>`<button class="pp-fmt" data-fmt="${escHtml(f)}" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:${selFmt===f?'rgba(255,255,255,0.1)':'transparent'};color:${selFmt===f?'#fff':'rgba(255,255,255,0.35)'};font-size:11px;font-weight:600;cursor:pointer">${f==='all'?'All formats':escHtml(f)}</button>`).join('')}
+      </div>` : ''}
+      ${posts.length ? `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${posts.map(p=>`
+          <button class="pp-post" data-post-id="${escHtml(p.id)}" style="position:relative;aspect-ratio:4/5;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);overflow:hidden;cursor:pointer;padding:0">
+            ${postThumb(p)}
+            ${p.format?`<div style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.6);border-radius:4px;padding:2px 5px;font-size:8px;color:rgba(255,255,255,0.7);font-weight:600">${escHtml(p.format)}</div>`:''}
+            ${p.title?`<div style="position:absolute;bottom:0;left:0;right:0;padding:4px 6px;background:linear-gradient(transparent,rgba(0,0,0,0.75));font-size:9px;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left">${escHtml(p.title)}</div>`:''}
+          </button>`).join('')}
+      </div>` : `<div style="color:rgba(255,255,255,0.25);font-size:13px;text-align:center;padding:40px 0">No posts match this filter</div>`}`;
+  }
 
   const sheet = document.createElement('div');
   sheet.id = 'plannerPicker';
   sheet.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.6);display:flex;flex-direction:column;justify-content:flex-end';
   sheet.innerHTML = `
-    <div style="background:#1c1c1e;border-radius:20px 20px 0 0;max-height:78vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)">
+    <div style="background:#1c1c1e;border-radius:20px 20px 0 0;max-height:82vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0">
         <div style="font-size:16px;font-weight:700;color:#fff">Pick from Planner</div>
-        <button id="plannerPickerClose" style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:24px;line-height:1;cursor:pointer;padding:0">×</button>
+        <button id="ppClose" style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:24px;line-height:1;cursor:pointer;padding:0">×</button>
       </div>
-      <div style="flex:1;overflow-y:auto;padding:16px 20px;overscroll-behavior:contain">
-        ${posts.length ? platformSections : '<div style="color:rgba(255,255,255,0.25);font-size:14px;text-align:center;padding:48px 0">No posts in planner yet</div>'}
-      </div>
+      <div id="ppBody" style="flex:1;overflow-y:auto;padding:14px 20px 0;overscroll-behavior:contain"></div>
+      ${onManual ? `<div style="padding:10px 20px 14px;border-top:1px solid rgba(255,255,255,0.06);flex-shrink:0">
+        <button id="ppManual" style="width:100%;background:none;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px;color:rgba(255,255,255,0.38);font-size:13px;font-weight:500;cursor:pointer">+ Enter manually</button>
+      </div>` : ''}
     </div>`;
 
   document.body.appendChild(sheet);
 
-  sheet.querySelector('#plannerPickerClose')?.addEventListener('click', () => sheet.remove());
-  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
-  sheet.querySelectorAll('.picker-post-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const post = (getBrand(brandId)?.scheduledPosts || []).find(p => p.id === btn.dataset.postId);
-      if (!post) return;
-      sheet.remove();
-      onPick(post);
+  function rerender() {
+    sheet.querySelector('#ppBody').innerHTML = bodyHTML();
+    sheet.querySelectorAll('.pp-plat').forEach(btn => {
+      btn.addEventListener('click', () => { selPlat = btn.dataset.plat; selFmt = 'all'; rerender(); });
     });
-  });
+    sheet.querySelectorAll('.pp-fmt').forEach(btn => {
+      btn.addEventListener('click', () => { selFmt = btn.dataset.fmt; rerender(); });
+    });
+    sheet.querySelectorAll('.pp-post').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const post = (getBrand(brandId)?.scheduledPosts || []).find(p => p.id === btn.dataset.postId);
+        if (!post) return;
+        sheet.remove();
+        onPick(post);
+      });
+    });
+  }
+  rerender();
+
+  sheet.querySelector('#ppClose')?.addEventListener('click', () => sheet.remove());
+  sheet.querySelector('#ppManual')?.addEventListener('click', () => { sheet.remove(); if (onManual) onManual(); });
+  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
 }
 
 /* ═══════════════════════════════════════
@@ -4333,7 +4359,21 @@ function bindCalendar(brandId, campId) {
   });
 
   function showSchedSheet(date) {
-    openScheduleSheet(brandId, campId, { date: date || '' }, rerender);
+    openPlannerPicker(
+      brandId, campId,
+      post => {
+        if (date) {
+          const b2 = getBrand(brandId);
+          if (!b2) return;
+          const posts = (b2.scheduledPosts || []).map(p => p.id === post.id ? { ...p, scheduledDate: date } : p);
+          saveBrandOverride(brandId, { scheduledPosts: posts });
+          rerender();
+        } else {
+          openScheduleSheet(brandId, campId, { existingPostId: post.id, date: post.scheduledDate || '' }, rerender);
+        }
+      },
+      () => openScheduleSheet(brandId, campId, { date: date || '' }, rerender)
+    );
   }
 
   bindBodyClicks();
