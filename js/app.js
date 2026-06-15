@@ -2267,7 +2267,7 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId, fil
     </div>
   `).join('') : '<div class="empty-card" style="margin-top:20px">No ideas match this filter</div>';
 
-  const backHref = campId ? `#/campaign?brandId=${id}&id=${campId}` : `#/brand?id=${id}`;
+  const backHref = campId ? '#/' : `#/brand?id=${id}`;
   const vf = (p,f,t,c) => `vaultFilter('${id}','${p}','${f}','${t}','${campId||''}','${c}')`;
 
   return `
@@ -2897,7 +2897,7 @@ function pageVisualPlanner(brandId, campId) {
   if (!brand) return pageHome();
   const campaign = campId ? (brand.campaigns||[]).find(c=>c.id===campId) : null;
   const platforms = Object.keys(brand.platformStrategy||{});
-  const backHref = campId ? `#/campaign?brandId=${brandId}&id=${campId}` : '#/';
+  const backHref = '#/';
 
   if (!platforms.length) return `
     <div class="page" style="padding-bottom:120px">
@@ -3664,7 +3664,7 @@ function pageCalendar(brandId, campId) {
   const brand = getBrand(brandId);
   if (!brand) return pageHome();
   const campaign = campId?(brand.campaigns||[]).find(c=>c.id===campId):null;
-  const backHref = campId?`#/campaign?brandId=${brandId}&id=${campId}`:'#/';
+  const backHref = '#/';
   const today = new Date();
 
   return `
@@ -5299,7 +5299,7 @@ function pageAnalytics(brandId, campId, platform) {
   const brand    = getBrand(brandId);
   if (!brand) return pageHome();
   const campaign = campId ? (brand.campaigns||[]).find(c=>c.id===campId) : null;
-  const backHref = campId ? `#/campaign?brandId=${brandId}&id=${campId}` : `#/brand?id=${brandId}`;
+  const backHref = campId ? '#/' : `#/brand?id=${brandId}`;
 
   const PLAT_ICONS = {
     instagram: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`,
@@ -5432,7 +5432,7 @@ function pageDoc(brandId, campId, docType) {
   return `
     <div class="page" style="padding-bottom:120px">
       <div class="back-header">
-        <button class="back-btn" data-href="#/campaign?brandId=${brandId}&id=${campId}">‹</button>
+        <button class="back-btn" data-href="#/">‹</button>
         <div style="flex:1;text-align:center;min-width:0">
           <div style="font-size:9px;letter-spacing:1px;color:#3a3a3a;text-transform:uppercase">${escHtml(campaign.name)}</div>
           <div style="font-size:14px;font-weight:600;color:#fff">${title}</div>
