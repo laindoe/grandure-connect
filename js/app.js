@@ -4508,11 +4508,7 @@ function injectCampaignNav(brandId, campId, activeTab, onAisha) {
   document.getElementById('campNavVisual')?.addEventListener('click', () => navigate(visualHref));
   document.getElementById('campNavCal')?.addEventListener('click',    () => navigate(calHref));
   document.getElementById('campNavAisha')?.addEventListener('click',  () => {
-    if (onAisha) { onAisha(); return; }
-    if (!campId) return;
-    const existing = document.getElementById('aishaSheet');
-    const aishaEl = existing || ensureAishaSheet(brandId, campId);
-    if (aishaEl) openAishaMini(aishaEl);
+    openAishaSelector(brandId, campId);
   });
 }
 
@@ -5410,8 +5406,6 @@ function bindCampaignPage(brandId, campId) {
   document.body.appendChild(aishaEl);
   bindAisha(brand, campaign, brandId, campId);
 
-  let aishaReturnSheet = null;
-
   // Settings page open / close
   document.getElementById('campMoreBtn')?.addEventListener('click', () => {
     moreEl.style.display = 'flex';
@@ -5427,12 +5421,11 @@ function bindCampaignPage(brandId, campId) {
   });
 
   // Campaign nav (body-level so position:fixed works correctly on iOS)
-  injectCampaignNav(brandId, campId, 'doc', () => { aishaReturnSheet = null; openAishaMini(aishaEl); });
+  injectCampaignNav(brandId, campId, 'doc');
 
   // Aisha back button
   document.getElementById('aishaBackBtn')?.addEventListener('click', () => {
     aishaEl.classList.remove('open');
-    if (aishaReturnSheet) { aishaReturnSheet.classList.add('open'); aishaReturnSheet = null; }
   });
 
   // Stage tracker
@@ -5721,14 +5714,10 @@ function bindCampaignPage(brandId, campId) {
   // + FAB → show picker
   // ✦ button → open Aisha full-screen modal, remember which sheet to return to
   document.getElementById('campInfoSheetPlus')?.addEventListener('click', () => {
-    aishaReturnSheet = infoSheet;
-    infoSheet.classList.remove('open');
-    aishaEl.classList.add('open');
+    openAishaSelector(brandId, campId);
   });
   document.getElementById('campPlanSheetPlus')?.addEventListener('click', () => {
-    aishaReturnSheet = planSheet;
-    planSheet.classList.remove('open');
-    aishaEl.classList.add('open');
+    openAishaSelector(brandId, campId);
   });
 
   // Open Doc from inside sheets (auto-save first)
