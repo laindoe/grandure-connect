@@ -2923,90 +2923,63 @@ function pageVisualPlanner(brandId, campId) {
     if (!formats.length) return `<div class="planner-empty">No formats set for ${escHtml(PLAT_DISPLAY_NAMES[platform]||platform)}</div>`;
     const items = (brand.scheduledPosts||[]).filter(i => i.platform===platform && (!campId||!i.campaignId||i.campaignId===campId));
     let html = '';
+    const chevronSVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
 
-    // Stories — vertical portrait cards
+    function thumbPreviews(list, shape) {
+      return list.slice(0,3).map(it => it.thumbnail
+        ? `<div style="width:${shape==='circle'?'28px':'22px'};height:${shape==='circle'?'28px':'36px'};border-radius:${shape==='circle'?'50%':'4px'};overflow:hidden;flex-shrink:0"><img src="${escHtml(it.thumbnail)}" style="width:100%;height:100%;object-fit:cover"></div>`
+        : `<div style="width:${shape==='circle'?'28px':'22px'};height:${shape==='circle'?'28px':'36px'};border-radius:${shape==='circle'?'50%':'4px'};background:rgba(255,255,255,0.08);flex-shrink:0"></div>`
+      ).join('');
+    }
+
     const storyFmts = formats.filter(isStory);
     if (storyFmts.length) {
       const storyItems = items.filter(i=>isStory(i.format));
       const highlights = (brand.plannerHighlights||{})[platform] || [];
       html += `
-        <div class="planner-section">
-          <div class="planner-section-label">STORIES</div>
-          <div class="planner-highlights-row">
-            ${highlights.map(h=>`
-              <button class="planner-highlight-circle planner-open-highlight" data-platform="${h.platform||platform}" data-highlight-id="${h.id}" title="${escHtml(h.name)}">
-                <div class="img-wrap">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">`:''}</div>
-                <span class="planner-highlight-label">${escHtml(h.name.length>8?h.name.slice(0,7)+'…':h.name)}</span>
-              </button>`).join('')}
-            <button class="planner-highlight-add planner-add-highlight" data-platform="${platform}">+</button>
+        <button class="planner-section-row" data-section="stories" data-platform="${platform}">
+          <div>
+            <div class="planner-section-label" style="margin-bottom:2px">STORIES</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.3)">${storyItems.length} stories · ${highlights.length} highlights</div>
           </div>
-          <div class="planner-stories-row" style="margin-top:14px">
-            ${storyItems.map(it=>`
-              <div class="planner-story-slot" data-id="${it.id}" data-platform="${platform}" draggable="true">
-                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:''}
-              </div>`).join('')}
-            <button class="planner-add-story planner-add-item" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(storyFmts))}">+</button>
+          <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">
+            ${thumbPreviews(storyItems,'portrait')}
+            ${chevronSVG}
           </div>
-        </div>`;
+        </button>`;
     }
 
-    // Reels — vertical portrait cards
     const reelFmts = formats.filter(isReel);
     if (reelFmts.length) {
       const reelItems = items.filter(i=>isReel(i.format));
       html += `
-        <div class="planner-section">
-          <div class="planner-section-label">REELS</div>
-          <div class="planner-reels-row">
-            ${reelItems.map(it=>`
-              <div class="planner-reel-slot" data-id="${it.id}" data-platform="${platform}" draggable="true">
-                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<span class="planner-fmt-hint">▶ ${escHtml(it.format)}</span>`}
-              </div>`).join('')}
-            <button class="planner-add-reel planner-add-item" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(reelFmts))}">+</button>
+        <button class="planner-section-row" data-section="reels" data-platform="${platform}">
+          <div>
+            <div class="planner-section-label" style="margin-bottom:2px">REELS</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.3)">${reelItems.length} clips</div>
           </div>
-        </div>`;
+          <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">
+            ${thumbPreviews(reelItems,'portrait')}
+            ${chevronSVG}
+          </div>
+        </button>`;
     }
 
-    // Feed — single grid or carousel toggle
     const feedFmts = formats.filter(isFeed);
     if (feedFmts.length) {
       const feedItems = items.filter(i=>isFeed(i.format));
-      const isYT = platform==='youtube';
-      const cols = isYT ? 2 : 3;
-      const ratio = isYT ? 'youtube' : 'square';
       html += `
-        <div class="planner-section">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div class="planner-section-label" style="margin-bottom:0">FEED</div>
-            <div class="planner-feed-toggle">
-              <button class="planner-feed-btn active" data-feed-view="single">Single</button>
-              <button class="planner-feed-btn" data-feed-view="carousel">Carousel</button>
-            </div>
+        <button class="planner-section-row" data-section="feed" data-platform="${platform}">
+          <div>
+            <div class="planner-section-label" style="margin-bottom:2px">FEED</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.3)">${feedItems.length} posts</div>
           </div>
-          <div class="planner-feed-single">
-            <div class="planner-grid planner-cols-${cols}">
-              ${feedItems.map(it=>`
-                <div class="planner-grid-item planner-ratio-${ratio}" data-id="${it.id}" data-platform="${platform}" draggable="true">
-                  ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<div class="planner-slot-placeholder"><span class="planner-fmt-hint">${escHtml(it.format)}</span></div>`}
-                  ${/carousel/i.test(it.format)?`<div class="planner-grid-badge">⊞</div>`:''}
-                </div>`).join('')}
-              <button class="planner-grid-add planner-add-item planner-ratio-${ratio}" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(feedFmts))}"><span>+</span></button>
-            </div>
+          <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">
+            ${thumbPreviews(feedItems,'square')}
+            ${chevronSVG}
           </div>
-          <div class="planner-feed-carousel" style="display:none">
-            <div class="planner-carousel-row">
-              ${feedItems.map(it=>`
-                <div class="planner-carousel-card" data-id="${it.id}" data-platform="${platform}" draggable="true">
-                  ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<span class="planner-fmt-hint">${escHtml(it.format)}</span>`}
-                </div>`).join('')}
-              <button class="planner-add-carousel planner-add-item" data-platform="${platform}" data-formats="${escHtml(JSON.stringify(feedFmts))}">+</button>
-            </div>
-          </div>
-        </div>`;
+        </button>`;
     }
-
-    return html;
-  }
 
   const tabsHTML = platforms.map(p=>`
     <button class="planner-tab${p===activePlatform?' active':''}" data-platform="${p}" title="${PLAT_DISPLAY_NAMES[p]||p}">${plannerIconSVG(p)}</button>`).join('');
@@ -3054,92 +3027,43 @@ function bindVisualPlanner(brandId, campId) {
     const pData = b.platformStrategy[activePlatform]||{};
     const formats = pData.formats||[];
     const items = (b.scheduledPosts||[]).filter(i=>i.platform===activePlatform&&(!campId||!i.campaignId||i.campaignId===campId));
+    const chevron = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+    function thumbPrev(list, shape) {
+      return list.slice(0,3).map(it => it.thumbnail
+        ? `<div style="width:${shape==='circle'?'28px':'22px'};height:${shape==='circle'?'28px':'36px'};border-radius:${shape==='circle'?'50%':'4px'};overflow:hidden;flex-shrink:0"><img src="${escHtml(it.thumbnail)}" style="width:100%;height:100%;object-fit:cover"></div>`
+        : `<div style="width:${shape==='circle'?'28px':'22px'};height:${shape==='circle'?'28px':'36px'};border-radius:${shape==='circle'?'50%':'4px'};background:rgba(255,255,255,0.08);flex-shrink:0"></div>`
+      ).join('');
+    }
     let html = '';
-
-    // Stories — vertical portrait
     const storyFmts = formats.filter(_isStory);
     if (storyFmts.length) {
       const storyItems = items.filter(i=>_isStory(i.format));
-      const highlights = (b.plannerHighlights||{})[activePlatform] || [];
-      html += `
-        <div class="planner-section">
-          <div class="planner-section-label">STORIES</div>
-          <div class="planner-highlights-row">
-            ${highlights.map(h=>`
-              <button class="planner-highlight-circle planner-open-highlight" data-platform="${activePlatform}" data-highlight-id="${h.id}" title="${escHtml(h.name)}">
-                ${h.cover?`<img src="${escHtml(h.cover)}" alt="">`:''}
-                <span class="planner-highlight-label">${escHtml(h.name.length>8?h.name.slice(0,7)+'…':h.name)}</span>
-              </button>`).join('')}
-            <button class="planner-highlight-add planner-add-highlight" data-platform="${activePlatform}">+</button>
-          </div>
-          <div class="planner-stories-row" style="margin-top:14px">
-            ${storyItems.map(it=>`
-              <div class="planner-story-slot" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
-                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:''}
-              </div>`).join('')}
-            <button class="planner-add-story planner-add-item" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(storyFmts))}">+</button>
-          </div>
-        </div>`;
+      const highlights = (b.plannerHighlights||{})[activePlatform]||[];
+      html += `<button class="planner-section-row" data-section="stories" data-platform="${activePlatform}">
+        <div><div class="planner-section-label" style="margin-bottom:2px">STORIES</div><div style="font-size:12px;color:rgba(255,255,255,0.3)">${storyItems.length} stories · ${highlights.length} highlights</div></div>
+        <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">${thumbPrev(storyItems,'portrait')}${chevron}</div>
+      </button>`;
     }
-
-    // Reels — vertical portrait
     const reelFmts = formats.filter(_isReel);
     if (reelFmts.length) {
       const reelItems = items.filter(i=>_isReel(i.format));
-      html += `
-        <div class="planner-section">
-          <div class="planner-section-label">REELS</div>
-          <div class="planner-reels-row">
-            ${reelItems.map(it=>`
-              <div class="planner-reel-slot" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
-                ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<span class="planner-fmt-hint">▶ ${escHtml(it.format)}</span>`}
-              </div>`).join('')}
-            <button class="planner-add-reel planner-add-item" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(reelFmts))}">+</button>
-          </div>
-        </div>`;
+      html += `<button class="planner-section-row" data-section="reels" data-platform="${activePlatform}">
+        <div><div class="planner-section-label" style="margin-bottom:2px">REELS</div><div style="font-size:12px;color:rgba(255,255,255,0.3)">${reelItems.length} clips</div></div>
+        <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">${thumbPrev(reelItems,'portrait')}${chevron}</div>
+      </button>`;
     }
-
-    // Feed — single / carousel toggle
     const feedFmts = formats.filter(_isFeed);
     if (feedFmts.length) {
       const feedItems = items.filter(i=>_isFeed(i.format));
-      const isYT = activePlatform==='youtube';
-      const cols = isYT?2:3;
-      const ratio = isYT?'youtube':'square';
-      html += `
-        <div class="planner-section">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <div class="planner-section-label" style="margin-bottom:0">FEED</div>
-            <div class="planner-feed-toggle">
-              <button class="planner-feed-btn active" data-feed-view="single">Single</button>
-              <button class="planner-feed-btn" data-feed-view="carousel">Carousel</button>
-            </div>
-          </div>
-          <div class="planner-feed-single">
-            <div class="planner-grid planner-cols-${cols}">
-              ${feedItems.map(it=>`
-                <div class="planner-grid-item planner-ratio-${ratio}" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
-                  ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<div class="planner-slot-placeholder"><span class="planner-fmt-hint">${escHtml(it.format)}</span></div>`}
-                  ${/carousel/i.test(it.format)?`<div class="planner-grid-badge">⊞</div>`:''}
-                </div>`).join('')}
-              <button class="planner-grid-add planner-add-item planner-ratio-${ratio}" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(feedFmts))}"><span>+</span></button>
-            </div>
-          </div>
-          <div class="planner-feed-carousel" style="display:none">
-            <div class="planner-carousel-row">
-              ${feedItems.map(it=>`
-                <div class="planner-carousel-card" data-id="${it.id}" data-platform="${activePlatform}" draggable="true">
-                  ${it.thumbnail?`<img src="${escHtml(it.thumbnail)}" alt="">`:`<span class="planner-fmt-hint">${escHtml(it.format)}</span>`}
-                </div>`).join('')}
-              <button class="planner-add-carousel planner-add-item" data-platform="${activePlatform}" data-formats="${escHtml(JSON.stringify(feedFmts))}">+</button>
-            </div>
-          </div>
-        </div>`;
+      html += `<button class="planner-section-row" data-section="feed" data-platform="${activePlatform}">
+        <div><div class="planner-section-label" style="margin-bottom:2px">FEED</div><div style="font-size:12px;color:rgba(255,255,255,0.3)">${feedItems.length} posts</div></div>
+        <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">${thumbPrev(feedItems,'square')}${chevron}</div>
+      </button>`;
     }
-
     content.innerHTML = html || `<div class="planner-empty">No content yet</div>`;
-    bindFeedToggle();
-    bindDragDrop();
+    content.querySelectorAll('.planner-section-row').forEach(row => {
+      row.addEventListener('click', () => openPlannerSectionPage(brandId, campId, row.dataset.platform, row.dataset.section, renderContent));
+    });
   }
 
   function bindFeedToggle() {
@@ -3277,6 +3201,251 @@ function bindVisualPlanner(brandId, campId) {
         renderContent();
       });
     });
+  }
+
+  function openPlannerSectionPage(bId, cId, platform, sectionType, onBack) {
+    document.getElementById('plannerSectionPage')?.remove();
+    const b = getBrand(bId);
+    if (!b) return;
+
+    const sectionLabel = { stories:'STORIES', reels:'REELS', feed:'FEED' }[sectionType] || sectionType.toUpperCase();
+    const platName = PLAT_DISPLAY_NAMES[platform] || platform;
+
+    const page = document.createElement('div');
+    page.id = 'plannerSectionPage';
+    page.style.cssText = 'position:fixed;inset:0;z-index:300;background:#0a0a0a;display:flex;flex-direction:column;overflow:hidden';
+    page.innerHTML = `
+      <div style="flex-shrink:0;display:flex;align-items:center;gap:12px;padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top,0px));border-bottom:1px solid rgba(255,255,255,0.06)">
+        <button id="secPageBack" type="button" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">‹</button>
+        <div>
+          <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.4)">${escHtml(platName.toUpperCase())}</div>
+          <div style="font-size:18px;font-weight:700;color:#fff">${sectionLabel}</div>
+        </div>
+      </div>
+      <div id="secPageBody" style="flex:1;overflow-y:auto;overscroll-behavior:contain;padding:20px"></div>
+      <input type="file" accept="image/*" id="secPageFile" style="display:none">
+    `;
+    document.body.appendChild(page);
+
+    page.querySelector('#secPageBack')?.addEventListener('click', () => {
+      page.remove();
+      onBack?.();
+    });
+
+    const body = page.querySelector('#secPageBody');
+    const secFile = page.querySelector('#secPageFile');
+    let pendingSecCb = null;
+
+    secFile?.addEventListener('change', () => {
+      const file = secFile.files[0];
+      if (!file || !pendingSecCb) return;
+      const reader = new FileReader();
+      reader.onload = ev => { pendingSecCb(ev.target.result); pendingSecCb = null; secFile.value = ''; };
+      reader.readAsDataURL(file);
+    });
+
+    function pickImage(cb) { pendingSecCb = cb; secFile.click(); }
+
+    // ── STORIES ──────────────────────────────────────────
+    if (sectionType === 'stories') {
+      function renderStories() {
+        const b2 = getBrand(bId);
+        const highlights = (b2.plannerHighlights||{})[platform]||[];
+        const storyItems = (b2.scheduledPosts||[]).filter(i=>i.platform===platform && _isStory(i.format) && (!cId||i.campaignId===cId));
+
+        body.innerHTML = `
+          <div style="margin-bottom:28px">
+            <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:12px">HIGHLIGHTS</div>
+            <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px">
+              ${highlights.map(h=>`
+                <button class="sec-hl" data-hid="${escHtml(h.id)}" type="button" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:0">
+                  <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center">
+                    ${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover" alt="">`:'<span style="font-size:20px;color:rgba(255,255,255,0.3)">★</span>'}
+                  </div>
+                  <div style="font-size:9px;color:rgba(255,255,255,0.45);max-width:60px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(h.name)}</div>
+                </button>`).join('')}
+              <button id="secAddHl" type="button" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:0">
+                <div style="width:56px;height:56px;border-radius:50%;border:2px dashed rgba(255,255,255,0.2);background:transparent;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:22px">+</div>
+                <div style="font-size:9px;color:rgba(255,255,255,0.3)">New</div>
+              </button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:12px">STORIES</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              ${storyItems.map(s=>`
+                <div data-story-id="${escHtml(s.id)}" style="width:88px;height:156px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;flex-shrink:0;cursor:pointer">
+                  ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>'}
+                  <button data-story-del="${escHtml(s.id)}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+                </div>`).join('')}
+              <button id="secAddStory" type="button" style="width:88px;height:156px;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;flex-shrink:0;cursor:pointer">+</button>
+            </div>
+          </div>`;
+
+        body.querySelector('#secAddHl')?.addEventListener('click', () => {
+          const name = prompt('Highlight name:');
+          if (!name?.trim()) return;
+          const b3 = getBrand(bId);
+          const hl = { ...(b3.plannerHighlights||{}) };
+          hl[platform] = [...(hl[platform]||[]), { id:uid(), name:name.trim(), cover:'', stories:[] }];
+          saveBrandOverride(bId, { plannerHighlights: hl });
+          renderStories();
+        });
+
+        body.querySelectorAll('.sec-hl').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const b3 = getBrand(bId);
+            const hl = (b3.plannerHighlights||{})[platform]||[];
+            const h = hl.find(x=>x.id===btn.dataset.hid);
+            if (h) openHighlightSheet(bId, platform, h);
+          });
+        });
+
+        body.querySelector('#secAddStory')?.addEventListener('click', () => {
+          pickImage(dataUrl => {
+            const b3 = getBrand(bId);
+            const fmt = ((b3.platformStrategy[platform]||{}).formats||[]).find(f=>_isStory(f)) || 'Story';
+            saveBrandOverride(bId, { scheduledPosts:[...(b3.scheduledPosts||[]), { id:uid(), platform, format:fmt, title:'', thumbnail:dataUrl, scheduledDate:null, campaignId:cId||null, order:(b3.scheduledPosts||[]).length }] });
+            renderStories();
+          });
+        });
+
+        body.querySelectorAll('[data-story-id]').forEach(card => {
+          card.addEventListener('click', e => {
+            if (e.target.closest('[data-story-del]')) return;
+            pickImage(dataUrl => {
+              const b3 = getBrand(bId);
+              saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===card.dataset.storyId?{...p,thumbnail:dataUrl}:p) });
+              renderStories();
+            });
+          });
+        });
+
+        body.querySelectorAll('[data-story-del]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const b3 = getBrand(bId);
+            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).filter(p=>p.id!==btn.dataset.storyDel) });
+            renderStories();
+          });
+        });
+      }
+      renderStories();
+
+    // ── REELS ──────────────────────────────────────────
+    } else if (sectionType === 'reels') {
+      function renderReels() {
+        const b2 = getBrand(bId);
+        const reelItems = (b2.scheduledPosts||[]).filter(i=>i.platform===platform && _isReel(i.format) && (!cId||i.campaignId===cId));
+
+        body.innerHTML = `
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${reelItems.map(s=>`
+              <div data-reel-id="${escHtml(s.id)}" style="width:88px;height:156px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;flex-shrink:0;cursor:pointer">
+                ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>'}
+                <button data-reel-del="${escHtml(s.id)}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+              </div>`).join('')}
+            <button id="secAddReel" type="button" style="width:88px;height:156px;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;flex-shrink:0;cursor:pointer">+</button>
+          </div>`;
+
+        body.querySelector('#secAddReel')?.addEventListener('click', () => {
+          pickImage(dataUrl => {
+            const b3 = getBrand(bId);
+            const fmt = ((b3.platformStrategy[platform]||{}).formats||[]).find(f=>_isReel(f)) || 'Reel';
+            saveBrandOverride(bId, { scheduledPosts:[...(b3.scheduledPosts||[]), { id:uid(), platform, format:fmt, title:'', thumbnail:dataUrl, scheduledDate:null, campaignId:cId||null, order:(b3.scheduledPosts||[]).length }] });
+            renderReels();
+          });
+        });
+
+        body.querySelectorAll('[data-reel-id]').forEach(card => {
+          card.addEventListener('click', e => {
+            if (e.target.closest('[data-reel-del]')) return;
+            pickImage(dataUrl => {
+              const b3 = getBrand(bId);
+              saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===card.dataset.reelId?{...p,thumbnail:dataUrl}:p) });
+              renderReels();
+            });
+          });
+        });
+
+        body.querySelectorAll('[data-reel-del]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const b3 = getBrand(bId);
+            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).filter(p=>p.id!==btn.dataset.reelDel) });
+            renderReels();
+          });
+        });
+      }
+      renderReels();
+
+    // ── FEED ──────────────────────────────────────────
+    } else if (sectionType === 'feed') {
+      let feedView = 'single';
+
+      function renderFeed() {
+        const b2 = getBrand(bId);
+        const feedItems = (b2.scheduledPosts||[]).filter(i=>i.platform===platform && _isFeed(i.format) && (!cId||i.campaignId===cId));
+        const isCarousel = feedView === 'carousel';
+
+        body.innerHTML = `
+          <div style="display:flex;gap:6px;margin-bottom:16px">
+            <button data-fv="single" type="button" style="padding:6px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:${!isCarousel?'rgba(255,255,255,0.1)':'transparent'};color:${!isCarousel?'#fff':'rgba(255,255,255,0.4)'};font-size:13px;cursor:pointer">Single Post</button>
+            <button data-fv="carousel" type="button" style="padding:6px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:${isCarousel?'rgba(255,255,255,0.1)':'transparent'};color:${isCarousel?'#fff':'rgba(255,255,255,0.4)'};font-size:13px;cursor:pointer">Carousel</button>
+          </div>
+          ${isCarousel ? `
+            <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px">
+              ${feedItems.map(s=>`
+                <div data-feed-id="${escHtml(s.id)}" style="width:140px;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;flex-shrink:0;cursor:pointer">
+                  ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>'}
+                  <button data-feed-del="${escHtml(s.id)}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+                </div>`).join('')}
+              <button id="secAddFeed" type="button" style="width:140px;aspect-ratio:4/5;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;flex-shrink:0;cursor:pointer">+</button>
+            </div>` : `
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              ${feedItems.map(s=>`
+                <div data-feed-id="${escHtml(s.id)}" style="width:calc(50% - 4px);aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;cursor:pointer">
+                  ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>'}
+                  <button data-feed-del="${escHtml(s.id)}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+                </div>`).join('')}
+              <button id="secAddFeed" type="button" style="width:calc(50% - 4px);aspect-ratio:4/5;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;cursor:pointer">+</button>
+            </div>`}`;
+
+        body.querySelectorAll('[data-fv]').forEach(btn => {
+          btn.addEventListener('click', () => { feedView = btn.dataset.fv; renderFeed(); });
+        });
+
+        body.querySelector('#secAddFeed')?.addEventListener('click', () => {
+          pickImage(dataUrl => {
+            const b3 = getBrand(bId);
+            const fmt = ((b3.platformStrategy[platform]||{}).formats||[]).find(f=>_isFeed(f)) || 'Post';
+            saveBrandOverride(bId, { scheduledPosts:[...(b3.scheduledPosts||[]), { id:uid(), platform, format:fmt, title:'', thumbnail:dataUrl, scheduledDate:null, campaignId:cId||null, order:(b3.scheduledPosts||[]).length }] });
+            renderFeed();
+          });
+        });
+
+        body.querySelectorAll('[data-feed-id]').forEach(card => {
+          card.addEventListener('click', e => {
+            if (e.target.closest('[data-feed-del]')) return;
+            pickImage(dataUrl => {
+              const b3 = getBrand(bId);
+              saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===card.dataset.feedId?{...p,thumbnail:dataUrl}:p) });
+              renderFeed();
+            });
+          });
+        });
+
+        body.querySelectorAll('[data-feed-del]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const b3 = getBrand(bId);
+            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).filter(p=>p.id!==btn.dataset.feedDel) });
+            renderFeed();
+          });
+        });
+      }
+      renderFeed();
+    }
   }
 
   // Platform tabs
