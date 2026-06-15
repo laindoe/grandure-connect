@@ -3686,19 +3686,22 @@ function bindVisualPlanner(brandId, campId) {
         const isCarousel = feedView === 'carousel';
 
         function thumbHTML(s) {
-          const dotsBtn = `<button class="planner-post-menu-btn" data-post-id="${escHtml(s.id)}" style="position:absolute;top:5px;right:5px;z-index:2;width:26px;height:26px;border-radius:7px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:15px;line-height:0;cursor:pointer;display:flex;align-items:center;justify-content:center;letter-spacing:1px;font-weight:900">···</button>`;
-          if (isCarousel) {
+          let bg = '';
+          if (s.placeholderColor) {
+            bg = `<div style="position:absolute;inset:0;background:${escHtml(s.placeholderColor)};display:flex;align-items:flex-end;padding:8px 7px">
+      ${s.title ? `<div style="color:rgba(255,255,255,0.9);font-size:10px;font-weight:700;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,0.6);word-break:break-word">${escHtml(s.title)}</div>` : ''}
+    </div>`;
+          } else if (isCarousel) {
             const sl = s.slides || (s.thumbnail ? [{ dataUrl: s.thumbnail }] : []);
             const first = sl[0]?.dataUrl;
-            return `${first
-              ? `<img src="${escHtml(first)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
-              : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`}
-              ${sl.length > 1 ? `<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:10px;color:#fff;font-weight:700;pointer-events:none">${sl.length}</div>` : ''}
-              ${dotsBtn}`;
+            bg = `${first ? `<img src="${escHtml(first)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">` : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`}
+      ${sl.length > 1 ? `<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:10px;color:#fff;font-weight:700;pointer-events:none">${sl.length}</div>` : ''}`;
+          } else {
+            bg = s.thumbnail
+              ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
+              : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`;
           }
-          return `${s.thumbnail
-            ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
-            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`}${dotsBtn}`;
+          return bg;
         }
 
         body.innerHTML = `
@@ -3743,12 +3746,6 @@ function bindVisualPlanner(brandId, campId) {
           }
         );
 
-        body.querySelectorAll('.planner-post-menu-btn').forEach(btn => {
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
-            openPostMenu(btn.dataset.postId, bId, cId || null, renderFeed);
-          });
-        });
       }
       renderFeed();
     }
@@ -4011,8 +4008,10 @@ function openPostDetails(postId, brandId, onSave) {
 }
 
 function openThumbnailMenu(postId, bId, cId, platform, isCarousel, onDone) {
+  document.getElementById('thumbMenu')?.remove();
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.5);display:flex;flex-direction:column;justify-content:flex-end';
+  overlay.id = 'thumbMenu';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:400;background:rgba(0,0,0,0.55);display:flex;flex-direction:column;justify-content:flex-end';
 
   function getOrCreatePost() {
     if (postId) return postId;
@@ -4024,49 +4023,37 @@ function openThumbnailMenu(postId, bId, cId, platform, isCarousel, onDone) {
     return newId;
   }
 
-  function chevron() {
-    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>`;
+  const chev = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+
+  function row(id, iconBg, iconStroke, iconPath, label, sub) {
+    return `<button id="${id}" type="button" style="display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;background:none;border:none;width:100%;text-align:left">
+      <div style="width:40px;height:40px;border-radius:10px;background:${iconBg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${iconStroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>
+      </div>
+      <div style="flex:1"><div style="font-weight:700;font-size:15px;color:#fff">${label}</div><div style="font-size:12px;color:rgba(255,255,255,0.38);margin-top:2px">${sub}</div></div>
+      ${chev}
+    </button>`;
   }
 
   overlay.innerHTML = `
     <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)">
       <div style="color:#fff;font-size:16px;font-weight:700;padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.07)">Add Post</div>
-      <button id="tmOpt1" type="button" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;background:none;border:none;width:100%;text-align:left">
-        <div style="width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-        </div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:15px;color:#fff">Add Image / Placeholder</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Upload or set a placeholder image</div>
-        </div>
-        ${chevron()}
-      </button>
-      <button id="tmOpt2" type="button" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;background:none;border:none;width:100%;text-align:left">
-        <div style="width:40px;height:40px;border-radius:10px;background:rgba(124,58,173,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c8a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        </div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:15px;color:#fff">Schedule</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Pick a date and time for this post</div>
-        </div>
-        ${chevron()}
-      </button>
-      <button id="tmOpt3" type="button" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;background:none;border:none;width:100%;text-align:left">
-        <div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        </div>
-        <div style="flex:1">
-          <div style="font-weight:700;font-size:15px;color:#fff">Add Details</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Title, notes, linked idea and more</div>
-        </div>
-        ${chevron()}
-      </button>
-      <button id="tmCancel" type="button" style="width:100%;background:none;border:none;color:rgba(255,255,255,0.4);font-size:15px;padding:16px;cursor:pointer">Cancel</button>
+      ${row('tmPlaceholder','rgba(124,58,173,0.15)','#c8a0ff','<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>','Add Placeholder','Choose a colour and add your post title')}
+      ${row('tmPhoto','rgba(99,102,241,0.15)','#818cf8','<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>','Upload Photo','Add an image from your library')}
+      ${row('tmSchedule','rgba(34,197,94,0.12)','#4ade80','<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>','Schedule','Pick a date — saves directly to calendar')}
+      ${row('tmDetails','rgba(255,255,255,0.07)','rgba(255,255,255,0.65)','<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>','Add Details','Photos, videos, links and notes')}
+      <button id="tmCancel" type="button" style="width:100%;background:none;border:none;color:rgba(255,255,255,0.38);font-size:15px;padding:16px;cursor:pointer">Cancel</button>
     </div>`;
 
   document.body.appendChild(overlay);
 
-  overlay.querySelector('#tmOpt1').addEventListener('click', () => {
+  overlay.querySelector('#tmPlaceholder').addEventListener('click', () => {
+    overlay.remove();
+    const pid = getOrCreatePost();
+    openPlaceholderCreator(pid, bId, onDone);
+  });
+
+  overlay.querySelector('#tmPhoto').addEventListener('click', () => {
     overlay.remove();
     const pid = getOrCreatePost();
     if (isCarousel) {
@@ -4074,13 +4061,13 @@ function openThumbnailMenu(postId, bId, cId, platform, isCarousel, onDone) {
     } else {
       pickImage(dataUrl => {
         const b3 = getBrand(bId);
-        saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===pid?{...p,thumbnail:dataUrl}:p) });
+        saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===pid?{...p,thumbnail:dataUrl,placeholderColor:null}:p) });
         if (onDone) onDone();
       });
     }
   });
 
-  overlay.querySelector('#tmOpt2').addEventListener('click', () => {
+  overlay.querySelector('#tmSchedule').addEventListener('click', () => {
     overlay.remove();
     const pid = getOrCreatePost();
     const b3 = getBrand(bId);
@@ -4088,14 +4075,205 @@ function openThumbnailMenu(postId, bId, cId, platform, isCarousel, onDone) {
     openScheduleSheet(bId, cId, { existingPostId: pid, date: post?.scheduledDate||'' }, onDone);
   });
 
-  overlay.querySelector('#tmOpt3').addEventListener('click', () => {
+  overlay.querySelector('#tmDetails').addEventListener('click', () => {
     overlay.remove();
     const pid = getOrCreatePost();
-    openPostDetails(pid, bId, onDone);
+    openPostDetailsPage(pid, bId, onDone);
   });
 
   overlay.querySelector('#tmCancel').addEventListener('click', () => overlay.remove());
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+function openPlaceholderCreator(postId, brandId, onDone) {
+  document.getElementById('placeholderCreator')?.remove();
+  const b = getBrand(brandId);
+  const post = (b?.scheduledPosts||[]).find(p=>p.id===postId);
+  if (!post) return;
+
+  const COLORS = [
+    { hex: '#1a0a2e', label: 'Purple' },
+    { hex: '#0a1628', label: 'Navy' },
+    { hex: '#0f1c0f', label: 'Forest' },
+    { hex: '#1c0a0a', label: 'Crimson' },
+    { hex: '#1c1c0a', label: 'Gold' },
+    { hex: '#0a1a1c', label: 'Teal' },
+    { hex: '#1c0a18', label: 'Rose' },
+    { hex: '#1c1c1e', label: 'Charcoal' },
+  ];
+
+  let selColor = post.placeholderColor || COLORS[0].hex;
+
+  const sheet = document.createElement('div');
+  sheet.id = 'placeholderCreator';
+  sheet.style.cssText = 'position:fixed;inset:0;z-index:410;background:rgba(0,0,0,0.55);display:flex;flex-direction:column;justify-content:flex-end';
+
+  function renderSheet() {
+    sheet.innerHTML = `
+      <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px 20px calc(28px + env(safe-area-inset-bottom,0px))">
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:16px">Add Placeholder</div>
+        <div style="width:100%;aspect-ratio:4/5;border-radius:12px;background:${selColor};margin-bottom:16px;display:flex;align-items:flex-end;padding:12px;box-sizing:border-box">
+          <div id="pcPreviewTitle" style="color:rgba(255,255,255,0.9);font-size:13px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.6);word-break:break-word;min-height:20px">${escHtml(post.title||'')}</div>
+        </div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:10px">POST TITLE</div>
+        <input id="pcTitle" type="text" value="${escHtml(post.title||'')}" placeholder="Add a title…" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 14px;color:#fff;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;-webkit-appearance:none;margin-bottom:16px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:10px">COLOUR</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+          ${COLORS.map(c => `<button class="pc-color" data-hex="${c.hex}" style="width:40px;height:40px;border-radius:10px;background:${c.hex};border:${selColor===c.hex?'3px solid #fff':'2px solid rgba(255,255,255,0.15)'};cursor:pointer;flex-shrink:0" title="${c.label}"></button>`).join('')}
+        </div>
+        <button id="pcSave" style="width:100%;background:#fff;color:#000;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px">Save Placeholder</button>
+        <button id="pcCancel" style="width:100%;background:none;border:none;color:rgba(255,255,255,0.38);font-size:15px;cursor:pointer;padding:6px">Cancel</button>
+      </div>`;
+
+    sheet.querySelectorAll('.pc-color').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selColor = btn.dataset.hex;
+        renderSheet();
+        setTimeout(() => {
+          const inp = sheet.querySelector('#pcTitle');
+          if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+        }, 50);
+      });
+    });
+
+    sheet.querySelector('#pcTitle')?.addEventListener('input', e => {
+      const preview = sheet.querySelector('#pcPreviewTitle');
+      if (preview) preview.textContent = e.target.value;
+    });
+
+    sheet.querySelector('#pcSave')?.addEventListener('click', () => {
+      const title = sheet.querySelector('#pcTitle')?.value.trim() || '';
+      const b2 = getBrand(brandId);
+      if (!b2) return;
+      const posts = (b2.scheduledPosts||[]).map(p => p.id===postId ? {...p, title, placeholderColor: selColor, thumbnail: null} : p);
+      saveBrandOverride(brandId, { scheduledPosts: posts });
+      sheet.remove();
+      if (onDone) onDone();
+    });
+
+    sheet.querySelector('#pcCancel')?.addEventListener('click', () => sheet.remove());
+  }
+
+  renderSheet();
+  document.body.appendChild(sheet);
+  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
+}
+
+function openPostDetailsPage(postId, brandId, onSave) {
+  document.getElementById('postDetailsPage')?.remove();
+  const b = getBrand(brandId);
+  const post = (b?.scheduledPosts||[]).find(p=>p.id===postId);
+  if (!post) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'postDetailsPage';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:420;background:#0a0a0f;display:flex;flex-direction:column;overflow:hidden';
+
+  const existingLinks = post.links || [];
+  const existingVideoLinks = post.videoLinks || [];
+  let photos = post.detailPhotos ? [...post.detailPhotos] : [];
+
+  function photoGrid() {
+    return `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+      ${photos.map((p,i) => `<div style="position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;flex-shrink:0">
+        <img src="${escHtml(p)}" style="width:100%;height:100%;object-fit:cover" alt="">
+        <button data-idx="${i}" class="pdp-del-photo" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.7);border:none;color:#fff;font-size:13px;line-height:1;cursor:pointer">×</button>
+      </div>`).join('')}
+      <button id="pdpAddPhoto" style="width:80px;height:80px;border-radius:8px;border:2px dashed rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);font-size:24px;cursor:pointer;flex-shrink:0">+</button>
+    </div>`;
+  }
+
+  overlay.innerHTML = `
+    <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;padding-top:calc(14px + env(safe-area-inset-top,0px))">
+      <button id="pdpBack" type="button" style="background:none;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 12px 0 0">‹</button>
+      <div style="flex:1;font-size:16px;font-weight:700;color:#fff">Add Details</div>
+      <button id="pdpSave" style="background:rgba(255,255,255,0.1);border:none;border-radius:20px;padding:7px 18px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Save</button>
+    </div>
+    <div id="pdpBody" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:20px;overscroll-behavior:contain">
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">TITLE</div>
+        <input id="pdpTitle" type="text" value="${escHtml(post.title||'')}" placeholder="Post title…" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;-webkit-appearance:none">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">PHOTOS</div>
+        <div id="pdpPhotoGrid">${photoGrid()}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">VIDEOS</div>
+        <div id="pdpVideoList">
+          ${existingVideoLinks.map((l,i) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><input class="pdp-video-input" type="url" value="${escHtml(l)}" placeholder="Paste video link…" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;color:#fff;font-size:14px;font-family:inherit;outline:none;-webkit-appearance:none"><button data-vidx="${i}" class="pdp-del-video" style="background:none;border:none;color:rgba(255,100,100,0.7);font-size:18px;cursor:pointer">×</button></div>`).join('')}
+        </div>
+        <button id="pdpAddVideo" style="background:none;border:1px dashed rgba(255,255,255,0.18);border-radius:10px;padding:10px 16px;color:rgba(255,255,255,0.38);font-size:13px;width:100%;cursor:pointer">+ Add video link</button>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">LINKS</div>
+        <div id="pdpLinkList">
+          ${existingLinks.map((l,i) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><input class="pdp-link-input" type="url" value="${escHtml(l)}" placeholder="Paste link…" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;color:#fff;font-size:14px;font-family:inherit;outline:none;-webkit-appearance:none"><button data-lidx="${i}" class="pdp-del-link" style="background:none;border:none;color:rgba(255,100,100,0.7);font-size:18px;cursor:pointer">×</button></div>`).join('')}
+        </div>
+        <button id="pdpAddLink" style="background:none;border:1px dashed rgba(255,255,255,0.18);border-radius:10px;padding:10px 16px;color:rgba(255,255,255,0.38);font-size:13px;width:100%;cursor:pointer">+ Add link</button>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">NOTES</div>
+        <textarea id="pdpNotes" placeholder="Add notes…" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:none;min-height:120px;box-sizing:border-box;-webkit-appearance:none">${escHtml(post.notes||'')}</textarea>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  function rebindPhotoGrid() {
+    const grid = overlay.querySelector('#pdpPhotoGrid');
+    if (grid) grid.innerHTML = photoGrid();
+    grid?.querySelector('#pdpAddPhoto')?.addEventListener('click', () => {
+      pickImage(dataUrl => { photos.push(dataUrl); rebindPhotoGrid(); });
+    });
+    grid?.querySelectorAll('.pdp-del-photo').forEach(btn => {
+      btn.addEventListener('click', () => { photos.splice(Number(btn.dataset.idx), 1); rebindPhotoGrid(); });
+    });
+  }
+  rebindPhotoGrid();
+
+  overlay.querySelector('#pdpAddVideo')?.addEventListener('click', () => {
+    const list = overlay.querySelector('#pdpVideoList');
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px';
+    row.innerHTML = `<input class="pdp-video-input" type="url" placeholder="Paste video link…" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;color:#fff;font-size:14px;font-family:inherit;outline:none;-webkit-appearance:none"><button class="pdp-del-video-row" style="background:none;border:none;color:rgba(255,100,100,0.7);font-size:18px;cursor:pointer">×</button>`;
+    row.querySelector('.pdp-del-video-row').addEventListener('click', () => row.remove());
+    list.appendChild(row);
+    row.querySelector('input')?.focus();
+  });
+
+  overlay.querySelector('#pdpAddLink')?.addEventListener('click', () => {
+    const list = overlay.querySelector('#pdpLinkList');
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px';
+    row.innerHTML = `<input class="pdp-link-input" type="url" placeholder="Paste link…" style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;color:#fff;font-size:14px;font-family:inherit;outline:none;-webkit-appearance:none"><button class="pdp-del-link-row" style="background:none;border:none;color:rgba(255,100,100,0.7);font-size:18px;cursor:pointer">×</button>`;
+    row.querySelector('.pdp-del-link-row').addEventListener('click', () => row.remove());
+    list.appendChild(row);
+    row.querySelector('input')?.focus();
+  });
+
+  overlay.querySelectorAll('.pdp-del-video').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('div').remove());
+  });
+  overlay.querySelectorAll('.pdp-del-link').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('div').remove());
+  });
+
+  function doSave() {
+    const title = overlay.querySelector('#pdpTitle')?.value.trim() || '';
+    const notes = overlay.querySelector('#pdpNotes')?.value.trim() || '';
+    const videoLinks = [...overlay.querySelectorAll('.pdp-video-input')].map(i=>i.value.trim()).filter(Boolean);
+    const links = [...overlay.querySelectorAll('.pdp-link-input')].map(i=>i.value.trim()).filter(Boolean);
+    const b2 = getBrand(brandId);
+    if (!b2) return;
+    const posts = (b2.scheduledPosts||[]).map(p => p.id===postId ? {...p, title, notes, links, videoLinks, detailPhotos: photos} : p);
+    saveBrandOverride(brandId, { scheduledPosts: posts });
+    overlay.remove();
+    if (onSave) onSave();
+  }
+
+  overlay.querySelector('#pdpSave')?.addEventListener('click', doSave);
+  overlay.querySelector('#pdpBack')?.addEventListener('click', () => overlay.remove());
 }
 
 function openPostDetailView(postId, brandId) {
@@ -4116,7 +4294,9 @@ function openPostDetailView(postId, brandId) {
 
   const heroHTML = post.thumbnail
     ? `<img src="${escHtml(post.thumbnail)}" style="width:100%;max-height:320px;object-fit:cover;display:block" alt="">`
-    : `<div style="background:rgba(255,255,255,0.05);height:200px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:14px">No image yet</div>`;
+    : post.placeholderColor
+      ? `<div style="background:${escHtml(post.placeholderColor)};height:200px;display:flex;align-items:flex-end;padding:16px"><div style="color:rgba(255,255,255,0.9);font-size:16px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,0.6)">${escHtml(post.title||'')}</div></div>`
+      : `<div style="background:rgba(255,255,255,0.05);height:200px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:14px">No image yet</div>`;
 
   const chipStyle = 'display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);margin-right:6px';
   const chipsHTML = `
@@ -4165,6 +4345,26 @@ function openPostDetailView(postId, brandId) {
       </div>
     </div>` : '';
 
+  const detailPhotosHTML = (post.detailPhotos||[]).length ? `
+  <div style="padding:16px 16px 8px">
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.08em;margin-bottom:10px">PHOTOS</div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px">
+      ${(post.detailPhotos||[]).map(p=>`<img src="${escHtml(p)}" style="width:80px;height:80px;border-radius:8px;object-fit:cover;flex-shrink:0" alt="">`).join('')}
+    </div>
+  </div>` : '';
+
+  const videoLinksHTML = (post.videoLinks||[]).length ? `
+  <div style="padding:16px 16px 8px">
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.08em;margin-bottom:8px">VIDEOS</div>
+    ${(post.videoLinks||[]).map(l=>`<a href="${escHtml(l)}" target="_blank" style="display:block;color:#818cf8;font-size:13px;margin-bottom:6px;word-break:break-all;text-decoration:none">${escHtml(l)}</a>`).join('')}
+  </div>` : '';
+
+  const linksHTML = (post.links||[]).length ? `
+  <div style="padding:16px 16px 8px">
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.08em;margin-bottom:8px">LINKS</div>
+    ${(post.links||[]).map(l=>`<a href="${escHtml(l)}" target="_blank" style="display:block;color:#818cf8;font-size:13px;margin-bottom:6px;word-break:break-all;text-decoration:none">${escHtml(l)}</a>`).join('')}
+  </div>` : '';
+
   overlay.innerHTML = `
     <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0">
       <button id="pdvBack" type="button" style="background:none;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 12px 0 0">‹</button>
@@ -4178,6 +4378,7 @@ function openPostDetailView(postId, brandId) {
       ${notesHTML}
       ${ideaHTML}
       ${galleryHTML}
+      ${detailPhotosHTML}${videoLinksHTML}${linksHTML}
       <div style="padding:24px 16px;text-align:center;font-size:12px;color:rgba(255,255,255,0.25)">Tap ··· to edit</div>
     </div>`;
 
