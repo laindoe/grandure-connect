@@ -1,4 +1,4 @@
-const CACHE = 'gc-v3';
+const CACHE = 'gc-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   './img/grandure-connect.png',
   './img/icon-192.png',
   './img/icon-512.png',
+  './img/aisha.jpeg',
 ];
 
 self.addEventListener('install', e => {

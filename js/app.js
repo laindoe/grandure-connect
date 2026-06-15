@@ -4323,7 +4323,7 @@ function openAishaSelector(brandId, campId) {
 
   overlay.innerHTML = `
     <div style="position:relative;flex:1;min-height:0">
-      <img src="img/aisha.jpeg" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block">
+      <img src="img/aisha.jpeg" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block" onerror="this.style.background='linear-gradient(160deg,#1a0a2e,#0a0a0f)';this.removeAttribute('src')">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,transparent 25%,rgba(10,10,15,0.6) 65%,#0a0a0f 100%)"></div>
       <button id="aishaSelectorClose" style="position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
       <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px 16px;text-align:center">
@@ -4394,7 +4394,7 @@ function openAishaVoice() {
 
   overlay.innerHTML = `
     <div style="position:relative;flex:1;min-height:0">
-      <img src="img/aisha.jpeg" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block">
+      <img src="img/aisha.jpeg" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block" onerror="this.style.background='linear-gradient(160deg,#1a0a2e,#0a0a0f)';this.removeAttribute('src')">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,transparent 30%,rgba(10,10,15,0.75) 70%,#0a0a0f 100%)"></div>
       <button id="aishaVoiceBack" style="position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
     </div>
