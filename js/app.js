@@ -3966,6 +3966,8 @@ function openPostDetails(postId, brandId, onSave) {
   const post = (b?.scheduledPosts || []).find(p => p.id === postId);
   if (!post) return;
 
+  const linkedIdea = post.ideaId ? (b.ideas || []).find(i => i.id === post.ideaId) : null;
+
   const sheet = document.createElement('div');
   sheet.id = 'postDetails';
   sheet.style.cssText = 'position:fixed;inset:0;z-index:450;background:rgba(0,0,0,0.5);display:flex;flex-direction:column;justify-content:flex-end';
@@ -3976,6 +3978,11 @@ function openPostDetails(postId, brandId, onSave) {
         <button id="postDetailsSave" style="background:rgba(255,255,255,0.1);border:none;border-radius:20px;padding:7px 18px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Save</button>
       </div>
       <div style="flex:1;overflow-y:auto;padding:20px;overscroll-behavior:contain;display:flex;flex-direction:column;gap:16px">
+        <button id="pdFromIdeas" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${linkedIdea ? '#c8a0ff' : 'rgba(255,255,255,0.4)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 01-1 1H9a1 1 0 01-1-1v-2.26A7.003 7.003 0 0112 2z"/></svg>
+          <span style="flex:1;font-size:13px;font-weight:500;color:${linkedIdea ? '#c8a0ff' : 'rgba(255,255,255,0.45)'}">${linkedIdea ? escHtml(linkedIdea.title) : 'Choose from Ideas'}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
         <div>
           <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">TITLE</div>
           <input id="postDetailsTitle" type="text" value="${escHtml(post.title || '')}" placeholder="Add a title…" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box;-webkit-appearance:none">
@@ -3989,17 +3996,104 @@ function openPostDetails(postId, brandId, onSave) {
 
   document.body.appendChild(sheet);
 
+  let linkedIdeaId = post.ideaId || null;
+
+  sheet.querySelector('#pdFromIdeas')?.addEventListener('click', () => {
+    openIdeaPicker(brandId, idea => {
+      linkedIdeaId = idea.id;
+      sheet.querySelector('#postDetailsTitle').value = idea.title || '';
+      sheet.querySelector('#postDetailsNotes').value = idea.notes || idea.references || '';
+      const btn = sheet.querySelector('#pdFromIdeas');
+      btn.querySelector('span').textContent = idea.title;
+      btn.querySelector('span').style.color = '#c8a0ff';
+      btn.querySelector('svg:first-child').setAttribute('stroke', '#c8a0ff');
+    });
+  });
+
   sheet.querySelector('#postDetailsSave')?.addEventListener('click', () => {
     const title = sheet.querySelector('#postDetailsTitle')?.value.trim();
     const notes = sheet.querySelector('#postDetailsNotes')?.value.trim();
     const b2 = getBrand(brandId);
     if (!b2) return;
-    const posts = (b2.scheduledPosts || []).map(p => p.id === postId ? { ...p, title, notes } : p);
+    const posts = (b2.scheduledPosts || []).map(p => p.id === postId ? { ...p, title, notes, ideaId: linkedIdeaId || p.ideaId || null } : p);
     saveBrandOverride(brandId, { scheduledPosts: posts });
     sheet.remove();
     if (onSave) onSave();
   });
   sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
+}
+
+function openIdeaPicker(brandId, onPick) {
+  document.getElementById('ideaPicker')?.remove();
+  const b = getBrand(brandId);
+  if (!b) return;
+
+  const ideas = b.ideas || [];
+  const platforms = [...new Set(ideas.map(i => i.platform).filter(Boolean))];
+  let selPlat = 'all';
+
+  function filtered() {
+    return ideas.filter(i => selPlat === 'all' || i.platform === selPlat);
+  }
+
+  function listHTML() {
+    const list = filtered();
+    if (!list.length) return `<div style="color:rgba(255,255,255,0.25);font-size:13px;text-align:center;padding:40px 0">No ideas match</div>`;
+    return list.map(i => `
+      <button class="ip-idea" data-idea-id="${escHtml(i.id)}" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;margin-bottom:8px;text-align:left;cursor:pointer">
+        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+          ${i.platform ? `<span style="background:rgba(255,255,255,0.08);border-radius:20px;padding:2px 8px;font-size:10px;color:rgba(255,255,255,0.5);font-weight:600">${PLATFORM_SHORT[i.platform] || i.platform}</span>` : ''}
+          ${i.format ? `<span style="background:rgba(255,255,255,0.08);border-radius:20px;padding:2px 8px;font-size:10px;color:rgba(255,255,255,0.5);font-weight:600">${escHtml(i.format)}</span>` : ''}
+          ${i.campaign ? `<span style="background:rgba(255,255,255,0.05);border-radius:20px;padding:2px 8px;font-size:10px;color:rgba(255,255,255,0.3)">${escHtml(i.campaign)}</span>` : ''}
+        </div>
+        <div style="font-size:14px;font-weight:500;color:#fff;line-height:1.4">${escHtml(i.title)}</div>
+        ${i.notes ? `<div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(i.notes)}</div>` : ''}
+      </button>`).join('');
+  }
+
+  const picker = document.createElement('div');
+  picker.id = 'ideaPicker';
+  picker.style.cssText = 'position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.55);display:flex;flex-direction:column;justify-content:flex-end';
+  picker.innerHTML = `
+    <div style="background:#1c1c1e;border-radius:20px 20px 0 0;max-height:80vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0">
+        <div style="font-size:16px;font-weight:700;color:#fff">Choose from Ideas</div>
+        <button id="ipClose" style="background:none;border:none;color:rgba(255,255,255,0.45);font-size:24px;line-height:1;cursor:pointer;padding:0">×</button>
+      </div>
+      ${platforms.length > 1 ? `<div style="display:flex;gap:6px;padding:12px 20px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0">
+        ${['all',...platforms].map(p=>`<button class="ip-plat" data-plat="${p}" style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:${selPlat===p?'rgba(255,255,255,0.12)':'transparent'};color:${selPlat===p?'#fff':'rgba(255,255,255,0.4)'};font-size:12px;font-weight:600;cursor:pointer">${p==='all'?'All':PLATFORM_SHORT[p]||p}</button>`).join('')}
+      </div>` : ''}
+      <div id="ipBody" style="flex:1;overflow-y:auto;padding:12px 20px;overscroll-behavior:contain"></div>
+    </div>`;
+
+  document.body.appendChild(picker);
+
+  function rerender() {
+    picker.querySelector('#ipBody').innerHTML = listHTML();
+    picker.querySelectorAll('.ip-idea').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idea = (getBrand(brandId)?.ideas || []).find(i => i.id === btn.dataset.ideaId);
+        if (!idea) return;
+        picker.remove();
+        onPick(idea);
+      });
+    });
+  }
+  rerender();
+
+  picker.querySelectorAll('.ip-plat').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selPlat = btn.dataset.plat;
+      picker.querySelectorAll('.ip-plat').forEach(b => {
+        b.style.background = b.dataset.plat === selPlat ? 'rgba(255,255,255,0.12)' : 'transparent';
+        b.style.color = b.dataset.plat === selPlat ? '#fff' : 'rgba(255,255,255,0.4)';
+      });
+      rerender();
+    });
+  });
+
+  picker.querySelector('#ipClose')?.addEventListener('click', () => picker.remove());
+  picker.addEventListener('click', e => { if (e.target === picker) picker.remove(); });
 }
 
 /* ═══════════════════════════════════════
