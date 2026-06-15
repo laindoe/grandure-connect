@@ -936,10 +936,7 @@ function bindHomeDock() {
       if (action === 'aisha') {
         const firstBrand = BRANDS[0];
         const firstCamp  = firstBrand?.campaigns?.[0];
-        if (firstBrand && firstCamp) {
-          const sheet = ensureAishaSheet(firstBrand.id, firstCamp.id);
-          if (sheet) openAishaMini(sheet);
-        }
+        openAishaSelector(firstBrand?.id, firstCamp?.id);
       } else if (action === 'capture') {
         document.getElementById('captureOverlay').style.display = 'flex';
       }
@@ -4307,6 +4304,107 @@ function openAishaMini(aishaEl) {
 
   document.getElementById('aishaMiniSend')?.addEventListener('click', sendMini);
   document.getElementById('aishaMiniInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') sendMini(); });
+}
+
+/* ═══════════════════════════════════════
+   AISHA: MODE SELECTOR
+═══════════════════════════════════════ */
+function openAishaSelector(brandId, campId) {
+  document.getElementById('aishaSelector')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'aishaSelector';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:300;background:#0a0a0f;display:flex;flex-direction:column;overflow:hidden';
+
+  overlay.innerHTML = `
+    <div style="position:relative;flex:1;min-height:0">
+      <img src="img/aisha.jpeg" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,transparent 25%,rgba(10,10,15,0.6) 65%,#0a0a0f 100%)"></div>
+      <button id="aishaSelectorClose" style="position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:16px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:22px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px 16px;text-align:center">
+        <div style="font-size:54px;font-weight:900;font-style:italic;background:linear-gradient(135deg,#c8a0ff 0%,#9055e5 60%,#6c28d9 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px;line-height:1">Ai'SHA</div>
+        <div style="color:rgba(255,255,255,0.45);font-size:10px;font-weight:700;letter-spacing:3.5px;margin-top:5px">CREATIVE DIRECTOR AI</div>
+      </div>
+    </div>
+    <div style="padding:16px 20px calc(32px + env(safe-area-inset-bottom,0px));background:#0a0a0f;display:flex;flex-direction:column;gap:10px">
+      <button id="aishaVoiceBtn" style="width:100%;background:rgba(124,58,173,0.15);border:1px solid rgba(180,120,255,0.2);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(124,58,173,0.25);border:1px solid rgba(180,120,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c8a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="color:#fff;font-size:15px;font-weight:700">Chat with Aisha</div>
+          <div style="color:rgba(255,255,255,0.35);font-size:12px;margin-top:2px">Voice conversation</div>
+        </div>
+        <div style="background:rgba(124,58,173,0.3);border:1px solid rgba(180,120,255,0.25);border-radius:100px;padding:4px 10px;color:#c8a0ff;font-size:10px;font-weight:700;letter-spacing:0.5px;flex-shrink:0">SOON</div>
+      </button>
+      <button id="aishaTextBtn" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;text-align:left">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="color:#fff;font-size:15px;font-weight:700">Ask Aisha</div>
+          <div style="color:rgba(255,255,255,0.35);font-size:12px;margin-top:2px">Text chat</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#aishaSelectorClose')?.addEventListener('click', () => overlay.remove());
+
+  overlay.querySelector('#aishaVoiceBtn')?.addEventListener('click', () => {
+    overlay.remove();
+    openAishaVoice();
+  });
+
+  overlay.querySelector('#aishaTextBtn')?.addEventListener('click', () => {
+    overlay.remove();
+    if (brandId && campId) {
+      const sheet = ensureAishaSheet(brandId, campId);
+      if (sheet) openAishaMini(sheet);
+    } else {
+      const firstBrand = BRANDS[0];
+      const firstCamp  = firstBrand?.campaigns?.[0];
+      if (firstBrand && firstCamp) {
+        const sheet = ensureAishaSheet(firstBrand.id, firstCamp.id);
+        if (sheet) openAishaMini(sheet);
+      }
+    }
+  });
+}
+
+function openAishaVoice() {
+  document.getElementById('aishaVoice')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'aishaVoice';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:310;background:#0a0a0f;display:flex;flex-direction:column';
+
+  const bars = Array.from({ length: 22 }, (_, i) => {
+    const h = 8 + Math.abs(Math.sin(i * 0.7 + 1) * 18);
+    return `<div style="width:3px;border-radius:2px;background:rgba(124,58,173,${0.25 + (i % 4) * 0.12});height:${h}px"></div>`;
+  }).join('');
+
+  overlay.innerHTML = `
+    <div style="position:relative;flex:1;min-height:0">
+      <img src="img/aisha.jpeg" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.25) 0%,transparent 30%,rgba(10,10,15,0.75) 70%,#0a0a0f 100%)"></div>
+      <button id="aishaVoiceBack" style="position:absolute;top:calc(16px + env(safe-area-inset-top,0px));left:16px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+    </div>
+    <div style="padding:20px 24px calc(48px + env(safe-area-inset-bottom,0px));background:#0a0a0f;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div style="color:rgba(255,255,255,0.35);font-size:12px;letter-spacing:1px">Aisha is listening…</div>
+      <div style="display:flex;align-items:center;gap:3px;height:36px">${bars}</div>
+      <button disabled style="width:68px;height:68px;border-radius:50%;background:rgba(124,58,173,0.2);border:2px solid rgba(180,120,255,0.2);display:flex;align-items:center;justify-content:center;cursor:not-allowed;opacity:0.45">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#c8a0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <div style="color:rgba(200,160,255,0.45);font-size:11px;font-weight:600;letter-spacing:1px">COMING SOON</div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  overlay.querySelector('#aishaVoiceBack')?.addEventListener('click', () => overlay.remove());
 }
 
 /* ═══════════════════════════════════════
