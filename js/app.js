@@ -2609,7 +2609,7 @@ function openIdeaDetail(brandId, ideaId) {
     });
     const updated = {
       ...(idea),
-      id: idea.id || uid(),
+      id: ideaId,
       title: sheetEl.querySelector('#ideaEditTitle').value.trim() || idea.title || '',
       platform: platSel.value,
       format: fmtSel.value,
@@ -2618,9 +2618,17 @@ function openIdeaDetail(brandId, ideaId) {
       links,
       mediaFiles: currentMediaFiles,
     };
-    const ideas = brand.ideas.map(i => i.id === ideaId ? updated : i);
+    const freshBrand = getBrand(brandId);
+    const ideas = (freshBrand.ideas || []).map(i => i.id === ideaId ? updated : i);
     saveBrandOverride(brandId, { ideas });
     closeSheet();
+    if (window.location.hash.includes('/vault')) {
+      const params = parseHash();
+      document.getElementById('app').innerHTML = pageIdeaVault(params.id, null, null, null, params.campId || null, null);
+      bindCapture(); bindNav();
+      bindVaultPage(params.id);
+      injectCampaignNav(params.id, params.campId || null, 'ideas');
+    }
   });
 }
 
