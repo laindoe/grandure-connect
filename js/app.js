@@ -470,7 +470,7 @@ function captureModalHTML() {
   return `
     <div class="capture-overlay" id="captureOverlay" style="display:none">
       <div class="capture-sheet" style="padding:0;display:flex;flex-direction:column;max-height:88dvh">
-        <div style="padding-top:calc(16px + env(safe-area-inset-top,0px));padding:calc(16px + env(safe-area-inset-top,0px)) 24px 12px;flex-shrink:0">
+        <div style="padding:20px 24px 12px;flex-shrink:0">
           <div class="capture-title">New Idea</div>
         </div>
         <div style="flex:1;overflow-y:auto;padding:0 24px 8px">
