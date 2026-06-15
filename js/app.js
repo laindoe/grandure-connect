@@ -3525,13 +3525,113 @@ function bindVisualPlanner(brandId, campId) {
     } else if (sectionType === 'feed') {
       let feedView = 'single';
 
+      function openCarouselEditor(postId) {
+        const b = getBrand(bId);
+        const post = (b.scheduledPosts||[]).find(p=>p.id===postId);
+        if (!post) return;
+        let slides = [...(post.slides || (post.thumbnail ? [{ dataUrl: post.thumbnail }] : []))];
+        let curIdx = 0;
+
+        document.getElementById('carouselEditor')?.remove();
+        const ov = document.createElement('div');
+        ov.id = 'carouselEditor';
+        ov.style.cssText = 'position:fixed;inset:0;z-index:500;background:#000;display:flex;flex-direction:column';
+
+        const ceFile = document.createElement('input');
+        ceFile.type = 'file'; ceFile.accept = 'image/*'; ceFile.style.display = 'none';
+        ov.appendChild(ceFile);
+
+        function saveSlides() {
+          const b3 = getBrand(bId);
+          saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>
+            p.id===postId ? {...p, slides, thumbnail: slides[0]?.dataUrl||null} : p
+          )});
+          renderFeed();
+        }
+
+        function draw() {
+          ov.querySelector('#ceBody')?.remove();
+          const bd = document.createElement('div');
+          bd.id = 'ceBody';
+          bd.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0';
+          bd.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:max(20px,env(safe-area-inset-top,20px)) 16px 12px;flex-shrink:0">
+              <button id="ceClose" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+              <div style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:600">${slides.length ? `${curIdx+1} / ${slides.length}` : 'No images'}</div>
+              <button id="ceAdd" style="background:rgba(255,255,255,0.1);border:none;border-radius:20px;padding:8px 16px;color:#fff;font-size:13px;cursor:pointer">+ Add</button>
+            </div>
+            <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+              ${slides[curIdx]?.dataUrl
+                ? `<img src="${escHtml(slides[curIdx].dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;display:block">`
+                : `<div style="color:rgba(255,255,255,0.25);font-size:14px;text-align:center">Tap + Add to add images</div>`}
+              ${slides.length > 1 ? `
+                <button id="cePrev" style="position:absolute;left:12px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+                <button id="ceNext" style="position:absolute;right:12px;background:rgba(0,0,0,0.5);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center">›</button>` : ''}
+            </div>
+            ${slides.length > 1 ? `
+              <div style="display:flex;justify-content:center;gap:6px;padding:10px 0;flex-shrink:0">
+                ${slides.map((_,i)=>`<div style="width:6px;height:6px;border-radius:50%;background:${i===curIdx?'#fff':'rgba(255,255,255,0.3)'}"></div>`).join('')}
+              </div>` : ''}
+            <div style="display:flex;gap:6px;padding:10px 16px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));overflow-x:auto;flex-shrink:0">
+              ${slides.map((s,i)=>`
+                <div data-ce-idx="${i}" style="position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;flex-shrink:0;border:2px solid ${i===curIdx?'#fff':'transparent'};cursor:pointer">
+                  <img src="${escHtml(s.dataUrl)}" style="width:100%;height:100%;object-fit:cover;display:block">
+                  <button data-ce-del="${i}" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.65);border:none;border-radius:50%;width:18px;height:18px;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+                </div>`).join('')}
+            </div>`;
+
+          ov.insertBefore(bd, ceFile);
+
+          bd.querySelector('#ceClose')?.addEventListener('click', () => { saveSlides(); ov.remove(); });
+          bd.querySelector('#ceAdd')?.addEventListener('click', () => ceFile.click());
+          bd.querySelector('#cePrev')?.addEventListener('click', () => { curIdx = Math.max(0, curIdx-1); draw(); });
+          bd.querySelector('#ceNext')?.addEventListener('click', () => { curIdx = Math.min(slides.length-1, curIdx+1); draw(); });
+          bd.querySelectorAll('[data-ce-idx]').forEach(el => {
+            el.addEventListener('click', e => {
+              if (e.target.closest('[data-ce-del]')) return;
+              curIdx = parseInt(el.dataset.ceIdx); draw();
+            });
+          });
+          bd.querySelectorAll('[data-ce-del]').forEach(btn => {
+            btn.addEventListener('click', e => {
+              e.stopPropagation();
+              slides.splice(parseInt(btn.dataset.ceDel), 1);
+              if (curIdx >= slides.length) curIdx = Math.max(0, slides.length-1);
+              draw();
+            });
+          });
+        }
+
+        ceFile.addEventListener('change', e => {
+          const file = e.target.files[0]; if (!file) return;
+          const reader = new FileReader();
+          reader.onload = ev => { slides.push({ dataUrl: ev.target.result }); curIdx = slides.length-1; draw(); };
+          reader.readAsDataURL(file);
+          ceFile.value = '';
+        });
+
+        document.body.appendChild(ov);
+        draw();
+      }
+
       function renderFeed() {
         const b2 = getBrand(bId);
         const feedItems = (b2.scheduledPosts||[]).filter(i=>i.platform===platform && _isFeed(i.format) && (!cId||i.campaignId===cId));
         const isCarousel = feedView === 'carousel';
-        const thumb = s => s.thumbnail
-          ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
-          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`;
+
+        function thumbHTML(s) {
+          if (isCarousel) {
+            const sl = s.slides || (s.thumbnail ? [{ dataUrl: s.thumbnail }] : []);
+            const first = sl[0]?.dataUrl;
+            return `${first
+              ? `<img src="${escHtml(first)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
+              : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`}
+              ${sl.length > 1 ? `<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:10px;color:#fff;font-weight:700;pointer-events:none">${sl.length}</div>` : ''}`;
+          }
+          return s.thumbnail
+            ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
+            : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`;
+        }
 
         body.innerHTML = `
           <div style="display:flex;gap:6px;margin-bottom:16px">
@@ -3540,11 +3640,11 @@ function bindVisualPlanner(brandId, campId) {
           </div>
           ${isCarousel ? `
             <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px">
-              ${feedItems.map(s=>swipeCard(s.id,'140px','aspect',thumb(s))).join('')}
+              ${feedItems.map(s=>swipeCard(s.id,'140px','aspect',thumbHTML(s))).join('')}
               <button id="secAddFeed" type="button" style="width:140px;aspect-ratio:4/5;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;flex-shrink:0;cursor:pointer">+</button>
             </div>` : `
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-              ${feedItems.map(s=>swipeCard(s.id,'100%','aspect',thumb(s))).join('')}
+              ${feedItems.map(s=>swipeCard(s.id,'100%','aspect',thumbHTML(s))).join('')}
               <button id="secAddFeed" type="button" style="width:100%;aspect-ratio:4/5;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;cursor:pointer">+</button>
             </div>`}`;
 
@@ -3553,20 +3653,35 @@ function bindVisualPlanner(brandId, campId) {
         });
 
         body.querySelector('#secAddFeed')?.addEventListener('click', () => {
-          pickImage(dataUrl => {
+          if (isCarousel) {
             const b3 = getBrand(bId);
             const fmt = ((b3.platformStrategy[platform]||{}).formats||[]).find(f=>_isFeed(f)) || 'Post';
-            saveBrandOverride(bId, { scheduledPosts:[...(b3.scheduledPosts||[]), { id:uid(), platform, format:fmt, title:'', thumbnail:dataUrl, scheduledDate:null, campaignId:cId||null, order:(b3.scheduledPosts||[]).length }] });
+            const newPost = { id:uid(), platform, format:fmt, title:'', thumbnail:null, slides:[], scheduledDate:null, campaignId:cId||null, order:(b3.scheduledPosts||[]).length };
+            saveBrandOverride(bId, { scheduledPosts:[...(b3.scheduledPosts||[]), newPost] });
             renderFeed();
-          });
+            openCarouselEditor(newPost.id);
+          } else {
+            pickImage(dataUrl => {
+              const b3 = getBrand(bId);
+              const fmt = ((b3.platformStrategy[platform]||{}).formats||[]).find(f=>_isFeed(f)) || 'Post';
+              saveBrandOverride(bId, { scheduledPosts:[...(b3.scheduledPosts||[]), { id:uid(), platform, format:fmt, title:'', thumbnail:dataUrl, scheduledDate:null, campaignId:cId||null, order:(b3.scheduledPosts||[]).length }] });
+              renderFeed();
+            });
+          }
         });
 
         bindSwipeFaces(
-          id => pickImage(dataUrl => {
-            const b3 = getBrand(bId);
-            saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===id?{...p,thumbnail:dataUrl}:p) });
-            renderFeed();
-          }),
+          id => {
+            if (isCarousel) {
+              openCarouselEditor(id);
+            } else {
+              pickImage(dataUrl => {
+                const b3 = getBrand(bId);
+                saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).map(p=>p.id===id?{...p,thumbnail:dataUrl}:p) });
+                renderFeed();
+              });
+            }
+          },
           id => {
             const b3 = getBrand(bId);
             saveBrandOverride(bId, { scheduledPosts:(b3.scheduledPosts||[]).filter(p=>p.id!==id) });
