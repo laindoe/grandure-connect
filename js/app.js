@@ -3589,7 +3589,7 @@ function bindVisualPlanner(brandId, campId) {
 
     // ── FEED ──────────────────────────────────────────
     } else if (sectionType === 'feed') {
-      let feedView = 'single';
+      let feedView = 'carousel';
 
       function openCarouselEditor(postId) {
         const b = getBrand(bId);
@@ -3706,8 +3706,8 @@ function bindVisualPlanner(brandId, campId) {
 
         body.innerHTML = `
           <div style="display:flex;gap:6px;margin-bottom:16px">
-            <button data-fv="single" type="button" style="padding:6px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:${!isCarousel?'rgba(255,255,255,0.1)':'transparent'};color:${!isCarousel?'#fff':'rgba(255,255,255,0.4)'};font-size:13px;cursor:pointer">Single Post</button>
             <button data-fv="carousel" type="button" style="padding:6px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:${isCarousel?'rgba(255,255,255,0.1)':'transparent'};color:${isCarousel?'#fff':'rgba(255,255,255,0.4)'};font-size:13px;cursor:pointer">Carousel</button>
+            <button data-fv="single" type="button" style="padding:6px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:${!isCarousel?'rgba(255,255,255,0.1)':'transparent'};color:${!isCarousel?'#fff':'rgba(255,255,255,0.4)'};font-size:13px;cursor:pointer">Single Post</button>
           </div>
           ${isCarousel ? `
             <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px">
@@ -3734,7 +3734,11 @@ function bindVisualPlanner(brandId, campId) {
             if (!post) return;
             const hasThumbnail = isCarousel ? (post.slides?.length > 0 || !!post.thumbnail) : !!post.thumbnail;
             if (hasThumbnail) {
-              openPostDetailView(id, bId);
+              if (isCarousel) {
+                openCarouselView(id, bId, cId, platform, renderFeed);
+              } else {
+                openPostDetailView(id, bId);
+              }
             } else {
               openThumbnailMenu(id, bId, cId, platform, isCarousel, renderFeed);
             }
@@ -4057,7 +4061,7 @@ function openThumbnailMenu(postId, bId, cId, platform, isCarousel, onDone) {
     overlay.remove();
     const pid = getOrCreatePost();
     if (isCarousel) {
-      openCarouselEditor(pid);
+      openCarouselView(pid, bId, cId, platform, onDone);
     } else {
       pickImage(dataUrl => {
         const b3 = getBrand(bId);
@@ -4083,6 +4087,211 @@ function openThumbnailMenu(postId, bId, cId, platform, isCarousel, onDone) {
 
   overlay.querySelector('#tmCancel').addEventListener('click', () => overlay.remove());
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+function openCarouselView(postId, bId, cId, platform, onDone) {
+  document.getElementById('carouselView')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'carouselView';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:450;background:#0a0a0f;display:flex;flex-direction:column;overflow:hidden';
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.style.display = 'none';
+  overlay.appendChild(fileInput);
+
+  function getSlides() {
+    const b = getBrand(bId);
+    const post = (b?.scheduledPosts||[]).find(p=>p.id===postId);
+    if (!post) return [];
+    return post.slides?.length ? [...post.slides] : (post.thumbnail ? [{dataUrl: post.thumbnail}] : []);
+  }
+
+  function saveSlides(slides) {
+    const b = getBrand(bId);
+    saveBrandOverride(bId, { scheduledPosts:(b.scheduledPosts||[]).map(p=>
+      p.id===postId ? {...p, slides, thumbnail: slides[0]?.dataUrl||null} : p
+    )});
+  }
+
+  function draw() {
+    const slides = getSlides();
+    overlay.querySelector('#cvBody')?.remove();
+    const bd = document.createElement('div');
+    bd.id = 'cvBody';
+    bd.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0';
+    bd.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:max(20px,env(safe-area-inset-top,20px)) 16px 12px;flex-shrink:0">
+        <button id="cvBack" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
+        <div style="color:#fff;font-size:16px;font-weight:700">Carousel <span style="color:rgba(255,255,255,0.4);font-size:13px;font-weight:400">${slides.length} slide${slides.length!==1?'s':''}</span></div>
+        <div style="width:36px"></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 16px 32px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          ${slides.map((s,i)=>`
+            <div data-cv-idx="${i}" style="aspect-ratio:4/5;border-radius:10px;overflow:hidden;position:relative;cursor:pointer;background:#1c1c1e">
+              <img src="${escHtml(s.dataUrl)}" style="width:100%;height:100%;object-fit:cover;display:block" alt="">
+              <div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.55);border-radius:4px;padding:2px 5px;font-size:10px;color:#fff;font-weight:700;pointer-events:none">${i+1}</div>
+            </div>`).join('')}
+          <div id="cvAddSlide" style="aspect-ratio:4/5;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:28px;cursor:pointer">+</div>
+        </div>
+      </div>`;
+    overlay.insertBefore(bd, fileInput);
+
+    bd.querySelector('#cvBack').addEventListener('click', () => { overlay.remove(); if(onDone) onDone(); });
+    bd.querySelector('#cvAddSlide').addEventListener('click', () => fileInput.click());
+    bd.querySelectorAll('[data-cv-idx]').forEach(el => {
+      el.addEventListener('click', () => {
+        const idx = parseInt(el.dataset.cvIdx);
+        overlay.remove();
+        openSlideView(postId, idx, bId, cId, platform, () => openCarouselView(postId, bId, cId, platform, onDone));
+      });
+    });
+  }
+
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const slides = getSlides();
+      slides.push({ dataUrl: ev.target.result });
+      saveSlides(slides);
+      fileInput.value = '';
+      draw();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.body.appendChild(overlay);
+  draw();
+}
+
+function openSlideView(postId, slideIdx, bId, cId, platform, refreshFn) {
+  document.getElementById('slideView')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'slideView';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:460;background:#000;display:flex;flex-direction:column;overflow:hidden';
+
+  function getPostData() {
+    const b = getBrand(bId);
+    const post = (b?.scheduledPosts||[]).find(p=>p.id===postId);
+    if (!post) return { slide: null, total: 0, post: null };
+    const slides = post.slides?.length ? post.slides : (post.thumbnail ? [{dataUrl: post.thumbnail}] : []);
+    return { slide: slides[slideIdx], total: slides.length, post };
+  }
+
+  function draw() {
+    const { slide, total, post } = getPostData();
+    overlay.querySelector('#svBody')?.remove();
+    const bd = document.createElement('div');
+    bd.id = 'svBody';
+    bd.style.cssText = 'display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0';
+    bd.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:max(20px,env(safe-area-inset-top,20px)) 16px 12px;flex-shrink:0">
+        <button id="svBack" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center">‹</button>
+        <div style="color:rgba(255,255,255,0.6);font-size:14px;font-weight:600">${slideIdx+1} / ${total}</div>
+        <button id="svSettings" style="background:rgba(255,255,255,0.1);border:none;border-radius:20px;padding:8px 14px;color:#fff;font-size:13px;cursor:pointer;font-weight:600">Settings</button>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:0 16px;min-height:0">
+        ${slide?.dataUrl
+          ? `<img src="${escHtml(slide.dataUrl)}" style="max-width:100%;max-height:100%;object-fit:contain;display:block;border-radius:8px">`
+          : `<div style="color:rgba(255,255,255,0.25);font-size:14px;text-align:center">No image</div>`}
+      </div>
+      <div style="padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));flex-shrink:0">
+        ${post?.title ? `<div style="color:#fff;font-size:15px;font-weight:700;margin-bottom:4px">${escHtml(post.title)}</div>` : ''}
+        ${post?.scheduledDate ? `<div style="color:rgba(255,255,255,0.4);font-size:13px">${post.scheduledDate}</div>` : ''}
+      </div>`;
+    overlay.appendChild(bd);
+
+    bd.querySelector('#svBack').addEventListener('click', () => { overlay.remove(); if(refreshFn) refreshFn(); });
+    bd.querySelector('#svSettings').addEventListener('click', () => {
+      openSlideSettingsMenu(postId, slideIdx, bId, cId, platform, () => {
+        overlay.remove();
+        if (refreshFn) refreshFn();
+      });
+    });
+  }
+
+  document.body.appendChild(overlay);
+  draw();
+}
+
+function openSlideSettingsMenu(postId, slideIdx, bId, cId, platform, onDone) {
+  document.getElementById('slideSettingsMenu')?.remove();
+  const sheet = document.createElement('div');
+  sheet.id = 'slideSettingsMenu';
+  sheet.style.cssText = 'position:fixed;inset:0;z-index:470;background:rgba(0,0,0,0.55);display:flex;flex-direction:column;justify-content:flex-end';
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.style.display = 'none';
+  sheet.appendChild(fileInput);
+
+  const chev = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+  function ssRow(id, iconBg, iconStroke, iconPath, label, sub) {
+    return `<button id="${id}" type="button" style="display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;background:none;border:none;width:100%;text-align:left">
+      <div style="width:40px;height:40px;border-radius:10px;background:${iconBg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${iconStroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPath}</svg>
+      </div>
+      <div style="flex:1"><div style="font-weight:700;font-size:15px;color:#fff">${label}</div><div style="font-size:12px;color:rgba(255,255,255,0.38);margin-top:2px">${sub}</div></div>
+      ${chev}
+    </button>`;
+  }
+
+  const menuDiv = document.createElement('div');
+  menuDiv.style.cssText = 'background:#1c1c1e;border-radius:20px 20px 0 0;padding-bottom:env(safe-area-inset-bottom,0px)';
+  menuDiv.innerHTML = `
+    <div style="color:#fff;font-size:16px;font-weight:700;padding:16px 20px 14px;border-bottom:1px solid rgba(255,255,255,0.07)">Slide Options</div>
+    ${ssRow('ssReplace','rgba(99,102,241,0.15)','#818cf8','<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>','Replace Image','Swap this slide with a new photo')}
+    ${ssRow('ssRemove','rgba(239,68,68,0.12)','#f87171','<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>','Remove Slide','Delete this slide from the carousel')}
+    ${ssRow('ssSchedule','rgba(34,197,94,0.12)','#4ade80','<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>','Schedule','Pick a date — saves directly to calendar')}
+    ${ssRow('ssDetails','rgba(255,255,255,0.07)','rgba(255,255,255,0.65)','<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>','Add Details','Photos, videos, links and notes')}
+    <button id="ssCancel" type="button" style="width:100%;background:none;border:none;color:rgba(255,255,255,0.38);font-size:15px;padding:16px;cursor:pointer">Cancel</button>`;
+  sheet.appendChild(menuDiv);
+  document.body.appendChild(sheet);
+
+  function getAndSaveSlides(transform) {
+    const b = getBrand(bId);
+    const post = (b?.scheduledPosts||[]).find(p=>p.id===postId);
+    if (!post) return;
+    const slides = post.slides?.length ? [...post.slides] : (post.thumbnail ? [{dataUrl: post.thumbnail}] : []);
+    const next = transform(slides);
+    saveBrandOverride(bId, { scheduledPosts:(b.scheduledPosts||[]).map(p=>
+      p.id===postId ? {...p, slides: next, thumbnail: next[0]?.dataUrl||null} : p
+    )});
+  }
+
+  sheet.querySelector('#ssReplace').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      getAndSaveSlides(slides => { slides[slideIdx] = { dataUrl: ev.target.result }; return slides; });
+      fileInput.value = '';
+      sheet.remove();
+      if (onDone) onDone();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  sheet.querySelector('#ssRemove').addEventListener('click', () => {
+    getAndSaveSlides(slides => { slides.splice(slideIdx, 1); return slides; });
+    sheet.remove();
+    if (onDone) onDone();
+  });
+
+  sheet.querySelector('#ssSchedule').addEventListener('click', () => {
+    sheet.remove();
+    const b = getBrand(bId);
+    const post = (b?.scheduledPosts||[]).find(p=>p.id===postId);
+    openScheduleSheet(bId, cId, { existingPostId: postId, date: post?.scheduledDate||'' }, onDone);
+  });
+
+  sheet.querySelector('#ssDetails').addEventListener('click', () => {
+    sheet.remove();
+    openPostDetailsPage(postId, bId, onDone);
+  });
+
+  sheet.querySelector('#ssCancel').addEventListener('click', () => sheet.remove());
+  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
 }
 
 function openPlaceholderCreator(postId, brandId, onDone) {
