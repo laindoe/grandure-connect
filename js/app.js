@@ -2407,6 +2407,7 @@ function bindVaultPage(brandId) {
       const idea = (getBrand(brandId)?.ideas || []).find(i => i.id === btn.dataset.ideaId);
       if (!idea) return;
       openScheduleSheet(brandId, idea.campaignId || null, {
+        dateOnly: true,
         title: idea.title,
         platform: idea.platform,
         format: idea.format,
@@ -4111,16 +4112,18 @@ function openScheduleSheet(brandId, campId, opts, onDone) {
   const initFmts = fmtsForPlat(selPlat);
   let selFmt = (opts.format && initFmts.includes(opts.format)) ? opts.format : (initFmts[0] || 'Post');
   const isUpdate = !!opts.existingPostId;
+  const dateOnly = !!opts.dateOnly;
+  const showFull = !isUpdate && !dateOnly;
 
   const overlay = document.createElement('div');
   overlay.id = 'schedSheet';
   overlay.className = 'add-post-overlay';
   overlay.innerHTML = `
     <div class="sched-sheet">
-      <div class="sched-title">${isUpdate ? 'Set Date' : 'Schedule Post'}</div>
-      ${!isUpdate ? `<div class="notion-field"><div class="notion-label">TITLE</div><input class="notion-input" id="schedTitle" placeholder="Post title" value="${escHtml(opts.title || '')}"></div>` : ''}
+      <div class="sched-title">${isUpdate || dateOnly ? 'Set Date' : 'Schedule Post'}</div>
+      ${showFull ? `<div class="notion-field"><div class="notion-label">TITLE</div><input class="notion-input" id="schedTitle" placeholder="Post title" value="${escHtml(opts.title || '')}"></div>` : ''}
       <div class="notion-field"><div class="notion-label">DATE</div><input type="date" class="notion-input notion-date" id="schedDate" value="${opts.date || ''}"></div>
-      ${!isUpdate ? `
+      ${showFull ? `
       <div class="notion-field">
         <div class="notion-label">PLATFORM</div>
         <div class="add-post-format-row" id="schedPlatRow">
@@ -4133,9 +4136,9 @@ function openScheduleSheet(brandId, campId, opts, onDone) {
           ${initFmts.map(f => `<button class="add-post-fmt-btn${f===selFmt?' active':''}" data-fmt="${escHtml(f)}">${escHtml(f)}</button>`).join('')}
         </div>
       </div>` : ''}
-      <button class="sched-save" id="schedSave">Schedule</button>
+      ${!dateOnly ? `<button class="sched-save" id="schedSave">Schedule</button>` : ''}
       <button class="add-post-cancel" id="schedCancel">Cancel</button>
-      ${!isUpdate ? `<button id="schedFromPlanner" style="width:100%;margin-top:6px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:rgba(255,255,255,0.45);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px">Pick from Planner ›</button>` : ''}
+      ${showFull ? `<button id="schedFromPlanner" style="width:100%;margin-top:6px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;color:rgba(255,255,255,0.45);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.3px">Pick from Planner ›</button>` : ''}
     </div>`;
   document.getElementById('app').appendChild(overlay);
 
@@ -4173,15 +4176,17 @@ function openScheduleSheet(brandId, campId, opts, onDone) {
       const posts = (b2.scheduledPosts || []).map(p => p.id === opts.existingPostId ? { ...p, scheduledDate: dateVal } : p);
       saveBrandOverride(brandId, { scheduledPosts: posts });
     } else {
-      const title = document.getElementById('schedTitle')?.value.trim();
-      const newPost = { id: uid(), title: title || '', platform: selPlat, format: selFmt, scheduledDate: dateVal, campaignId: campId || null, thumbnail: opts.thumbnail || null };
+      const title = dateOnly ? (opts.title || '') : (document.getElementById('schedTitle')?.value.trim() || '');
+      const platform = dateOnly ? (opts.platform || selPlat) : selPlat;
+      const format   = dateOnly ? (opts.format  || selFmt)   : selFmt;
+      const newPost = { id: uid(), title, platform, format, scheduledDate: dateVal, campaignId: campId || null, thumbnail: opts.thumbnail || null };
       saveBrandOverride(brandId, { scheduledPosts: [...(b2.scheduledPosts || []), newPost] });
     }
     overlay.remove();
     if (onDone) onDone();
   }
 
-  if (isUpdate) {
+  if (isUpdate || dateOnly) {
     document.getElementById('schedDate')?.addEventListener('change', doSave);
   }
   document.getElementById('schedSave')?.addEventListener('click', doSave);
