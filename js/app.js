@@ -3543,9 +3543,9 @@ function bindVisualPlanner(brandId, campId) {
               ${feedItems.map(s=>swipeCard(s.id,'140px','aspect',thumb(s))).join('')}
               <button id="secAddFeed" type="button" style="width:140px;aspect-ratio:4/5;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;flex-shrink:0;cursor:pointer">+</button>
             </div>` : `
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              ${feedItems.map(s=>swipeCard(s.id,'calc(50% - 4px)','aspect',thumb(s))).join('')}
-              <button id="secAddFeed" type="button" style="width:calc(50% - 4px);aspect-ratio:4/5;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;cursor:pointer">+</button>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+              ${feedItems.map(s=>swipeCard(s.id,'100%','aspect',thumb(s))).join('')}
+              <button id="secAddFeed" type="button" style="width:100%;aspect-ratio:4/5;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;cursor:pointer">+</button>
             </div>`}`;
 
         body.querySelectorAll('[data-fv]').forEach(btn => {
