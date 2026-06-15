@@ -2981,6 +2981,9 @@ function pageVisualPlanner(brandId, campId) {
         </button>`;
     }
 
+    return html;
+  }
+
   const tabsHTML = platforms.map(p=>`
     <button class="planner-tab${p===activePlatform?' active':''}" data-platform="${p}" title="${PLAT_DISPLAY_NAMES[p]||p}">${plannerIconSVG(p)}</button>`).join('');
 
