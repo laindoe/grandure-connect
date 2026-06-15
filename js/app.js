@@ -656,11 +656,16 @@ function bindCapture() {
       const updatedIdeas = [...(brand.ideas || []), idea];
       saveBrandOverride(captureState.brandId, { ideas: updatedIdeas });
     }
+    const savedBrandId = captureState.brandId;
     reset();
     close();
-    if (window.location.hash.includes('/vault')) {
-      const params = parseHash();
-      window.vaultFilter(params.id, 'all', 'all', 'all', params.campId || null, 'all');
+    if (savedBrandId) {
+      if (window.location.hash.includes('/vault')) {
+        const params = parseHash();
+        window.vaultFilter(savedBrandId, 'all', 'all', 'all', params.campId || null, 'all');
+      } else {
+        navigate(`/vault?id=${savedBrandId}`);
+      }
     }
   });
 }
