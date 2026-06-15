@@ -649,6 +649,13 @@ function bindCapture() {
     }
     reset();
     close();
+    if (window.location.hash.includes('/vault')) {
+      const params = parseHash();
+      document.getElementById('app').innerHTML = pageIdeaVault(params.id, null, null, null, params.campId || null, null);
+      bindCapture(); bindNav();
+      bindVaultPage(params.id);
+      injectCampaignNav(params.id, params.campId || null, 'ideas');
+    }
   });
 }
 
