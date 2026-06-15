@@ -2324,7 +2324,7 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId, fil
           <div class="back-header-label">IDEA VAULT</div>
           <div class="back-header-title">${brand.name}</div>
         </div>
-        <button id="vaultAddIdea" type="button" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
+        <div style="width:36px;flex-shrink:0"></div>
       </div>
       <div class="filter-section">
         <div style="color:#555;font-size:10px;letter-spacing:2px">PLATFORM</div>
@@ -2348,15 +2348,16 @@ function pageIdeaVault(id, filterPlatform, filterFormat, filterType, campId, fil
           `).join('')}
         </div>
       </div>
-      ${campaigns.length ? `
-      <div style="padding:8px 16px;display:flex;justify-content:flex-end">
+      <div style="padding:8px 16px;display:flex;align-items:center;justify-content:space-between">
+        ${campaigns.length ? `
         <button id="vaultCampFilterBtn"
           data-fp="${fp}" data-ff="${ff}" data-ft="${ft}" data-fc="${fc}" data-nav-camp="${campId||''}" data-brand-id="${id}"
           style="background:${fc!=='all'?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.07)'};border:none;border-radius:20px;padding:8px 16px 8px 14px;color:${fc!=='all'?'#fff':'rgba(255,255,255,0.5)'};font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="18" x2="12" y2="18" stroke-width="3"/></svg>
           ${fc==='all' ? 'Campaign' : escHtml(fc.length > 18 ? fc.slice(0,16)+'…' : fc)}
-        </button>
-      </div>` : ''}
+        </button>` : `<div></div>`}
+        <button id="vaultAddIdea" type="button" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:30px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
+      </div>
       <div style="padding:16px">${ideasHTML}</div>
     </div>
     ${captureModalHTML()}
