@@ -4320,6 +4320,12 @@ function pageCalendar(brandId, campId) {
         <button class="cal-view-btn" data-view="week">Week</button>
         <button class="cal-view-btn active" data-view="month">Month</button>
       </div>
+      <div id="calStatusFilter" class="cal-sf-wrap" style="display:none">
+        <button class="cal-sf-btn active" data-sf="all">All</button>
+        <button class="cal-sf-btn" data-sf="Production">Production</button>
+        <button class="cal-sf-btn" data-sf="Scheduled">Scheduled</button>
+        <button class="cal-sf-btn" data-sf="Posted">Posted</button>
+      </div>
       <div id="calBody" class="cal-body">
         ${calMonthHTML(brand, campId, today.getFullYear(), today.getMonth())}
       </div>
@@ -4387,9 +4393,14 @@ function calWeekHTML(brand, campId, weekStart) {
     <button class="cal-add-btn" id="calAddPost">+ Schedule Post</button>`;
 }
 
-function calListHTML(brand, campId) {
+function calListHTML(brand, campId, statusFilter) {
   const posts = (brand.scheduledPosts||[])
-    .filter(p=>p.scheduledDate&&(!campId||!p.campaignId||p.campaignId===campId))
+    .filter(p=>{
+      if(!p.scheduledDate) return false;
+      if(campId&&p.campaignId&&p.campaignId!==campId) return false;
+      if(statusFilter&&statusFilter!=='all'&&(p.postStatus||'Production')!==statusFilter) return false;
+      return true;
+    })
     .sort((a,b)=>a.scheduledDate.localeCompare(b.scheduledDate));
 
   const addBtn = `<button class="cal-add-btn" id="calAddPost">+ Schedule Post</button>`;
@@ -4423,20 +4434,31 @@ function bindCalendar(brandId, campId) {
   const brand = getBrand(brandId);
   if (!brand) return;
   let view='month';
+  let statusFilter='all';
   const now=new Date();
   let year=now.getFullYear(), month=now.getMonth();
   const dow=now.getDay();
   let weekStart=new Date(now); weekStart.setDate(now.getDate()-((dow+6)%7)); weekStart.setHours(0,0,0,0);
   const body=document.getElementById('calBody');
+  const sfWrap=document.getElementById('calStatusFilter');
 
   function rerender() {
     const b=getBrand(brandId);
     if(!b||!body) return;
     if(view==='month') body.innerHTML=calMonthHTML(b,campId,year,month);
     else if(view==='week') body.innerHTML=calWeekHTML(b,campId,weekStart);
-    else body.innerHTML=calListHTML(b,campId);
+    else body.innerHTML=calListHTML(b,campId,statusFilter);
     bindBodyClicks();
   }
+
+  // Status filter pill bindings (static — these don't re-render)
+  sfWrap?.querySelectorAll('.cal-sf-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      statusFilter=btn.dataset.sf;
+      sfWrap.querySelectorAll('.cal-sf-btn').forEach(b=>b.classList.toggle('active',b.dataset.sf===statusFilter));
+      rerender();
+    });
+  });
 
   function bindBodyClicks() {
     document.getElementById('calPrev')?.addEventListener('click',()=>{
@@ -4470,6 +4492,7 @@ function bindCalendar(brandId, campId) {
     btn.addEventListener('click',()=>{
       view=btn.dataset.view;
       document.querySelectorAll('.cal-view-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+      if(sfWrap) sfWrap.style.display=view==='list'?'flex':'none';
       rerender();
     });
   });

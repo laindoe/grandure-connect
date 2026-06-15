@@ -1482,6 +1482,10 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .cal-list-fmt { font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px; }
 .cal-empty-msg { text-align:center;color:rgba(255,255,255,0.2);font-size:13px;padding:40px 0; }
 .cal-add-btn { display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:13px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);color:rgba(255,255,255,0.3);font-size:13px;font-weight:600;margin-top:18px; }
+.cal-sf-wrap { display:flex;gap:8px;overflow-x:auto;padding:10px 16px 6px;scrollbar-width:none; }
+.cal-sf-wrap::-webkit-scrollbar { display:none; }
+.cal-sf-btn { padding:6px 14px;border-radius:100px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);white-space:nowrap;cursor:pointer; }
+.cal-sf-btn.active { background:rgba(124,58,173,0.25);border-color:rgba(180,120,255,0.35);color:#d4aaff; }
 /* Schedule Sheet */
 .sched-sheet { background:#1c1c1e;border-radius:20px 20px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));width:100%;max-width:430px; }
 .sched-title { font-size:15px;font-weight:700;color:#fff;margin-bottom:16px; }
