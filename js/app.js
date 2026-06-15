@@ -520,11 +520,24 @@ function homeDockHTML() {
           <line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
       </button>
-      <button class="nav-btn nav-btn-center" id="dockCapture">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M13 2L4 13h7l-1 9 10-12h-7z"/>
-        </svg>
-      </button>
+      <div style="position:relative;display:flex;align-items:center;justify-content:center">
+        <div id="lightningMenu" style="display:none;position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:rgba(24,24,26,0.98);border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;min-width:190px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:200;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)">
+          <button class="lightning-menu-item" data-lm="aisha">
+            <span style="font-size:16px">✦</span> Ask Aisha
+          </button>
+          <button class="lightning-menu-item" data-lm="capture">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 13h7l-1 9 10-12h-7z"/></svg> Capture Idea
+          </button>
+          <button class="lightning-menu-item" data-lm="vault">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a7 7 0 017 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 017-7z"/><circle cx="12" cy="9" r="2.5"/></svg> Idea Vault
+          </button>
+        </div>
+        <button class="nav-btn nav-btn-center" id="dockCapture">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M13 2L4 13h7l-1 9 10-12h-7z"/>
+          </svg>
+        </button>
+      </div>
       <button class="nav-btn" id="dockBrands">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="7" height="7" rx="1.5"/>
@@ -561,7 +574,6 @@ function bindCapture() {
   const close = () => { overlay.style.display = 'none'; };
 
   document.getElementById('navCapture')?.addEventListener('click', open);
-  document.getElementById('dockCapture')?.addEventListener('click', open);
   document.getElementById('captureCancel')?.addEventListener('click', () => { reset(); close(); });
   document.getElementById('navHome')?.addEventListener('click', () => navigate('/'));
   overlay.addEventListener('click', e => { if (e.target === overlay) { reset(); close(); } });
@@ -908,6 +920,37 @@ function bindHomeDock() {
 
   dockBrands?.addEventListener('click', () => showView('brands'));
   dockCamps?.addEventListener('click', () => showView('campaigns'));
+
+  /* Lightning bolt menu */
+  const lightningMenu = document.getElementById('lightningMenu');
+  document.getElementById('dockCapture')?.addEventListener('click', e => {
+    e.stopPropagation();
+    if (lightningMenu) lightningMenu.style.display = lightningMenu.style.display === 'none' ? 'block' : 'none';
+  });
+  document.addEventListener('click', function closeLightning() {
+    if (lightningMenu) lightningMenu.style.display = 'none';
+    document.removeEventListener('click', closeLightning);
+  });
+  lightningMenu?.querySelectorAll('[data-lm]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (lightningMenu) lightningMenu.style.display = 'none';
+      const action = btn.dataset.lm;
+      if (action === 'aisha') {
+        const firstBrand = BRANDS[0];
+        const firstCamp  = firstBrand?.campaigns?.[0];
+        if (firstBrand && firstCamp) {
+          const sheet = ensureAishaSheet(firstBrand.id, firstCamp.id);
+          if (sheet) openAishaMini(sheet);
+        }
+      } else if (action === 'capture') {
+        document.getElementById('captureOverlay').style.display = 'flex';
+      } else if (action === 'vault') {
+        const firstBrand = BRANDS[0];
+        if (firstBrand) navigate(`/vault?id=${firstBrand.id}`);
+      }
+    });
+  });
 
   const openAddMenu = document.getElementById('openAddMenu');
   const addMenu     = document.getElementById('addMenu');
@@ -2962,15 +3005,15 @@ function pageVisualPlanner(brandId, campId) {
 
   function plannerIconSVG(p) {
     const icons = {
-      instagram:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>`,
-      tiktok:`<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.38a8.26 8.26 0 004.83 1.55V7.48a4.85 4.85 0 01-1.06-.79z"/></svg>`,
-      youtube:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></svg>`,
-      threads:`<svg width="18" height="18" viewBox="0 0 192 192" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M141.537 88.988a73.5 73.5 0 00-2.667-.617c-1.598-6.718-5.03-12.505-10.287-17.203C118.786 62.027 106.48 57.5 92 57.5c-18.42 0-30.4 7.12-38.387 21.887l14.84 10.107C74.13 80.127 81.78 75.6 92 75.6c9.247 0 15.44 2.573 18.78 5.953 1.898 1.927 3.254 4.204 4.073 6.674a68.5 68.5 0 00-15.64-.7c-24.28 1.4-39.9 15.587-39.9 35.187 0 11.38 6.013 22.1 16.52 28.207 8.307 4.827 18.74 5.547 27.747 1.893 10.673-4.267 17.247-13.16 19.38-26.587 2.18 1.313 3.993 2.887 5.373 4.693 3.347 4.373 3.26 11.52 3.26 11.52l16.207-.607s.16-9.413-4.293-17.487c-2.387-4.333-5.733-7.72-9.573-10.16zm-33.893 30.94c-3.68 7.427-10.367 11.733-20.107 11.64-8.88-.094-14.607-4.454-14.607-11.127 0-9.267 8.293-14.787 22.48-15.587 4.64-.267 9.14-.067 13.44.547-.5 6.573-1.24 10.813-1.24 14.5z"/></svg>`,
-      twitter:`<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
-      linkedin:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="10" x2="8" y2="18"/><circle cx="8" cy="7" r="0.8" fill="currentColor" stroke="none"/><path d="M12 18v-5c0-1.1.9-2 2-2s2 .9 2 2v5"/><line x1="12" y1="10" x2="12" y2="18"/></svg>`,
-      email:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`,
+      instagram:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>`,
+      tiktok:`<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.38a8.26 8.26 0 004.83 1.55V7.48a4.85 4.85 0 01-1.06-.79z"/></svg>`,
+      youtube:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></svg>`,
+      threads:`<svg width="24" height="24" viewBox="0 0 192 192" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M141.537 88.988a73.5 73.5 0 00-2.667-.617c-1.598-6.718-5.03-12.505-10.287-17.203C118.786 62.027 106.48 57.5 92 57.5c-18.42 0-30.4 7.12-38.387 21.887l14.84 10.107C74.13 80.127 81.78 75.6 92 75.6c9.247 0 15.44 2.573 18.78 5.953 1.898 1.927 3.254 4.204 4.073 6.674a68.5 68.5 0 00-15.64-.7c-24.28 1.4-39.9 15.587-39.9 35.187 0 11.38 6.013 22.1 16.52 28.207 8.307 4.827 18.74 5.547 27.747 1.893 10.673-4.267 17.247-13.16 19.38-26.587 2.18 1.313 3.993 2.887 5.373 4.693 3.347 4.373 3.26 11.52 3.26 11.52l16.207-.607s.16-9.413-4.293-17.487c-2.387-4.333-5.733-7.72-9.573-10.16zm-33.893 30.94c-3.68 7.427-10.367 11.733-20.107 11.64-8.88-.094-14.607-4.454-14.607-11.127 0-9.267 8.293-14.787 22.48-15.587 4.64-.267 9.14-.067 13.44.547-.5 6.573-1.24 10.813-1.24 14.5z"/></svg>`,
+      twitter:`<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+      linkedin:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="10" x2="8" y2="18"/><circle cx="8" cy="7" r="0.8" fill="currentColor" stroke="none"/><path d="M12 18v-5c0-1.1.9-2 2-2s2 .9 2 2v5"/><line x1="12" y1="10" x2="12" y2="18"/></svg>`,
+      email:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`,
     };
-    return icons[p] || `<span style="font-size:10px;font-weight:700">${(p[0]||'').toUpperCase()}</span>`;
+    return icons[p] || `<span style="font-size:14px;font-weight:700">${(p[0]||'').toUpperCase()}</span>`;
   }
 
   const isStory = f => /stor/i.test(f);
@@ -3071,7 +3114,7 @@ function bindVisualPlanner(brandId, campId) {
   let pendingThumbCb = null;
 
   function plannerIconSVG(p) {
-    const icons={instagram:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>`,tiktok:`<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.38a8.26 8.26 0 004.83 1.55V7.48a4.85 4.85 0 01-1.06-.79z"/></svg>`,youtube:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></svg>`,threads:`<svg width="18" height="18" viewBox="0 0 192 192" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M141.537 88.988a73.5 73.5 0 00-2.667-.617c-1.598-6.718-5.03-12.505-10.287-17.203C118.786 62.027 106.48 57.5 92 57.5c-18.42 0-30.4 7.12-38.387 21.887l14.84 10.107C74.13 80.127 81.78 75.6 92 75.6c9.247 0 15.44 2.573 18.78 5.953 1.898 1.927 3.254 4.204 4.073 6.674a68.5 68.5 0 00-15.64-.7c-24.28 1.4-39.9 15.587-39.9 35.187 0 11.38 6.013 22.1 16.52 28.207 8.307 4.827 18.74 5.547 27.747 1.893 10.673-4.267 17.247-13.16 19.38-26.587 2.18 1.313 3.993 2.887 5.373 4.693 3.347 4.373 3.26 11.52 3.26 11.52l16.207-.607s.16-9.413-4.293-17.487c-2.387-4.333-5.733-7.72-9.573-10.16zm-33.893 30.94c-3.68 7.427-10.367 11.733-20.107 11.64-8.88-.094-14.607-4.454-14.607-11.127 0-9.267 8.293-14.787 22.48-15.587 4.64-.267 9.14-.067 13.44.547-.5 6.573-1.24 10.813-1.24 14.5z"/></svg>`,twitter:`<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,linkedin:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="10" x2="8" y2="18"/><circle cx="8" cy="7" r="0.8" fill="currentColor" stroke="none"/><path d="M12 18v-5c0-1.1.9-2 2-2s2 .9 2 2v5"/><line x1="12" y1="10" x2="12" y2="18"/></svg>`,email:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`};
+    const icons={instagram:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="6"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" stroke="none"/></svg>`,tiktok:`<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.38a8.26 8.26 0 004.83 1.55V7.48a4.85 4.85 0 01-1.06-.79z"/></svg>`,youtube:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><polygon points="10 8.5 16 12 10 15.5" fill="currentColor" stroke="none"/></svg>`,threads:`<svg width="24" height="24" viewBox="0 0 192 192" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M141.537 88.988a73.5 73.5 0 00-2.667-.617c-1.598-6.718-5.03-12.505-10.287-17.203C118.786 62.027 106.48 57.5 92 57.5c-18.42 0-30.4 7.12-38.387 21.887l14.84 10.107C74.13 80.127 81.78 75.6 92 75.6c9.247 0 15.44 2.573 18.78 5.953 1.898 1.927 3.254 4.204 4.073 6.674a68.5 68.5 0 00-15.64-.7c-24.28 1.4-39.9 15.587-39.9 35.187 0 11.38 6.013 22.1 16.52 28.207 8.307 4.827 18.74 5.547 27.747 1.893 10.673-4.267 17.247-13.16 19.38-26.587 2.18 1.313 3.993 2.887 5.373 4.693 3.347 4.373 3.26 11.52 3.26 11.52l16.207-.607s.16-9.413-4.293-17.487c-2.387-4.333-5.733-7.72-9.573-10.16zm-33.893 30.94c-3.68 7.427-10.367 11.733-20.107 11.64-8.88-.094-14.607-4.454-14.607-11.127 0-9.267 8.293-14.787 22.48-15.587 4.64-.267 9.14-.067 13.44.547-.5 6.573-1.24 10.813-1.24 14.5z"/></svg>`,twitter:`<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.26 5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,linkedin:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="4"/><line x1="8" y1="10" x2="8" y2="18"/><circle cx="8" cy="7" r="0.8" fill="currentColor" stroke="none"/><path d="M12 18v-5c0-1.1.9-2 2-2s2 .9 2 2v5"/><line x1="12" y1="10" x2="12" y2="18"/></svg>`,email:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`};
     return icons[p]||`<span style="font-size:10px;font-weight:700">${(p[0]||'').toUpperCase()}</span>`;
   }
 

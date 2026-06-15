@@ -1375,10 +1375,14 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .doc-section-dot-h2 { background:rgba(255,255,255,0.25); }
 .doc-section-label { font-size:14px;font-weight:500;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
 
+/* ── Lightning Menu ── */
+.lightning-menu-item { display:flex;align-items:center;gap:10px;width:100%;padding:14px 18px;background:none;border:none;border-bottom:1px solid rgba(255,255,255,0.06);color:#fff;font-size:14px;font-weight:500;cursor:pointer;text-align:left; }
+.lightning-menu-item:last-child { border-bottom:none; }
+.lightning-menu-item:active { background:rgba(255,255,255,0.06); }
+
 /* ── Visual Planner ── */
-.planner-tabs { display:flex;gap:8px;padding:14px 16px 0;overflow-x:auto; }
-.planner-tabs::-webkit-scrollbar { display:none; }
-.planner-tab { flex-shrink:0;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.35); }
+.planner-tabs { display:flex;gap:8px;padding:14px 16px 0; }
+.planner-tab { flex:1;display:flex;align-items:center;justify-content:center;height:56px;border-radius:14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);color:rgba(255,255,255,0.35); }
 .planner-tab.active { background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2);color:#fff; }
 .planner-content { padding:14px 16px 0; }
 .planner-sec-card { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:14px 16px;margin-bottom:12px;cursor:pointer; }
