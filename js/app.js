@@ -651,10 +651,7 @@ function bindCapture() {
     close();
     if (window.location.hash.includes('/vault')) {
       const params = parseHash();
-      document.getElementById('app').innerHTML = pageIdeaVault(params.id, null, null, null, params.campId || null, null);
-      bindCapture(); bindNav();
-      bindVaultPage(params.id);
-      injectCampaignNav(params.id, params.campId || null, 'ideas');
+      window.vaultFilter(params.id, 'all', 'all', 'all', params.campId || null, 'all');
     }
   });
 }
