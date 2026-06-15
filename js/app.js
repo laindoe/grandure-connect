@@ -2982,66 +2982,57 @@ function pageVisualPlanner(brandId, campId) {
     const formats = pData.formats||[];
     if (!formats.length) return `<div class="planner-empty">No formats set for ${escHtml(PLAT_DISPLAY_NAMES[platform]||platform)}</div>`;
     const items = (brand.scheduledPosts||[]).filter(i => i.platform===platform && (!campId||!i.campaignId||i.campaignId===campId));
-    let html = '';
-    const chevronSVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+    const highlights = (brand.plannerHighlights||{})[platform] || [];
 
-    function thumbPreviews(list, shape) {
-      return list.slice(0,3).map(it => it.thumbnail
-        ? `<div style="width:${shape==='circle'?'28px':'22px'};height:${shape==='circle'?'28px':'36px'};border-radius:${shape==='circle'?'50%':'4px'};overflow:hidden;flex-shrink:0"><img src="${escHtml(it.thumbnail)}" style="width:100%;height:100%;object-fit:cover"></div>`
-        : `<div style="width:${shape==='circle'?'28px':'22px'};height:${shape==='circle'?'28px':'36px'};border-radius:${shape==='circle'?'50%':'4px'};background:rgba(255,255,255,0.08);flex-shrink:0"></div>`
-      ).join('');
+    function colCard(it, shape) {
+      return it.thumbnail
+        ? `<div class="planner-card ${shape}" style="overflow:hidden"><img src="${escHtml(it.thumbnail)}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`
+        : `<div class="planner-card ${shape}"></div>`;
     }
+
+    let cols = '';
 
     const storyFmts = formats.filter(isStory);
     if (storyFmts.length) {
       const storyItems = items.filter(i=>isStory(i.format));
-      const highlights = (brand.plannerHighlights||{})[platform] || [];
-      html += `
-        <button class="planner-section-row" data-section="stories" data-platform="${platform}">
-          <div>
-            <div class="planner-section-label" style="margin-bottom:2px">STORIES</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.3)">${storyItems.length} stories · ${highlights.length} highlights</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">
-            ${thumbPreviews(storyItems,'portrait')}
-            ${chevronSVG}
-          </div>
-        </button>`;
+      const circles = highlights.slice(0,3).map(h =>
+        `<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);flex-shrink:0;overflow:hidden">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover">`:'&nbsp;'}</div>`
+      ).join('');
+      cols += `<div class="planner-col" data-section="stories" data-platform="${platform}">
+        <div class="planner-col-hd"><div class="planner-col-name">STORIES</div><div class="planner-col-ct">${storyItems.length} stories · ${highlights.length} highlights</div></div>
+        <div class="planner-col-body">
+          ${highlights.length ? `<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">${circles}</div>` : ''}
+          ${storyItems.map(it=>colCard(it,'portrait')).join('')}
+          ${!storyItems.length && !highlights.length ? '<div class="planner-col-empty">Empty</div>' : ''}
+        </div>
+      </div>`;
     }
 
     const reelFmts = formats.filter(isReel);
     if (reelFmts.length) {
       const reelItems = items.filter(i=>isReel(i.format));
-      html += `
-        <button class="planner-section-row" data-section="reels" data-platform="${platform}">
-          <div>
-            <div class="planner-section-label" style="margin-bottom:2px">REELS</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.3)">${reelItems.length} clips</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">
-            ${thumbPreviews(reelItems,'portrait')}
-            ${chevronSVG}
-          </div>
-        </button>`;
+      cols += `<div class="planner-col" data-section="reels" data-platform="${platform}">
+        <div class="planner-col-hd"><div class="planner-col-name">REELS</div><div class="planner-col-ct">${reelItems.length} clips</div></div>
+        <div class="planner-col-body">
+          ${reelItems.map(it=>colCard(it,'portrait')).join('')}
+          ${!reelItems.length ? '<div class="planner-col-empty">Empty</div>' : ''}
+        </div>
+      </div>`;
     }
 
     const feedFmts = formats.filter(isFeed);
     if (feedFmts.length) {
       const feedItems = items.filter(i=>isFeed(i.format));
-      html += `
-        <button class="planner-section-row" data-section="feed" data-platform="${platform}">
-          <div>
-            <div class="planner-section-label" style="margin-bottom:2px">FEED</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.3)">${feedItems.length} posts</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">
-            ${thumbPreviews(feedItems,'square')}
-            ${chevronSVG}
-          </div>
-        </button>`;
+      cols += `<div class="planner-col" data-section="feed" data-platform="${platform}">
+        <div class="planner-col-hd"><div class="planner-col-name">FEED</div><div class="planner-col-ct">${feedItems.length} posts</div></div>
+        <div class="planner-col-body">
+          ${feedItems.map(it=>colCard(it,'square')).join('')}
+          ${!feedItems.length ? '<div class="planner-col-empty">Empty</div>' : ''}
+        </div>
+      </div>`;
     }
 
-    return html;
+    return `<div class="planner-cols">${cols}</div>`;
   }
 
   const tabsHTML = platforms.map(p=>`
@@ -3090,42 +3081,55 @@ function bindVisualPlanner(brandId, campId) {
     const pData = b.platformStrategy[activePlatform]||{};
     const formats = pData.formats||[];
     const items = (b.scheduledPosts||[]).filter(i=>i.platform===activePlatform&&(!campId||!i.campaignId||i.campaignId===campId));
-    const chevron = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
-    function thumbPrev(list, shape) {
-      return list.slice(0,3).map(it => it.thumbnail
-        ? `<div style="width:${shape==='circle'?'28px':'22px'};height:${shape==='circle'?'28px':'36px'};border-radius:${shape==='circle'?'50%':'4px'};overflow:hidden;flex-shrink:0"><img src="${escHtml(it.thumbnail)}" style="width:100%;height:100%;object-fit:cover"></div>`
-        : `<div style="width:${shape==='circle'?'28px':'22px'};height:${shape==='circle'?'28px':'36px'};border-radius:${shape==='circle'?'50%':'4px'};background:rgba(255,255,255,0.08);flex-shrink:0"></div>`
-      ).join('');
+    const highlights = (b.plannerHighlights||{})[activePlatform]||[];
+
+    function colCard(it, shape) {
+      return it.thumbnail
+        ? `<div class="planner-card ${shape}" style="overflow:hidden"><img src="${escHtml(it.thumbnail)}" style="width:100%;height:100%;object-fit:cover;display:block"></div>`
+        : `<div class="planner-card ${shape}"></div>`;
     }
-    let html = '';
+
+    let cols = '';
     const storyFmts = formats.filter(_isStory);
     if (storyFmts.length) {
       const storyItems = items.filter(i=>_isStory(i.format));
-      const highlights = (b.plannerHighlights||{})[activePlatform]||[];
-      html += `<button class="planner-section-row" data-section="stories" data-platform="${activePlatform}">
-        <div><div class="planner-section-label" style="margin-bottom:2px">STORIES</div><div style="font-size:12px;color:rgba(255,255,255,0.3)">${storyItems.length} stories · ${highlights.length} highlights</div></div>
-        <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">${thumbPrev(storyItems,'portrait')}${chevron}</div>
-      </button>`;
+      const circles = highlights.slice(0,3).map(h =>
+        `<div style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.08);flex-shrink:0;overflow:hidden">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover">`:'&nbsp;'}</div>`
+      ).join('');
+      cols += `<div class="planner-col" data-section="stories" data-platform="${activePlatform}">
+        <div class="planner-col-hd"><div class="planner-col-name">STORIES</div><div class="planner-col-ct">${storyItems.length} stories · ${highlights.length} highlights</div></div>
+        <div class="planner-col-body">
+          ${highlights.length ? `<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">${circles}</div>` : ''}
+          ${storyItems.map(it=>colCard(it,'portrait')).join('')}
+          ${!storyItems.length && !highlights.length ? '<div class="planner-col-empty">Empty</div>' : ''}
+        </div>
+      </div>`;
     }
     const reelFmts = formats.filter(_isReel);
     if (reelFmts.length) {
       const reelItems = items.filter(i=>_isReel(i.format));
-      html += `<button class="planner-section-row" data-section="reels" data-platform="${activePlatform}">
-        <div><div class="planner-section-label" style="margin-bottom:2px">REELS</div><div style="font-size:12px;color:rgba(255,255,255,0.3)">${reelItems.length} clips</div></div>
-        <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">${thumbPrev(reelItems,'portrait')}${chevron}</div>
-      </button>`;
+      cols += `<div class="planner-col" data-section="reels" data-platform="${activePlatform}">
+        <div class="planner-col-hd"><div class="planner-col-name">REELS</div><div class="planner-col-ct">${reelItems.length} clips</div></div>
+        <div class="planner-col-body">
+          ${reelItems.map(it=>colCard(it,'portrait')).join('')}
+          ${!reelItems.length ? '<div class="planner-col-empty">Empty</div>' : ''}
+        </div>
+      </div>`;
     }
     const feedFmts = formats.filter(_isFeed);
     if (feedFmts.length) {
       const feedItems = items.filter(i=>_isFeed(i.format));
-      html += `<button class="planner-section-row" data-section="feed" data-platform="${activePlatform}">
-        <div><div class="planner-section-label" style="margin-bottom:2px">FEED</div><div style="font-size:12px;color:rgba(255,255,255,0.3)">${feedItems.length} posts</div></div>
-        <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.25)">${thumbPrev(feedItems,'square')}${chevron}</div>
-      </button>`;
+      cols += `<div class="planner-col" data-section="feed" data-platform="${activePlatform}">
+        <div class="planner-col-hd"><div class="planner-col-name">FEED</div><div class="planner-col-ct">${feedItems.length} posts</div></div>
+        <div class="planner-col-body">
+          ${feedItems.map(it=>colCard(it,'square')).join('')}
+          ${!feedItems.length ? '<div class="planner-col-empty">Empty</div>' : ''}
+        </div>
+      </div>`;
     }
-    content.innerHTML = html || `<div class="planner-empty">No content yet</div>`;
-    content.querySelectorAll('.planner-section-row').forEach(row => {
-      row.addEventListener('click', () => openPlannerSectionPage(brandId, campId, row.dataset.platform, row.dataset.section, renderContent));
+    content.innerHTML = cols ? `<div class="planner-cols">${cols}</div>` : `<div class="planner-empty">No content yet</div>`;
+    content.querySelectorAll('.planner-col').forEach(col => {
+      col.addEventListener('click', () => openPlannerSectionPage(brandId, campId, col.dataset.platform, col.dataset.section, renderContent));
     });
   }
 
@@ -3565,6 +3569,11 @@ function bindVisualPlanner(brandId, campId) {
       renderFeed();
     }
   }
+
+  // Bind initial static columns (rendered by sectionHTML on page load)
+  content?.querySelectorAll('.planner-col').forEach(col => {
+    col.addEventListener('click', () => openPlannerSectionPage(brandId, campId, col.dataset.platform, col.dataset.section, renderContent));
+  });
 
   // Platform tabs
   tabs?.addEventListener('click', e => {
