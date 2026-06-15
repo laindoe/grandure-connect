@@ -5819,7 +5819,7 @@ function pageDoc(brandId, campId, docType) {
   return `
     <div class="page" style="padding-bottom:120px">
       <div class="back-header">
-        <button class="back-btn" data-href="#/">‹</button>
+        <button class="back-btn" data-href="#/campaign?brandId=${brandId}&id=${campId}">‹</button>
         <div style="flex:1;text-align:center;min-width:0">
           <div style="font-size:9px;letter-spacing:1px;color:#3a3a3a;text-transform:uppercase">${escHtml(campaign.name)}</div>
           <div style="font-size:14px;font-weight:600;color:#fff">${title}</div>
