@@ -247,7 +247,7 @@ function render() {
     app.innerHTML = pageCharacters(params.id);
     injectBrandAppNav(params.id, 'characters');
   } else if (path === '/gb-assets') {
-    app.innerHTML = pageGrandureBrandStub(params.id, 'assets', 'Assets');
+    app.innerHTML = pageAssets(params.id);
     injectBrandAppNav(params.id, 'assets');
   } else if (path === '/gb-bible') {
     app.innerHTML = pageGrandureBrandStub(params.id, 'bible', 'Bible');
@@ -271,6 +271,7 @@ function render() {
   if (path === '/doc')      { bindDoc(params.brandId, params.campId, params.type); }
   if (path === '/gb-universe') { bindUniverseWizard(params.id, _uwChapterIdx); }
   if (path === '/gb-characters') { bindCharacters(params.id); }
+  if (path === '/gb-assets') { bindAssets(params.id); }
 }
 
 /* ── Bind all nav links ── */
@@ -6160,6 +6161,227 @@ function openCharacterEditor(brandId, characterId, onSave) {
     saveBrandOverride(brandId, { characters: nextCharacters });
     overlay.remove();
     if (onSave) onSave();
+  });
+}
+
+/* ── Grandure Brand: Assets ── */
+const ASSET_GALLERY_SECTIONS = [
+  { key: 'logos', label: 'LOGOS', gridId: 'assetLogosGrid', addId: 'assetLogosAdd' },
+  { key: 'moodboards', label: 'MOODBOARDS', gridId: 'assetMoodboardsGrid', addId: 'assetMoodboardsAdd' },
+  { key: 'visualRefs', label: 'VISUAL REFERENCES', gridId: 'assetVisualRefsGrid', addId: 'assetVisualRefsAdd' },
+  { key: 'imagery', label: 'IMAGERY', gridId: 'assetImageryGrid', addId: 'assetImageryAdd' },
+  { key: 'icons', label: 'ICONS', gridId: 'assetIconsGrid', addId: 'assetIconsAdd' },
+];
+
+function assetPhotoGridHtml(images, gridId, addId) {
+  return `<div id="${gridId}" style="display:flex;flex-wrap:wrap;gap:8px">
+    ${images.map((src, i) => `<div style="position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;flex-shrink:0">
+      <img src="${escHtml(src)}" style="width:100%;height:100%;object-fit:cover" alt="">
+      <button data-idx="${i}" class="as-del-photo" data-grid="${gridId}" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.7);border:none;color:#fff;font-size:13px;line-height:1;cursor:pointer">×</button>
+    </div>`).join('')}
+    <button id="${addId}" style="width:80px;height:80px;border-radius:8px;border:2px dashed rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);font-size:24px;cursor:pointer;flex-shrink:0">+</button>
+  </div>`;
+}
+
+function assetSectionLabel(text) {
+  return `<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">${escHtml(text)}</div>`;
+}
+
+function pageAssets(brandId) {
+  const brand = getBrand(brandId);
+  const assets = (brand && brand.brandAssets) || { logos: [], colors: [], typography: [], moodboards: [], visualRefs: [], imagery: [], icons: [] };
+
+  const gallerySectionsHtml = ASSET_GALLERY_SECTIONS.map(sec => `
+    <div class="as-section">
+      ${assetSectionLabel(sec.label)}
+      ${assetPhotoGridHtml(assets[sec.key] || [], sec.gridId, sec.addId)}
+    </div>
+  `);
+
+  const presetSwatches = AESTHETIC_PRESET_COLORS.map(hex => {
+    const selected = (assets.colors || []).includes(hex);
+    return `<button type="button" class="uw-swatch${selected ? ' selected' : ''}" data-hex="${escHtml(hex)}" style="background:${escHtml(hex)}" title="${escHtml(hex)}"></button>`;
+  }).join('');
+
+  const colorSectionHtml = `
+    <div class="as-section">
+      ${assetSectionLabel('COLOR PALETTE')}
+      <div class="uw-swatch-row" id="assetColorSwatchRow">
+        ${presetSwatches}
+        <label class="uw-swatch-custom" title="Pick a custom color">
+          <input type="color" id="assetCustomColor">
+          <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:18px;pointer-events:none">+</span>
+        </label>
+      </div>
+    </div>
+  `;
+
+  const typographyChipsHtml = (assets.typography || []).map((t, i) => `
+    <span class="uw-symbol-chip" data-idx="${i}">
+      ${escHtml(t)}
+      <button type="button" class="uw-symbol-remove" data-remove-idx="${i}">×</button>
+    </span>
+  `).join('');
+
+  const typographySectionHtml = `
+    <div class="as-section">
+      ${assetSectionLabel('TYPOGRAPHY')}
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="text" id="assetTypographyInput" class="uw-text-input" placeholder="e.g. Headline: Canela Bold / Body: Inter Regular">
+        <button id="assetTypographyAdd" type="button" style="background:rgba(255,255,255,0.1);border:1px solid rgba(180,120,255,0.3);border-radius:12px;padding:0 18px;color:#d4aaff;font-size:18px;font-weight:600;cursor:pointer;flex-shrink:0">+</button>
+      </div>
+      <div class="uw-swatch-row" id="assetTypographyChips">${typographyChipsHtml}</div>
+    </div>
+  `;
+
+  return `
+    <div class="page" style="padding-bottom:120px">
+      <div class="back-header">
+        <button class="back-btn" data-href="#/gb-home?id=${brandId}">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">GRANDURE BRAND</div>
+          <div class="back-header-title">Assets</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+      <div style="padding:0 16px">
+        ${gallerySectionsHtml[0]}
+        ${colorSectionHtml}
+        ${typographySectionHtml}
+        ${gallerySectionsHtml[1]}
+        ${gallerySectionsHtml[2]}
+        ${gallerySectionsHtml[3]}
+        ${gallerySectionsHtml[4]}
+      </div>
+    </div>
+  `;
+}
+
+function bindAssets(brandId) {
+  /* ── Image gallery sections (logos, moodboards, visualRefs, imagery, icons) ── */
+  function rebindGallery(sec) {
+    const grid = document.getElementById(sec.gridId);
+    if (!grid) return;
+    const brand = getBrand(brandId);
+    const images = (brand.brandAssets && brand.brandAssets[sec.key]) || [];
+    grid.outerHTML = assetPhotoGridHtml(images, sec.gridId, sec.addId);
+    bindGallerySection(sec);
+  }
+
+  function bindGallerySection(sec) {
+    document.getElementById(sec.addId)?.addEventListener('click', () => {
+      pickImage(dataUrl => {
+        const brand = getBrand(brandId);
+        const assets = brand.brandAssets || {};
+        const next = [...(assets[sec.key] || []), dataUrl];
+        saveBrandOverride(brandId, { brandAssets: { ...assets, [sec.key]: next } });
+        rebindGallery(sec);
+      });
+    });
+    document.getElementById(sec.gridId)?.querySelectorAll('.as-del-photo').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.idx);
+        const brand = getBrand(brandId);
+        const assets = brand.brandAssets || {};
+        const next = (assets[sec.key] || []).filter((_, i) => i !== idx);
+        saveBrandOverride(brandId, { brandAssets: { ...assets, [sec.key]: next } });
+        rebindGallery(sec);
+      });
+    });
+  }
+
+  ASSET_GALLERY_SECTIONS.forEach(bindGallerySection);
+
+  /* ── Color palette ── */
+  function rebindColors() {
+    const row = document.getElementById('assetColorSwatchRow');
+    if (!row) return;
+    const brand = getBrand(brandId);
+    const colors = (brand.brandAssets && brand.brandAssets.colors) || [];
+    const presetSwatches = AESTHETIC_PRESET_COLORS.map(hex => {
+      const selected = colors.includes(hex);
+      return `<button type="button" class="uw-swatch${selected ? ' selected' : ''}" data-hex="${escHtml(hex)}" style="background:${escHtml(hex)}" title="${escHtml(hex)}"></button>`;
+    }).join('');
+    row.innerHTML = `
+      ${presetSwatches}
+      <label class="uw-swatch-custom" title="Pick a custom color">
+        <input type="color" id="assetCustomColor">
+        <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:18px;pointer-events:none">+</span>
+      </label>
+    `;
+    bindColorSwatches();
+  }
+
+  function bindColorSwatches() {
+    document.querySelectorAll('#assetColorSwatchRow .uw-swatch[data-hex]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const hex = btn.dataset.hex;
+        const brand = getBrand(brandId);
+        const assets = brand.brandAssets || {};
+        const cur = assets.colors || [];
+        const next = cur.includes(hex) ? cur.filter(c => c !== hex) : [...cur, hex];
+        saveBrandOverride(brandId, { brandAssets: { ...assets, colors: next } });
+        rebindColors();
+      });
+    });
+    document.getElementById('assetCustomColor')?.addEventListener('change', e => {
+      const hex = e.target.value;
+      const brand = getBrand(brandId);
+      const assets = brand.brandAssets || {};
+      const cur = assets.colors || [];
+      if (!cur.includes(hex)) {
+        saveBrandOverride(brandId, { brandAssets: { ...assets, colors: [...cur, hex] } });
+        rebindColors();
+      }
+    });
+  }
+  bindColorSwatches();
+
+  /* ── Typography ── */
+  function rebindTypography() {
+    const wrap = document.getElementById('assetTypographyChips');
+    if (!wrap) return;
+    const brand = getBrand(brandId);
+    const typography = (brand.brandAssets && brand.brandAssets.typography) || [];
+    wrap.innerHTML = typography.map((t, i) => `
+      <span class="uw-symbol-chip" data-idx="${i}">
+        ${escHtml(t)}
+        <button type="button" class="uw-symbol-remove" data-remove-idx="${i}">×</button>
+      </span>
+    `).join('');
+    bindTypographyChips();
+  }
+
+  function bindTypographyChips() {
+    document.getElementById('assetTypographyChips')?.querySelectorAll('[data-remove-idx]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.removeIdx);
+        const brand = getBrand(brandId);
+        const assets = brand.brandAssets || {};
+        const next = (assets.typography || []).filter((_, i) => i !== idx);
+        saveBrandOverride(brandId, { brandAssets: { ...assets, typography: next } });
+        rebindTypography();
+      });
+    });
+  }
+  bindTypographyChips();
+
+  function submitTypography() {
+    const input = document.getElementById('assetTypographyInput');
+    if (!input) return;
+    const value = input.value.trim();
+    if (!value) return;
+    const brand = getBrand(brandId);
+    const assets = brand.brandAssets || {};
+    const next = [...(assets.typography || []), value];
+    saveBrandOverride(brandId, { brandAssets: { ...assets, typography: next } });
+    input.value = '';
+    rebindTypography();
+  }
+
+  document.getElementById('assetTypographyAdd')?.addEventListener('click', submitTypography);
+  document.getElementById('assetTypographyInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); submitTypography(); }
   });
 }
 
