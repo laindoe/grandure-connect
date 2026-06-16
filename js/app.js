@@ -5072,18 +5072,18 @@ function pageCalendar(brandId, campId) {
         <div style="width:36px"></div>
       </div>
       <div class="cal-view-switcher">
-        <button class="cal-view-btn" data-view="list">List</button>
+        <button class="cal-view-btn active" data-view="list">List</button>
         <button class="cal-view-btn" data-view="week">Week</button>
-        <button class="cal-view-btn active" data-view="month">Month</button>
+        <button class="cal-view-btn" data-view="month">Month</button>
       </div>
-      <div id="calStatusFilter" class="cal-sf-wrap" style="display:none">
+      <div id="calStatusFilter" class="cal-sf-wrap" style="display:flex">
         <button class="cal-sf-btn active" data-sf="all">All</button>
         <button class="cal-sf-btn" data-sf="Production">Production</button>
         <button class="cal-sf-btn" data-sf="Scheduled">Scheduled</button>
         <button class="cal-sf-btn" data-sf="Posted">Posted</button>
       </div>
       <div id="calBody" class="cal-body">
-        ${calMonthHTML(brand, campId, today.getFullYear(), today.getMonth())}
+        ${calListHTML(brand, campId, 'all')}
       </div>
     </div>`;
 }
@@ -5189,7 +5189,7 @@ function calListHTML(brand, campId, statusFilter) {
 function bindCalendar(brandId, campId) {
   const brand = getBrand(brandId);
   if (!brand) return;
-  let view='month';
+  let view='list';
   let statusFilter='all';
   const now=new Date();
   let year=now.getFullYear(), month=now.getMonth();
