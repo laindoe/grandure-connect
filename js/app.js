@@ -244,7 +244,7 @@ function render() {
     app.innerHTML = pageUniverseWizard(params.id, _uwChapterIdx);
     injectBrandAppNav(params.id, 'universe');
   } else if (path === '/gb-characters') {
-    app.innerHTML = pageGrandureBrandStub(params.id, 'characters', 'Characters');
+    app.innerHTML = pageCharacters(params.id);
     injectBrandAppNav(params.id, 'characters');
   } else if (path === '/gb-assets') {
     app.innerHTML = pageGrandureBrandStub(params.id, 'assets', 'Assets');
@@ -270,6 +270,7 @@ function render() {
   if (path === '/calendar') { bindCalendar(params.brandId, params.campId || null); }
   if (path === '/doc')      { bindDoc(params.brandId, params.campId, params.type); }
   if (path === '/gb-universe') { bindUniverseWizard(params.id, _uwChapterIdx); }
+  if (path === '/gb-characters') { bindCharacters(params.id); }
 }
 
 /* ── Bind all nav links ── */
@@ -5934,6 +5935,232 @@ function bindUniverseWizard(brandId, chapterIdx) {
   } else {
     initQAChapter();
   }
+}
+
+/* ── Grandure Brand: Characters ── */
+function pageCharacters(brandId) {
+  const brand = getBrand(brandId);
+  const characters = (brand && brand.characters) || [];
+
+  const cardsHtml = characters.map(ch => {
+    const thumb = (ch.visualRefs && ch.visualRefs[0])
+      ? `<img src="${escHtml(ch.visualRefs[0])}" alt="" style="width:100%;height:100%;object-fit:cover">`
+      : `<div class="ch-avatar-fallback">${escHtml((ch.name || '?').trim().charAt(0).toUpperCase() || '?')}</div>`;
+    return `
+      <div class="section-card ch-card" data-id="${escHtml(ch.id)}" style="cursor:pointer;display:flex;align-items:center;gap:14px;padding:16px 18px">
+        <div class="ch-avatar">${thumb}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:15px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ch.name || 'Untitled Character')}</div>
+          ${ch.role ? `<div style="font-size:12px;color:#888;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ch.role)}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const emptyHtml = `
+    <div style="display:flex;align-items:center;justify-content:center;min-height:40vh;padding:0 32px">
+      <p style="text-align:center;color:#666;font-size:14px;line-height:1.7">No characters yet. Every universe needs its citizens.</p>
+    </div>
+  `;
+
+  return `
+    <div class="page" style="padding-bottom:120px">
+      <div class="back-header">
+        <button class="back-btn" data-href="#/gb-home?id=${brandId}">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">GRANDURE BRAND</div>
+          <div class="back-header-title">Characters</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+      <div style="padding:0 16px">
+        ${characters.length ? cardsHtml : emptyHtml}
+        <button id="chAddBtn" style="background:none;border:1px dashed rgba(255,255,255,0.18);border-radius:10px;padding:10px 16px;color:rgba(255,255,255,0.38);font-size:13px;width:100%;cursor:pointer">+ Add Character</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindCharacters(brandId) {
+  document.querySelectorAll('.ch-card').forEach(card => {
+    card.addEventListener('click', () => {
+      openCharacterEditor(brandId, card.dataset.id, () => render());
+    });
+  });
+
+  document.getElementById('chAddBtn')?.addEventListener('click', () => {
+    openCharacterEditor(brandId, null, () => render());
+  });
+}
+
+function openCharacterEditor(brandId, characterId, onSave) {
+  document.getElementById('characterEditorPage')?.remove();
+  const brand = getBrand(brandId);
+  if (!brand) return;
+
+  const isNew = !characterId;
+  let character;
+  if (isNew) {
+    character = { id: null, name: '', role: '', description: '', personality: '', purpose: '', visualRefs: [], products: [], campaigns: [] };
+  } else {
+    character = (brand.characters || []).find(c => c.id === characterId);
+    if (!character) return;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'characterEditorPage';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:420;background:#0a0a0f;display:flex;flex-direction:column;overflow:hidden';
+
+  let visualRefs = [...(character.visualRefs || [])];
+  let selectedProducts = [...(character.products || [])];
+  let selectedCampaigns = [...(character.campaigns || [])];
+
+  const offers = (brand.overview && brand.overview.offers) || [];
+  const campaignOptions = (brand.campaigns || []).map(c => ({ id: c.id, name: c.name }));
+
+  function photoGrid() {
+    return `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+      ${visualRefs.map((p,i) => `<div style="position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;flex-shrink:0">
+        <img src="${escHtml(p)}" style="width:100%;height:100%;object-fit:cover" alt="">
+        <button data-idx="${i}" class="ce-del-photo" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,0.7);border:none;color:#fff;font-size:13px;line-height:1;cursor:pointer">×</button>
+      </div>`).join('')}
+      <button id="ceAddPhoto" style="width:80px;height:80px;border-radius:8px;border:2px dashed rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);font-size:24px;cursor:pointer;flex-shrink:0">+</button>
+    </div>`;
+  }
+
+  function chipsHtml(options, selected, dataAttr) {
+    if (!options.length) return `<div style="font-size:13px;color:#666">No offers defined yet</div>`;
+    return `<div class="aisha-opts-grid">${options.map(opt => {
+      const isSel = selected.includes(opt);
+      return `<button type="button" class="aisha-opt${isSel ? ' selected' : ''}" data-${dataAttr}="${escHtml(opt)}">${escHtml(opt)}</button>`;
+    }).join('')}</div>`;
+  }
+
+  function campaignChipsHtml() {
+    if (!campaignOptions.length) return `<div style="font-size:13px;color:#666">No campaigns defined yet</div>`;
+    return `<div class="aisha-opts-grid">${campaignOptions.map(opt => {
+      const isSel = selectedCampaigns.includes(opt.id);
+      return `<button type="button" class="aisha-opt${isSel ? ' selected' : ''}" data-camp-id="${escHtml(opt.id)}">${escHtml(opt.name)}</button>`;
+    }).join('')}</div>`;
+  }
+
+  overlay.innerHTML = `
+    <div style="display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;padding-top:calc(14px + env(safe-area-inset-top,0px))">
+      <button id="ceBack" type="button" style="background:none;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 12px 0 0">‹</button>
+      <div style="flex:1;font-size:16px;font-weight:700;color:#fff">${isNew ? 'New Character' : 'Edit Character'}</div>
+      <button id="ceSave" style="background:rgba(255,255,255,0.1);border:none;border-radius:20px;padding:7px 18px;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Save</button>
+    </div>
+    <div id="ceBody" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:20px;overscroll-behavior:contain">
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">NAME</div>
+        <input id="ceName" type="text" value="${escHtml(character.name||'')}" placeholder="Character name…" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;-webkit-appearance:none">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">ROLE</div>
+        <input id="ceRole" type="text" value="${escHtml(character.role||'')}" placeholder="e.g. The Mentor, The Rebel" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:15px;font-family:inherit;outline:none;box-sizing:border-box;-webkit-appearance:none">
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">DESCRIPTION</div>
+        <textarea id="ceDescription" placeholder="Describe this character…" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:none;min-height:90px;box-sizing:border-box;-webkit-appearance:none">${escHtml(character.description||'')}</textarea>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">PERSONALITY</div>
+        <textarea id="cePersonality" placeholder="What makes them who they are?" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:none;min-height:90px;box-sizing:border-box;-webkit-appearance:none">${escHtml(character.personality||'')}</textarea>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">PURPOSE</div>
+        <textarea id="cePurpose" placeholder="What role do they play in the brand's story?" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:none;min-height:90px;box-sizing:border-box;-webkit-appearance:none">${escHtml(character.purpose||'')}</textarea>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">VISUAL REFERENCES</div>
+        <div id="cePhotoGrid">${photoGrid()}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">ASSOCIATED PRODUCTS</div>
+        <div id="ceProductChips">${chipsHtml(offers, selectedProducts, 'product')}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">ASSOCIATED CAMPAIGNS</div>
+        <div id="ceCampaignChips">${campaignChipsHtml()}</div>
+      </div>
+      ${!isNew ? `<button id="ceDelete" style="background:none;border:1px solid rgba(255,69,58,0.4);border-radius:12px;padding:12px 14px;color:#ff453a;font-size:14px;font-weight:600;cursor:pointer;width:100%">Delete Character</button>` : ''}
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  function rebindPhotoGrid() {
+    const grid = overlay.querySelector('#cePhotoGrid');
+    if (grid) grid.innerHTML = photoGrid();
+    grid?.querySelector('#ceAddPhoto')?.addEventListener('click', () => {
+      pickImage(dataUrl => { visualRefs.push(dataUrl); rebindPhotoGrid(); });
+    });
+    grid?.querySelectorAll('.ce-del-photo').forEach(btn => {
+      btn.addEventListener('click', () => { visualRefs.splice(Number(btn.dataset.idx), 1); rebindPhotoGrid(); });
+    });
+  }
+  rebindPhotoGrid();
+
+  function rebindProductChips() {
+    const wrap = overlay.querySelector('#ceProductChips');
+    if (wrap) wrap.innerHTML = chipsHtml(offers, selectedProducts, 'product');
+    wrap?.querySelectorAll('.aisha-opt[data-product]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.product;
+        selectedProducts = selectedProducts.includes(val) ? selectedProducts.filter(p => p !== val) : [...selectedProducts, val];
+        rebindProductChips();
+      });
+    });
+  }
+  rebindProductChips();
+
+  function rebindCampaignChips() {
+    const wrap = overlay.querySelector('#ceCampaignChips');
+    if (wrap) wrap.innerHTML = campaignChipsHtml();
+    wrap?.querySelectorAll('.aisha-opt[data-camp-id]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.campId;
+        selectedCampaigns = selectedCampaigns.includes(val) ? selectedCampaigns.filter(c => c !== val) : [...selectedCampaigns, val];
+        rebindCampaignChips();
+      });
+    });
+  }
+  rebindCampaignChips();
+
+  function doSave() {
+    const name = overlay.querySelector('#ceName')?.value.trim() || '';
+    const role = overlay.querySelector('#ceRole')?.value.trim() || '';
+    const description = overlay.querySelector('#ceDescription')?.value.trim() || '';
+    const personality = overlay.querySelector('#cePersonality')?.value.trim() || '';
+    const purpose = overlay.querySelector('#cePurpose')?.value.trim() || '';
+    const b2 = getBrand(brandId);
+    if (!b2) return;
+    const existing = b2.characters || [];
+    const savedChar = {
+      id: character.id || uid(),
+      name, role, description, personality, purpose,
+      visualRefs: [...visualRefs],
+      products: [...selectedProducts],
+      campaigns: [...selectedCampaigns],
+    };
+    const nextCharacters = isNew
+      ? [...existing, savedChar]
+      : existing.map(c => c.id === savedChar.id ? savedChar : c);
+    saveBrandOverride(brandId, { characters: nextCharacters });
+    overlay.remove();
+    if (onSave) onSave();
+  }
+
+  overlay.querySelector('#ceSave')?.addEventListener('click', doSave);
+  overlay.querySelector('#ceBack')?.addEventListener('click', () => overlay.remove());
+  overlay.querySelector('#ceDelete')?.addEventListener('click', () => {
+    if (!confirm('Delete this character?')) return;
+    const b2 = getBrand(brandId);
+    if (!b2) return;
+    const nextCharacters = (b2.characters || []).filter(c => c.id !== character.id);
+    saveBrandOverride(brandId, { characters: nextCharacters });
+    overlay.remove();
+    if (onSave) onSave();
+  });
 }
 
 /* ── Grandure Brand: temporary stub pages for deeper tabs ── */
