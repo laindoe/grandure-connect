@@ -4133,6 +4133,23 @@ function openPostDetails(postId, brandId, onSave) {
   sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
 }
 
+function pickImage(cb) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    input.remove();
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => cb(ev.target.result);
+    reader.readAsDataURL(file);
+  });
+  input.click();
+}
+
 function openThumbnailMenu(postId, bId, cId, platform, isCarousel, onDone) {
   document.getElementById('thumbMenu')?.remove();
   const overlay = document.createElement('div');
