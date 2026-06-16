@@ -38,6 +38,34 @@ function universeCompletion(brand) {
   return { pct, states, nextIdx };
 }
 
+/* ── Grandure Brand: Universe Wizard — question/field config ── */
+const UNIVERSE_CHAPTER_FIELDS = {
+  world: [
+    { key: 'name', q: "What is the name of your universe?", type: 'text' },
+    { key: 'description', q: "Describe your world in a sentence or two — what does it feel, look, and sound like?", type: 'textarea' },
+    { key: 'tension', q: "What's the central tension or transformation at the heart of this world?", type: 'textarea' },
+    { key: 'setting', q: "What kind of setting is this?", type: 'chips', multi: false, options: ['Digital Realm', 'Physical Movement', 'Mythic Landscape', 'Everyday Magic', 'Other'] },
+  ],
+  belief: [
+    { key: 'statement', q: "What's the one belief at the center of your universe?", type: 'textarea' },
+    { key: 'differentiator', q: "What does your brand believe that others don't?", type: 'textarea' },
+    { key: 'oldParadigm', q: "What old paradigm or status quo are you rebelling against?", type: 'textarea' },
+  ],
+  citizens: [
+    { key: 'name', q: "What do the citizens of your universe call themselves?", type: 'text' },
+    { key: 'who', q: "Who are they? Describe the people who belong here.", type: 'textarea' },
+    { key: 'unites', q: "What unites them?", type: 'textarea' },
+    { key: 'transformation', q: "What transformation do they go through as citizens of this world?", type: 'textarea' },
+  ],
+  invitations: [
+    { key: 'onRamp', q: "How do people enter your universe — what's the on-ramp?", type: 'textarea' },
+    { key: 'cta', q: "What's the call to action that invites people in?", type: 'text' },
+    { key: 'reward', q: "What do citizens receive once they join?", type: 'textarea' },
+  ],
+};
+const AESTHETIC_MOOD_WORDS = ['Futuristic', 'Organic', 'Luxury', 'Playful', 'Minimal', 'Maximalist', 'Editorial', 'Raw', 'Ethereal', 'Bold'];
+const AESTHETIC_PRESET_COLORS = ['#1a0a2e','#0a1628','#0f1c0f','#1c0a0a','#1c1c0a','#0a1a1c','#1c0a18','#1c1c1e','#d4aaff','#ffffff'];
+
 /* ── Auto-update poller ── */
 (function startUpdatePoller() {
   let knownEtag = null;
@@ -138,6 +166,7 @@ window.addEventListener('load', render);
 function render() {
   const { path, params } = parseHash();
   const app = document.getElementById('app');
+  let _uwChapterIdx = 0; // set when path === '/gb-universe', used by bindUniverseWizard below
 
   // Remove sheets that belong only to campaign/doc contexts
   if (path !== '/campaign') {
@@ -207,7 +236,12 @@ function render() {
     app.innerHTML = pageGrandureBrandHome(params.id);
     injectBrandAppNav(params.id, 'home');
   } else if (path === '/gb-universe') {
-    app.innerHTML = pageGrandureBrandStub(params.id, 'universe', 'Universe');
+    const _uwBrand = getBrand(params.id);
+    _uwChapterIdx = parseInt(params.chapter, 10);
+    if (!_uwBrand || isNaN(_uwChapterIdx) || _uwChapterIdx < 0 || _uwChapterIdx >= UNIVERSE_CHAPTERS.length) {
+      _uwChapterIdx = _uwBrand ? universeCompletion(_uwBrand).nextIdx : 0;
+    }
+    app.innerHTML = pageUniverseWizard(params.id, _uwChapterIdx);
     injectBrandAppNav(params.id, 'universe');
   } else if (path === '/gb-characters') {
     app.innerHTML = pageGrandureBrandStub(params.id, 'characters', 'Characters');
@@ -235,6 +269,7 @@ function render() {
   if (path === '/planner')  { bindVisualPlanner(params.brandId, params.campId || null); }
   if (path === '/calendar') { bindCalendar(params.brandId, params.campId || null); }
   if (path === '/doc')      { bindDoc(params.brandId, params.campId, params.type); }
+  if (path === '/gb-universe') { bindUniverseWizard(params.id, _uwChapterIdx); }
 }
 
 /* ── Bind all nav links ── */
@@ -5407,6 +5442,498 @@ function pageGrandureBrandHome(brandId) {
       </div>
     </div>
   `;
+}
+
+/* ── Grandure Brand: Universe Wizard ── */
+function pageUniverseWizard(brandId, chapterIdx) {
+  const brand = getBrand(brandId);
+  if (!brand) return `<div class="page"><div class="back-header"><button class="back-btn" data-href="#/grandure-brand">‹</button></div></div>`;
+
+  let idx = parseInt(chapterIdx, 10);
+  if (isNaN(idx) || idx < 0 || idx >= UNIVERSE_CHAPTERS.length) {
+    idx = universeCompletion(brand).nextIdx;
+  }
+
+  const { states } = universeCompletion(brand);
+  const chapter = UNIVERSE_CHAPTERS[idx];
+
+  const dotsHTML = UNIVERSE_CHAPTERS.map((c, i) => {
+    const isDone = states[i];
+    const isCurrent = i === idx;
+    let dotCls = 'gb-dot';
+    if (isDone) dotCls += ' gb-dot-done';
+    else if (isCurrent) dotCls += ' gb-dot-next';
+    else dotCls += ' gb-dot-upcoming';
+    // A done chapter that's also the one being viewed still gets the glow treatment.
+    const glowStyle = isCurrent && isDone ? ' style="box-shadow:0 0 0 4px rgba(124,58,173,0.4), 0 0 16px rgba(180,120,255,0.9)"' : '';
+    return `
+      <button type="button" class="gb-dot-col uw-dot-col" data-href="#/gb-universe?id=${brandId}&chapter=${i}">
+        <div class="${dotCls}"${glowStyle}></div>
+        <div class="gb-dot-label">${escHtml(c.label)}</div>
+      </button>
+    `;
+  }).join('');
+
+  return `
+    <div class="page" style="padding-bottom:130px">
+      <div class="back-header">
+        <button class="back-btn" data-href="#/gb-home?id=${brandId}">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">CHAPTER ${idx + 1} OF 7</div>
+          <div class="back-header-title">${escHtml(chapter.label)}</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+
+      <div class="uw-constellation-strip">
+        <div class="gb-constellation" style="margin-bottom:0">
+          <div class="gb-constellation-line"></div>
+          <div class="gb-constellation-row">${dotsHTML}</div>
+        </div>
+      </div>
+
+      <div id="uwChat" class="aisha-chat"></div>
+      <div id="uwBody"></div>
+      <div id="uwOptsWrap" class="aisha-opts-wrap" style="display:none">
+        <div id="uwOptsGrid" class="aisha-opts-grid"></div>
+        <button id="uwOptsDone" class="aisha-opts-done" style="display:none">Done ›</button>
+      </div>
+      <div id="uwInputRow" class="aisha-input-row" style="display:none">
+        <input id="uwInput" class="aisha-input" type="text" placeholder="Type your answer…" style="font-size:16px">
+        <button id="uwSendBtn" class="aisha-send" type="button">${UW_SEND_SVG}</button>
+      </div>
+    </div>
+  `;
+}
+
+const UW_SEND_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+
+/* ── Universe Wizard: interaction state ── */
+let _uwMessages = [];      // { role: 'aisha'|'user', text }
+let _uwKey = '';           // `${brandId}:${chapterIdx}` — resets state on chapter/brand change
+let _uwFieldPos = 0;       // index into the unanswered-fields queue for q&a chapters
+let _uwSelectedChips = [];
+
+function uwGoToChapter(brandId, nextIdx) {
+  navigate(`/gb-universe?id=${brandId}&chapter=${nextIdx}`);
+}
+
+function uwContinueCTA(brandId, chapterIdx) {
+  if (chapterIdx < UNIVERSE_CHAPTERS.length - 1) {
+    const nextChapter = UNIVERSE_CHAPTERS[chapterIdx + 1];
+    return `<button id="uwContinueBtn" class="gb-cta-btn" type="button" style="width:100%">
+      <span class="gb-cta-top">
+        <span class="gb-cta-label">Continue to ${escHtml(nextChapter.label)}</span>
+        <span class="gb-cta-chevron">›</span>
+      </span>
+    </button>`;
+  }
+  return `<button id="uwContinueBtn" class="gb-cta-btn" type="button" style="width:100%">
+    <span class="gb-cta-top">
+      <span class="gb-cta-label">Return to Your Universe</span>
+      <span class="gb-cta-chevron">›</span>
+    </span>
+  </button>`;
+}
+
+function uwBindContinue(brandId, chapterIdx) {
+  document.getElementById('uwContinueBtn')?.addEventListener('click', () => {
+    if (chapterIdx < UNIVERSE_CHAPTERS.length - 1) {
+      uwGoToChapter(brandId, chapterIdx + 1);
+    } else {
+      navigate('/gb-home?id=' + brandId);
+    }
+  });
+}
+
+function bindUniverseWizard(brandId, chapterIdx) {
+  const brand = getBrand(brandId);
+  if (!brand) return;
+
+  let idx = parseInt(chapterIdx, 10);
+  if (isNaN(idx) || idx < 0 || idx >= UNIVERSE_CHAPTERS.length) {
+    idx = universeCompletion(brand).nextIdx;
+  }
+  const chapterId = UNIVERSE_CHAPTERS[idx].id;
+  const key = `${brandId}:${idx}`;
+
+  if (_uwKey !== key) {
+    _uwKey = key;
+    _uwMessages = [];
+    _uwFieldPos = 0;
+    _uwSelectedChips = [];
+  }
+
+  const chat = document.getElementById('uwChat');
+  const body = document.getElementById('uwBody');
+  const optsWrap = document.getElementById('uwOptsWrap');
+  const optsGrid = document.getElementById('uwOptsGrid');
+  const optsDone = document.getElementById('uwOptsDone');
+  const inputRow = document.getElementById('uwInputRow');
+  if (!chat || !body) return;
+
+  // Reassigned per-chapter-mode below; showTextInput()/showChips() call through these.
+  let onTextSubmit = () => {};
+  let onChipSubmit = () => {};
+
+  function renderChat() {
+    chat.innerHTML = _uwMessages.map(m =>
+      `<div class="aisha-msg ${m.role === 'aisha' ? 'from-aisha' : 'from-user'}">${escHtml(m.text).replace(/\n/g, '<br>')}</div>`
+    ).join('');
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function hideOpts() {
+    if (optsWrap) optsWrap.style.display = 'none';
+    _uwSelectedChips = [];
+  }
+
+  function hideInputRow() {
+    if (inputRow) inputRow.style.display = 'none';
+  }
+
+  function showTextInput(placeholder, isTextarea) {
+    hideOpts();
+    if (!inputRow) return;
+    inputRow.style.display = 'flex';
+    inputRow.innerHTML = isTextarea
+      ? `<textarea id="uwInput" class="uw-textarea" placeholder="${escHtml(placeholder || 'Type your answer…')}" rows="1"></textarea><button id="uwSendBtn" class="aisha-send" type="button">${UW_SEND_SVG}</button>`
+      : `<input id="uwInput" class="aisha-input" type="text" placeholder="${escHtml(placeholder || 'Type your answer…')}" style="font-size:16px"><button id="uwSendBtn" class="aisha-send" type="button">${UW_SEND_SVG}</button>`;
+    const liveInput = document.getElementById('uwInput');
+    const liveSend = document.getElementById('uwSendBtn');
+    const submit = () => {
+      const text = (liveInput.value || '').trim();
+      if (!text) return;
+      liveInput.value = '';
+      onTextSubmit(text);
+    };
+    liveSend?.addEventListener('click', submit);
+    liveInput?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !isTextarea) { e.preventDefault(); submit(); }
+    });
+    setTimeout(() => liveInput?.focus(), 50);
+  }
+
+  function showChips(options, multi) {
+    hideInputRow();
+    if (!optsWrap || !optsGrid || !optsDone) return;
+    _uwSelectedChips = [];
+    optsGrid.innerHTML = options.map(opt => `<button type="button" class="aisha-opt" data-opt="${escHtml(opt)}">${escHtml(opt)}</button>`).join('');
+    optsDone.style.display = multi ? 'block' : 'none';
+    optsWrap.style.display = 'block';
+    optsGrid.querySelectorAll('.aisha-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (multi) {
+          btn.classList.toggle('selected');
+          const val = btn.dataset.opt;
+          _uwSelectedChips = _uwSelectedChips.includes(val)
+            ? _uwSelectedChips.filter(o => o !== val)
+            : [..._uwSelectedChips, val];
+        } else {
+          onChipSubmit(btn.dataset.opt);
+        }
+      });
+    });
+    optsDone.onclick = () => {
+      if (_uwSelectedChips.length) onChipSubmit(_uwSelectedChips.join(', '));
+    };
+  }
+
+  function hideAllInputUI() {
+    hideOpts();
+    hideInputRow();
+  }
+
+  /* ── Q&A driven chapters: world / belief / citizens / invitations ── */
+  function saveField(field, value) {
+    const b = getBrand(brandId);
+    const u = b.brandUniverse || {};
+    saveBrandOverride(brandId, {
+      brandUniverse: { ...u, [chapterId]: { ...(u[chapterId] || {}), [field.key]: value } },
+    });
+  }
+
+  function renderQAComplete() {
+    hideAllInputUI();
+    body.innerHTML = `<div class="uw-continue-wrap">${uwContinueCTA(brandId, idx)}</div>`;
+    uwBindContinue(brandId, idx);
+  }
+
+  function askField(field) {
+    hideAllInputUI();
+    body.innerHTML = '';
+    onChipSubmit = handleFieldAnswer;
+    onTextSubmit = handleFieldAnswer;
+    _uwMessages.push({ role: 'aisha', text: field.q });
+    renderChat();
+    if (field.type === 'chips') {
+      showChips(field.options, false);
+    } else {
+      showTextInput('Type your answer…', field.type === 'textarea');
+    }
+  }
+
+  function handleFieldAnswer(value) {
+    const fields = UNIVERSE_CHAPTER_FIELDS[chapterId];
+    const field = fields[_uwFieldPos];
+    if (!field) return;
+    hideAllInputUI();
+    _uwMessages.push({ role: 'user', text: value });
+    renderChat();
+    saveField(field, value);
+    // refresh local brand reference's chapter object so subsequent reads see the save
+    advanceQA();
+  }
+
+  function advanceQA() {
+    const fields = UNIVERSE_CHAPTER_FIELDS[chapterId];
+    _uwFieldPos++;
+    if (_uwFieldPos < fields.length) {
+      askField(fields[_uwFieldPos]);
+    } else {
+      _uwMessages.push({ role: 'aisha', text: "This chapter is complete." });
+      renderChat();
+      renderQAComplete();
+    }
+  }
+
+  function initQAChapter() {
+    const fields = UNIVERSE_CHAPTER_FIELDS[chapterId];
+    const b = getBrand(brandId);
+    const saved = (b.brandUniverse && b.brandUniverse[chapterId]) || {};
+
+    _uwMessages = [];
+    let firstUnanswered = -1;
+    fields.forEach((f, i) => {
+      const val = saved[f.key];
+      if (val) {
+        _uwMessages.push({ role: 'aisha', text: f.q });
+        _uwMessages.push({ role: 'user', text: val });
+      } else if (firstUnanswered === -1) {
+        firstUnanswered = i;
+      }
+    });
+
+    renderChat();
+
+    if (firstUnanswered === -1) {
+      _uwFieldPos = fields.length;
+      _uwMessages.push({ role: 'aisha', text: "This chapter is complete." });
+      renderChat();
+      renderQAComplete();
+    } else {
+      _uwFieldPos = firstUnanswered;
+      askField(fields[firstUnanswered]);
+    }
+  }
+
+  /* ── Characters chapter: link-out ── */
+  function initCharactersChapter() {
+    hideAllInputUI();
+    const b = getBrand(brandId);
+    const count = (b.characters || []).length;
+    _uwMessages = [
+      { role: 'aisha', text: "Characters are managed in their own space — that's where you'll create and develop the cast of your universe." },
+      { role: 'aisha', text: `You have ${count} character${count === 1 ? '' : 's'} so far.` },
+    ];
+    renderChat();
+    body.innerHTML = `
+      <div class="uw-continue-wrap">
+        <button id="uwOpenCharactersBtn" class="gb-cta-btn" type="button" style="width:100%;margin-bottom:10px">
+          <span class="gb-cta-top">
+            <span class="gb-cta-label">Open Characters</span>
+            <span class="gb-cta-chevron">›</span>
+          </span>
+        </button>
+      </div>
+    `;
+    document.getElementById('uwOpenCharactersBtn')?.addEventListener('click', () => {
+      navigate('/gb-characters?id=' + brandId);
+    });
+  }
+
+  /* ── Symbols chapter ── */
+  function renderSymbolsBody() {
+    const b = getBrand(brandId);
+    const symbols = (b.brandUniverse && b.brandUniverse.symbols) || [];
+    const chipsHTML = symbols.map(s => `
+      <span class="uw-symbol-chip" data-id="${escHtml(s.id)}">
+        ${escHtml(s.name)}
+        <button type="button" class="uw-symbol-remove" data-remove="${escHtml(s.id)}">×</button>
+      </span>
+    `).join('');
+    const continueHTML = symbols.length >= 1 ? uwContinueCTA(brandId, idx) : '';
+    body.innerHTML = `
+      <div class="uw-section" style="padding-top:0">
+        ${chipsHTML ? `<div class="uw-swatch-row" style="margin-bottom:16px">${chipsHTML}</div>` : ''}
+        ${continueHTML ? `<div class="uw-continue-wrap" style="padding:0 0 4px">${continueHTML}</div>` : ''}
+      </div>
+    `;
+    body.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const bb = getBrand(brandId);
+        const u = bb.brandUniverse || {};
+        const next = (u.symbols || []).filter(s => s.id !== btn.dataset.remove);
+        saveBrandOverride(brandId, { brandUniverse: { ...u, symbols: next } });
+        renderSymbolsBody();
+      });
+    });
+    uwBindContinue(brandId, idx);
+  }
+
+  function initSymbolsChapter() {
+    _uwMessages = [
+      { role: 'aisha', text: "What symbols represent your universe? Objects, icons, or motifs that carry meaning." },
+    ];
+    renderChat();
+    onTextSubmit = onSymbolSubmit;
+    showTextInput('Add a symbol…', false);
+    renderSymbolsBody();
+  }
+
+  function onSymbolSubmit(value) {
+    const b = getBrand(brandId);
+    const u = b.brandUniverse || {};
+    const next = [...(u.symbols || []), { id: uid(), name: value }];
+    saveBrandOverride(brandId, { brandUniverse: { ...u, symbols: next } });
+    renderSymbolsBody();
+    onTextSubmit = onSymbolSubmit;
+    showTextInput('Add a symbol…', false);
+  }
+
+  /* ── Aesthetic chapter ── */
+  function renderAestheticBody() {
+    hideAllInputUI();
+    const b = getBrand(brandId);
+    const aesthetic = (b.brandUniverse && b.brandUniverse.aesthetic) || { palette: [], typography: '', moodWords: [], moodboard: [] };
+    const palette = aesthetic.palette || [];
+    const moodWords = aesthetic.moodWords || [];
+    const moodboard = aesthetic.moodboard || [];
+
+    const presetSwatches = AESTHETIC_PRESET_COLORS.map(hex => {
+      const selected = palette.includes(hex);
+      return `<button type="button" class="uw-swatch${selected ? ' selected' : ''}" data-hex="${escHtml(hex)}" style="background:${escHtml(hex)}" title="${escHtml(hex)}"></button>`;
+    }).join('');
+
+    const moodChips = AESTHETIC_MOOD_WORDS.map(word => {
+      const selected = moodWords.includes(word);
+      return `<button type="button" class="aisha-opt${selected ? ' selected' : ''}" data-mood="${escHtml(word)}">${escHtml(word)}</button>`;
+    }).join('');
+
+    const moodboardThumbs = moodboard.map((src, i) =>
+      `<img class="uw-moodboard-thumb" src="${src}" data-mb-idx="${i}" alt="Moodboard image">`
+    ).join('');
+
+    const canContinue = palette.length >= 1 && moodWords.length >= 1;
+
+    body.innerHTML = `
+      <div class="uw-section" style="padding-top:0">
+        <div class="uw-section-label">COLOR PALETTE</div>
+        <div class="uw-swatch-row">
+          ${presetSwatches}
+          <label class="uw-swatch-custom" title="Pick a custom color">
+            <input type="color" id="uwCustomColor">
+            <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:18px;pointer-events:none">+</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="uw-section">
+        <div class="uw-section-label">TYPOGRAPHY</div>
+        <input type="text" id="uwTypographyInput" class="uw-text-input" placeholder="e.g. Bold serif headlines, clean sans body" value="${escHtml(aesthetic.typography || '')}">
+      </div>
+
+      <div class="uw-section">
+        <div class="uw-section-label">MOOD</div>
+        <div class="aisha-opts-grid">${moodChips}</div>
+      </div>
+
+      <div class="uw-section">
+        <div class="uw-section-label">MOODBOARD</div>
+        <div class="uw-moodboard-row">
+          ${moodboardThumbs}
+          <button type="button" class="uw-moodboard-add" id="uwMoodboardAdd">+</button>
+        </div>
+      </div>
+
+      ${canContinue ? `<div class="uw-continue-wrap">${uwContinueCTA(brandId, idx)}</div>` : ''}
+    `;
+
+    body.querySelectorAll('.uw-swatch[data-hex]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const hex = btn.dataset.hex;
+        const bb = getBrand(brandId);
+        const u = bb.brandUniverse || {};
+        const a = u.aesthetic || {};
+        const cur = a.palette || [];
+        const nextPalette = cur.includes(hex) ? cur.filter(c => c !== hex) : [...cur, hex];
+        saveBrandOverride(brandId, { brandUniverse: { ...u, aesthetic: { ...a, palette: nextPalette } } });
+        renderAestheticBody();
+      });
+    });
+
+    document.getElementById('uwCustomColor')?.addEventListener('change', e => {
+      const hex = e.target.value;
+      const bb = getBrand(brandId);
+      const u = bb.brandUniverse || {};
+      const a = u.aesthetic || {};
+      const cur = a.palette || [];
+      if (!cur.includes(hex)) {
+        saveBrandOverride(brandId, { brandUniverse: { ...u, aesthetic: { ...a, palette: [...cur, hex] } } });
+        renderAestheticBody();
+      }
+    });
+
+    const typographyInput = document.getElementById('uwTypographyInput');
+    typographyInput?.addEventListener('change', () => {
+      const bb = getBrand(brandId);
+      const u = bb.brandUniverse || {};
+      const a = u.aesthetic || {};
+      saveBrandOverride(brandId, { brandUniverse: { ...u, aesthetic: { ...a, typography: typographyInput.value } } });
+    });
+
+    body.querySelectorAll('.aisha-opt[data-mood]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const word = btn.dataset.mood;
+        const bb = getBrand(brandId);
+        const u = bb.brandUniverse || {};
+        const a = u.aesthetic || {};
+        const cur = a.moodWords || [];
+        const nextWords = cur.includes(word) ? cur.filter(w => w !== word) : [...cur, word];
+        saveBrandOverride(brandId, { brandUniverse: { ...u, aesthetic: { ...a, moodWords: nextWords } } });
+        renderAestheticBody();
+      });
+    });
+
+    document.getElementById('uwMoodboardAdd')?.addEventListener('click', () => {
+      pickImage(dataUrl => {
+        const bb = getBrand(brandId);
+        const u = bb.brandUniverse || {};
+        const a = u.aesthetic || {};
+        const nextBoard = [...(a.moodboard || []), dataUrl];
+        saveBrandOverride(brandId, { brandUniverse: { ...u, aesthetic: { ...a, moodboard: nextBoard } } });
+        renderAestheticBody();
+      });
+    });
+
+    uwBindContinue(brandId, idx);
+  }
+
+  function initAestheticChapter() {
+    chat.innerHTML = '';
+    renderAestheticBody();
+  }
+
+  /* ── Dispatch by chapter type ── */
+  if (chapterId === 'characters') {
+    initCharactersChapter();
+  } else if (chapterId === 'symbols') {
+    initSymbolsChapter();
+  } else if (chapterId === 'aesthetic') {
+    initAestheticChapter();
+  } else {
+    initQAChapter();
+  }
 }
 
 /* ── Grandure Brand: temporary stub pages for deeper tabs ── */
