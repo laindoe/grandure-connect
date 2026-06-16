@@ -250,7 +250,7 @@ function render() {
     app.innerHTML = pageAssets(params.id);
     injectBrandAppNav(params.id, 'assets');
   } else if (path === '/gb-bible') {
-    app.innerHTML = pageGrandureBrandStub(params.id, 'bible', 'Bible');
+    app.innerHTML = pageBible(params.id);
     injectBrandAppNav(params.id, 'bible');
   } else {
     app.innerHTML = pageHome();
@@ -6383,6 +6383,142 @@ function bindAssets(brandId) {
   document.getElementById('assetTypographyInput')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); submitTypography(); }
   });
+}
+
+/* ── Grandure Brand: Bible (read-only auto-generated document) ── */
+function bibFieldLine(label, value) {
+  if (!value) return '';
+  return `<div style="font-size:13px;color:#999;line-height:1.6;margin-bottom:6px"><span style="color:#666">${escHtml(label)}:</span> ${escHtml(value)}</div>`;
+}
+
+function bibEmptyState(brandId, chapter, chapterIdx) {
+  const href = chapter.id === 'characters'
+    ? `#/gb-characters?id=${brandId}`
+    : `#/gb-universe?id=${brandId}&chapter=${chapterIdx}`;
+  return `
+    <div style="font-size:13px;color:#666;margin-bottom:12px">Not yet defined.</div>
+    <button data-href="${href}" style="background:none;border:1px dashed rgba(255,255,255,0.18);border-radius:10px;padding:10px 16px;color:rgba(255,255,255,0.38);font-size:13px;cursor:pointer">Continue in the wizard ›</button>
+  `;
+}
+
+function bibChapterBody(brand, brandId, chapter, chapterIdx) {
+  const u = brand.brandUniverse || {};
+
+  if (chapter.id === 'world') {
+    const w = u.world || {};
+    return `
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:8px">${escHtml(w.name || '')}</div>
+      <div style="font-size:14px;color:#ccc;line-height:1.7;margin-bottom:10px">${escHtml(w.description || '')}</div>
+      ${bibFieldLine('Tension', w.tension)}
+      ${bibFieldLine('Setting', w.setting)}
+    `;
+  }
+
+  if (chapter.id === 'belief') {
+    const b = u.belief || {};
+    return `
+      <div style="border-left:2px solid rgba(180,120,255,0.4);padding-left:14px;margin-bottom:10px;font-size:15px;color:#d4aaff;line-height:1.7;font-style:italic">${escHtml(b.statement || '')}</div>
+      ${bibFieldLine('Differentiator', b.differentiator)}
+      ${bibFieldLine('Old paradigm', b.oldParadigm)}
+    `;
+  }
+
+  if (chapter.id === 'citizens') {
+    const c = u.citizens || {};
+    return `
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:8px">${escHtml(c.name || '')}</div>
+      ${bibFieldLine('Who', c.who)}
+      ${bibFieldLine('Unites', c.unites)}
+      ${bibFieldLine('Transformation', c.transformation)}
+    `;
+  }
+
+  if (chapter.id === 'characters') {
+    const characters = brand.characters || [];
+    return characters.map(ch => {
+      const thumb = (ch.visualRefs && ch.visualRefs[0])
+        ? `<img src="${escHtml(ch.visualRefs[0])}" alt="" style="width:100%;height:100%;object-fit:cover">`
+        : `<div class="ch-avatar-fallback">${escHtml((ch.name || '?').trim().charAt(0).toUpperCase() || '?')}</div>`;
+      return `
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+          <div class="ch-avatar">${thumb}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;font-weight:700;color:#fff">${escHtml(ch.name || 'Untitled Character')}</div>
+            ${ch.role ? `<div style="font-size:12px;color:#888;margin-top:1px">${escHtml(ch.role)}</div>` : ''}
+            ${ch.description ? `<div style="font-size:12px;color:#999;margin-top:4px;line-height:1.5">${escHtml(ch.description)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (chapter.id === 'symbols') {
+    const symbols = u.symbols || [];
+    return `<div class="uw-swatch-row">${symbols.map(s => `
+      <span class="uw-symbol-chip">${escHtml(s.name)}</span>
+    `).join('')}</div>`;
+  }
+
+  if (chapter.id === 'aesthetic') {
+    const a = u.aesthetic || {};
+    const palette = a.palette || [];
+    const moodWords = a.moodWords || [];
+    const moodboard = a.moodboard || [];
+    const swatches = palette.map(hex => `<div class="uw-swatch" style="background:${escHtml(hex)};cursor:default" title="${escHtml(hex)}"></div>`).join('');
+    const moodChips = moodWords.map(w => `<span class="aisha-opt selected" style="cursor:default">${escHtml(w)}</span>`).join('');
+    const moodboardThumbs = moodboard.map(src => `<img class="uw-moodboard-thumb" src="${src}" alt="Moodboard image">`).join('');
+    return `
+      ${palette.length ? `<div class="uw-section-label" style="margin-bottom:8px">COLOR PALETTE</div><div class="uw-swatch-row" style="margin-bottom:16px">${swatches}</div>` : ''}
+      ${bibFieldLine('Typography', a.typography)}
+      ${moodWords.length ? `<div class="uw-section-label" style="margin:14px 0 8px">MOOD WORDS</div><div class="aisha-opts-grid" style="margin-bottom:16px">${moodChips}</div>` : ''}
+      ${moodboard.length ? `<div class="uw-section-label" style="margin:14px 0 8px">MOODBOARD</div><div style="display:flex;flex-wrap:wrap;gap:8px">${moodboardThumbs}</div>` : ''}
+    `;
+  }
+
+  if (chapter.id === 'invitations') {
+    const inv = u.invitations || {};
+    return `
+      ${bibFieldLine('On-ramp', inv.onRamp)}
+      ${bibFieldLine('CTA', inv.cta)}
+      ${bibFieldLine('Reward', inv.reward)}
+    `;
+  }
+
+  return '';
+}
+
+function pageBible(brandId) {
+  const brand = getBrand(brandId);
+  if (!brand) return `<div class="page"><div class="back-header"><button class="back-btn" data-href="#/grandure-brand">‹</button></div></div>`;
+
+  const sectionsHtml = UNIVERSE_CHAPTERS.map((chapter, i) => {
+    const complete = isChapterComplete(brand, chapter.id);
+    const body = complete ? bibChapterBody(brand, brandId, chapter, i) : bibEmptyState(brandId, chapter, i);
+    return `
+      <div class="section-card bib-section" style="cursor:default">
+        <div class="section-label" style="margin-bottom:6px">CHAPTER ${i + 1}</div>
+        <div style="font-size:19px;font-weight:700;color:#fff;margin-bottom:14px">${escHtml(chapter.label)}</div>
+        ${body}
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="page" style="padding-bottom:120px">
+      <div class="back-header">
+        <button class="back-btn" data-href="#/gb-home?id=${brandId}">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">GRANDURE BRAND</div>
+          <div class="back-header-title">Brand Bible</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+      <div style="padding:0 16px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.6px;color:#666;margin-bottom:16px">${escHtml(brand.name || '')} — AS DEFINED SO FAR</div>
+        ${sectionsHtml}
+      </div>
+    </div>
+  `;
 }
 
 /* ── Grandure Brand: temporary stub pages for deeper tabs ── */
