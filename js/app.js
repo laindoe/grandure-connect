@@ -4,6 +4,40 @@ const PLATFORM_LABELS = { instagram: 'Instagram', threads: 'Threads', youtube: '
 const PLATFORM_SHORT  = { instagram: 'IG', threads: 'TH', youtube: 'YT', tiktok: 'TK', twitter: 'X' };
 const ALL_PLATFORMS   = ['Instagram','TikTok','YouTube','Facebook','X','LinkedIn','Threads','Pinterest','Snapchat','Email','Patreon','Discord'];
 
+/* ── Grandure Brand: Universe chapters ── */
+const UNIVERSE_CHAPTERS = [
+  { id: 'world', label: 'World' },
+  { id: 'belief', label: 'Belief' },
+  { id: 'citizens', label: 'Citizens' },
+  { id: 'characters', label: 'Characters' },
+  { id: 'symbols', label: 'Symbols' },
+  { id: 'aesthetic', label: 'Aesthetic' },
+  { id: 'invitations', label: 'Invitations' },
+];
+
+function isChapterComplete(brand, chapterId) {
+  const u = brand.brandUniverse || {};
+  switch (chapterId) {
+    case 'world': return !!(u.world?.name && u.world?.description);
+    case 'belief': return !!(u.belief?.statement);
+    case 'citizens': return !!(u.citizens?.name && u.citizens?.who);
+    case 'characters': return (brand.characters || []).length > 0;
+    case 'symbols': return (u.symbols || []).length > 0;
+    case 'aesthetic': return !!((u.aesthetic?.palette || []).length && (u.aesthetic?.moodWords || []).length);
+    case 'invitations': return !!(u.invitations?.onRamp);
+    default: return false;
+  }
+}
+
+function universeCompletion(brand) {
+  const states = UNIVERSE_CHAPTERS.map(c => isChapterComplete(brand, c.id));
+  const doneCount = states.filter(Boolean).length;
+  const pct = Math.round((doneCount / UNIVERSE_CHAPTERS.length) * 100);
+  let nextIdx = states.findIndex(s => !s);
+  if (nextIdx === -1) nextIdx = UNIVERSE_CHAPTERS.length - 1;
+  return { pct, states, nextIdx };
+}
+
 /* ── Auto-update poller ── */
 (function startUpdatePoller() {
   let knownEtag = null;
@@ -118,6 +152,8 @@ function render() {
   }
   // Always clear old nav so each page re-injects a fresh one
   document.getElementById('campaignBottomNav')?.remove();
+  document.getElementById('brandAppNav')?.remove();
+  document.getElementById('mainMenuOverlay')?.remove();
 
   if (path === '/' || path === '') {
     app.innerHTML = pageHome();
@@ -159,6 +195,29 @@ function render() {
     injectCampaignNav(params.brandId, params.campId || null, null);
   } else if (path === '/doc') {
     app.innerHTML = pageDoc(params.brandId, params.campId, params.type);
+  } else if (path === '/hub') {
+    app.innerHTML = pageHub();
+  } else if (path === '/plan') {
+    app.innerHTML = pagePlanPlaceholder();
+  } else if (path === '/orbit') {
+    app.innerHTML = pageOrbitPlaceholder();
+  } else if (path === '/grandure-brand') {
+    app.innerHTML = pageGrandureBrandPicker();
+  } else if (path === '/gb-home') {
+    app.innerHTML = pageGrandureBrandHome(params.id);
+    injectBrandAppNav(params.id, 'home');
+  } else if (path === '/gb-universe') {
+    app.innerHTML = pageGrandureBrandStub(params.id, 'universe', 'Universe');
+    injectBrandAppNav(params.id, 'universe');
+  } else if (path === '/gb-characters') {
+    app.innerHTML = pageGrandureBrandStub(params.id, 'characters', 'Characters');
+    injectBrandAppNav(params.id, 'characters');
+  } else if (path === '/gb-assets') {
+    app.innerHTML = pageGrandureBrandStub(params.id, 'assets', 'Assets');
+    injectBrandAppNav(params.id, 'assets');
+  } else if (path === '/gb-bible') {
+    app.innerHTML = pageGrandureBrandStub(params.id, 'bible', 'Bible');
+    injectBrandAppNav(params.id, 'bible');
   } else {
     app.innerHTML = pageHome();
   }
@@ -172,6 +231,7 @@ function render() {
   if (path === '/brand')    { bindEditBrand(params.id); bindDropdowns(params.id); }
   if (path === '/campaign') { bindCampaignPage(params.brandId, params.id); }
   if (path === '/vault')    { bindVaultPage(params.id, params.campId || null); }
+  if (path === '/hub')      { document.getElementById('hubMenuBtn')?.addEventListener('click', openMainMenu); }
   if (path === '/planner')  { bindVisualPlanner(params.brandId, params.campId || null); }
   if (path === '/calendar') { bindCalendar(params.brandId, params.campId || null); }
   if (path === '/doc')      { bindDoc(params.brandId, params.campId, params.type); }
@@ -449,6 +509,66 @@ function _populateSettings() {
       area.innerHTML = '<div class="settings-banner-placeholder">Tap to add banner photo</div>';
     }
   }
+}
+
+/* ── Main Menu (slide-in drawer) ── */
+function openMainMenu() {
+  // Re-use existing overlay if already mounted
+  let overlay = document.getElementById('mainMenuOverlay');
+  if (overlay) { return; }
+
+  const soonBadge = `<span class="main-menu-badge">SOON</span>`;
+
+  const rows = [
+    { href: '#/hub', label: 'Home', icon: `<path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1v-9.5z"/><path d="M9 21v-9h6v9"/>` },
+    { href: '#/grandure-brand', label: 'Grandure Brand', icon: `<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>` },
+    { href: '#/plan', label: 'Grandure Plan', icon: `<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`, soon: true },
+    { href: '#/', label: 'Grandure Connect', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
+    { href: '#/orbit', label: 'Grandure Orbit', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>`, soon: true },
+  ];
+
+  const rowsHTML = rows.map(r => `
+    <button class="main-menu-row" data-href="${r.href}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${r.icon}</svg>
+      <span class="main-menu-row-label">${r.label}</span>
+      ${r.soon ? soonBadge : ''}
+    </button>
+  `).join('');
+
+  const el = document.createElement('div');
+  el.innerHTML = `
+    <div class="main-menu-overlay" id="mainMenuOverlay">
+      <div class="main-menu-panel" id="mainMenuPanel">
+        <div class="main-menu-header">
+          <div class="main-menu-wordmark">GRANDURE</div>
+          <button class="main-menu-close" id="mmClose">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="main-menu-rows">${rowsHTML}</div>
+      </div>
+    </div>`;
+  document.body.appendChild(el.firstElementChild);
+  overlay = document.getElementById('mainMenuOverlay');
+  const panel = document.getElementById('mainMenuPanel');
+
+  const close = () => {
+    panel.style.transform = 'translateX(-100%)';
+    setTimeout(() => overlay.remove(), 300);
+  };
+
+  requestAnimationFrame(() => { panel.style.transform = 'translateX(0)'; });
+
+  document.getElementById('mmClose')?.addEventListener('click', close);
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+  overlay.querySelectorAll('.main-menu-row').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const href = btn.dataset.href;
+      overlay.remove();
+      navigate(href.replace('#', ''));
+    });
+  });
 }
 
 /* ── Idea Capture Modal ── */
@@ -882,7 +1002,7 @@ function pageHome() {
   return `
     <div class="page" style="padding-bottom:110px">
       <div class="top-header">
-        <div class="icon-btn">
+        <div class="icon-btn" id="openMainMenu">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </div>
         <div class="logo-wrap">
@@ -913,6 +1033,8 @@ function bindHomeDock() {
   const campsView  = document.getElementById('homeCampsView');
   const dockBrands = document.getElementById('dockBrands');
   const dockCamps  = document.getElementById('dockCampaigns');
+
+  document.getElementById('openMainMenu')?.addEventListener('click', openMainMenu);
 
   function showView(v) {
     _homeView = v;
@@ -5135,6 +5257,264 @@ function injectCampaignNav(brandId, campId, activeTab, onAisha) {
   document.getElementById('campNavAisha')?.addEventListener('click',  () => {
     openAishaSelector(brandId, campId);
   });
+}
+
+/* ── Grandure Brand app bottom nav ── */
+function injectBrandAppNav(brandId, activeTab) {
+  document.getElementById('brandAppNav')?.remove();
+
+  const universeSVG   = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7l1.8 4.2L18 13l-4.2 1.8L12 19l-1.8-4.2L6 13l4.2-1.8z"/></svg>`;
+  const charactersSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="7" r="2.3"/><path d="M14.5 13.2c.7-.3 1.6-.5 2.5-.5 3.3 0 6 2.7 6 6"/></svg>`;
+  const homeSVG       = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>`;
+  const assetsSVG      = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="14" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 14l-5-5-4 4-3-3-4 4"/></svg>`;
+  const bibleSVG       = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>`;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'brandAppNav';
+  wrap.className = 'campaign-dock';
+  wrap.innerHTML = `
+    <nav class="bottom-nav campaign-nav">
+      <button class="nav-btn${activeTab === 'universe'   ? ' nav-active' : ''}" id="gbNavUniverse">${universeSVG}</button>
+      <button class="nav-btn${activeTab === 'characters' ? ' nav-active' : ''}" id="gbNavCharacters">${charactersSVG}</button>
+      <button class="nav-btn nav-btn-center" id="gbNavHome">${homeSVG}</button>
+      <button class="nav-btn${activeTab === 'assets'      ? ' nav-active' : ''}" id="gbNavAssets">${assetsSVG}</button>
+      <button class="nav-btn${activeTab === 'bible'       ? ' nav-active' : ''}" id="gbNavBible">${bibleSVG}</button>
+    </nav>`;
+  document.getElementById('app').appendChild(wrap);
+
+  document.getElementById('gbNavUniverse')?.addEventListener('click',   () => navigate('/gb-universe?id=' + brandId));
+  document.getElementById('gbNavCharacters')?.addEventListener('click', () => navigate('/gb-characters?id=' + brandId));
+  document.getElementById('gbNavHome')?.addEventListener('click',       () => navigate('/gb-home?id=' + brandId));
+  document.getElementById('gbNavAssets')?.addEventListener('click',     () => navigate('/gb-assets?id=' + brandId));
+  document.getElementById('gbNavBible')?.addEventListener('click',      () => navigate('/gb-bible?id=' + brandId));
+}
+
+/* ── Grandure Brand: Picker ── */
+function pageGrandureBrandPicker() {
+  const cards = BRANDS.map(brand => {
+    const { pct } = universeCompletion(brand);
+    return `
+      <div class="brand-card" data-href="#/gb-home?id=${brand.id}" style="padding:18px 18px 16px;cursor:pointer">
+        <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:3px">${escHtml(brand.name)}</div>
+        <div style="font-size:12px;color:#888;margin-bottom:14px">${escHtml(brand.tagline || '')}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:10px;letter-spacing:1.5px;color:#666">UNIVERSE</span>
+          <span style="font-size:12px;font-weight:700;color:#d4aaff">${pct}% complete</span>
+        </div>
+        <div style="height:5px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#7c3aad,#d4aaff);border-radius:3px"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="page" style="padding-bottom:40px">
+      <div class="back-header">
+        <button class="back-btn" data-href="#/hub">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">GRANDURE BRAND</div>
+          <div class="back-header-title">Select a Universe</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+      <div style="padding:4px 16px 16px">${cards}</div>
+    </div>
+  `;
+}
+
+/* ── Grandure Brand: Home (mockup screen) ── */
+function pageGrandureBrandHome(brandId) {
+  const brand = getBrand(brandId);
+  if (!brand) return `<div class="page"><div class="back-header"><button class="back-btn" data-href="#/grandure-brand">‹</button></div></div>`;
+
+  const { pct, states, nextIdx } = universeCompletion(brand);
+
+  const ctaLabel = pct === 0 ? 'Begin World Building' : pct === 100 ? 'Revisit Your Universe' : 'Continue World Building';
+
+  const dotsHTML = UNIVERSE_CHAPTERS.map((c, i) => {
+    const isDone = states[i];
+    const isNext = i === nextIdx && !isDone;
+    let dotCls = 'gb-dot';
+    if (isDone) dotCls += ' gb-dot-done';
+    else if (isNext) dotCls += ' gb-dot-next';
+    else dotCls += ' gb-dot-upcoming';
+    return `
+      <div class="gb-dot-col">
+        <div class="${dotCls}"></div>
+        <div class="gb-dot-label">${escHtml(c.label)}</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="page" style="padding-bottom:120px">
+      <div class="back-header">
+        <button class="back-btn" data-href="#/grandure-brand">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">GRANDURE BRAND</div>
+          <div class="back-header-title">BRAND UNIVERSE WIZARD</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+
+      <div class="gb-hero">
+        <div class="gb-avatar-ring">
+          <img src="img/aisha.jpeg" class="gb-avatar-img" alt="AI'SHA">
+          <svg class="gb-sparkle gb-sparkle-1" width="16" height="16" viewBox="0 0 24 24" fill="#d4aaff"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>
+          <svg class="gb-sparkle gb-sparkle-2" width="11" height="11" viewBox="0 0 24 24" fill="#c8a0ff"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>
+        </div>
+        <div class="gb-aisha-name">AI'SHA</div>
+        <div class="gb-aisha-sub">CREATIVE DIRECTOR AI</div>
+      </div>
+
+      <div class="gb-progress-block">
+        <div class="gb-progress-label">BRAND UNIVERSE</div>
+        <div class="gb-progress-pct">${pct}%</div>
+        <div class="gb-progress-complete">COMPLETE</div>
+      </div>
+
+      <div class="gb-constellation">
+        <div class="gb-constellation-line"></div>
+        <div class="gb-constellation-row">${dotsHTML}</div>
+      </div>
+
+      <div style="padding:8px 20px 0">
+        <button class="gb-cta-btn" data-href="#/gb-universe?id=${brand.id}">
+          <span class="gb-cta-top">
+            <span class="gb-cta-label">${ctaLabel}</span>
+            <span class="gb-cta-chevron">›</span>
+          </span>
+          <span class="gb-cta-sub">AI'SHA will guide you step by step</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+/* ── Grandure Brand: temporary stub pages for deeper tabs ── */
+function pageGrandureBrandStub(brandId, tabId, label) {
+  return `
+    <div class="page" style="padding-bottom:120px">
+      <div class="back-header">
+        <button class="back-btn" data-href="#/gb-home?id=${brandId}">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">GRANDURE BRAND</div>
+          <div class="back-header-title">${escHtml(label)}</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;min-height:50vh;padding:0 32px">
+        <p style="text-align:center;color:#666;font-size:14px;line-height:1.7">${escHtml(label)} — coming soon in the next update.</p>
+      </div>
+    </div>
+  `;
+}
+
+/* ── Grandure Hub ── */
+function pageHub() {
+  const ecosystemTiles = [
+    { href: '#/grandure-brand', name: 'Grandure Brand', desc: 'Define your universe', icon: `<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>` },
+    { href: '#/plan', name: 'Grandure Plan', desc: 'Establish your roadmap', icon: `<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`, soon: true },
+    { href: '#/', name: 'Grandure Connect', desc: 'Run your campaigns', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
+    { href: '#/orbit', name: 'Grandure Orbit', desc: 'Execute production', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>`, soon: true },
+  ].map(t => `
+    <div class="hub-tile" data-href="${t.href}">
+      <div class="hub-tile-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg>
+      </div>
+      <div class="hub-tile-name">${t.name}</div>
+      ${t.soon ? `<span class="main-menu-badge">SOON</span>` : `<div class="hub-tile-desc">${t.desc}</div>`}
+    </div>
+  `).join('');
+
+  const brandRows = BRANDS.map(brand => {
+    const { pct } = universeCompletion(brand);
+    return `
+      <div class="section-card" data-href="#/gb-home?id=${brand.id}" style="cursor:pointer">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:#fff">${escHtml(brand.name)}</div>
+            <div style="font-size:12px;color:#888;margin-top:2px">${escHtml(brand.currentPhase?.name || '')}</div>
+          </div>
+          <div style="font-size:13px;font-weight:700;color:#d4aaff">${pct}%</div>
+        </div>
+        <div style="height:5px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#7c3aad,#d4aaff);border-radius:3px"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="page" style="padding-bottom:40px">
+      <div class="top-header">
+        <div class="icon-btn" id="hubMenuBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </div>
+        <div class="logo-wrap">
+          <div style="font-size:15px;font-weight:800;letter-spacing:2px;color:#fff">GRANDURE</div>
+        </div>
+        <div style="width:44px"></div>
+      </div>
+      <div style="padding:0 16px">
+        <div class="section-label">ECOSYSTEM</div>
+        <div class="hub-tile-grid">${ecosystemTiles}</div>
+
+        <div class="section-label" style="margin-top:8px">YOUR BRANDS</div>
+        ${brandRows}
+      </div>
+    </div>
+  `;
+}
+
+/* ── Grandure Plan / Orbit placeholders ── */
+function pagePlanPlaceholder() {
+  return `
+    <div class="page" style="padding-bottom:40px">
+      <div class="back-header">
+        <button class="back-btn" data-href="#/hub">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">GRANDURE</div>
+          <div class="back-header-title">Grandure Plan</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:55vh;padding:0 32px;text-align:center">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="color:#555;margin-bottom:18px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <div style="font-size:19px;font-weight:700;color:#fff;margin-bottom:8px">Grandure Plan</div>
+        <p style="font-size:14px;color:#888;line-height:1.6;margin-bottom:4px">Establishes the roadmap.</p>
+        <p style="font-size:13px;color:#555;margin-bottom:26px">Coming soon.</p>
+        <button class="gb-cta-btn" style="max-width:240px" data-href="#/hub">
+          <span class="gb-cta-top"><span class="gb-cta-label">Back to Hub</span></span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function pageOrbitPlaceholder() {
+  return `
+    <div class="page" style="padding-bottom:40px">
+      <div class="back-header">
+        <button class="back-btn" data-href="#/hub">‹</button>
+        <div class="back-header-center">
+          <div class="back-header-label">GRANDURE</div>
+          <div class="back-header-title">Grandure Orbit</div>
+        </div>
+        <div style="width:36px"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:55vh;padding:0 32px;text-align:center">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="color:#555;margin-bottom:18px"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/></svg>
+        <div style="font-size:19px;font-weight:700;color:#fff;margin-bottom:8px">Grandure Orbit</div>
+        <p style="font-size:14px;color:#888;line-height:1.6;margin-bottom:4px">Executes production and operations.</p>
+        <p style="font-size:13px;color:#555;margin-bottom:26px">Coming soon.</p>
+        <button class="gb-cta-btn" style="max-width:240px" data-href="#/hub">
+          <span class="gb-cta-top"><span class="gb-cta-label">Back to Hub</span></span>
+        </button>
+      </div>
+    </div>
+  `;
 }
 
 function campaignNavHTML(brandId, campId) {
