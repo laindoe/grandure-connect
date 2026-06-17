@@ -3475,31 +3475,42 @@ function bindVisualPlanner(brandId, campId) {
       document.addEventListener('touchend', _teh);
     }
 
-    function openSchedulePicker(storyIdx, anchorBtn) {
+    function saveHlSchedule(isoOrNull) {
+      const b = getBrand(bId);
+      const hl = { ...(b.plannerHighlights||{}) };
+      const list = [...(hl[platform]||[])];
+      const i = list.findIndex(x=>x.id===highlight.id);
+      if (i<0) return;
+      list[i] = { ...list[i], scheduledDate: isoOrNull };
+      hl[platform] = list;
+      saveBrandOverride(bId, { plannerHighlights: hl });
+    }
+
+    function openSchedulePicker(anchorBtn) {
       document.getElementById('hlSchedPicker')?.remove();
-      const current = getStories()[storyIdx]?.scheduledDate || '';
+      const current = getHl().scheduledDate || '';
       const picker = document.createElement('div');
       picker.id = 'hlSchedPicker';
       const ar = anchorBtn.getBoundingClientRect();
-      picker.style.cssText = `position:fixed;z-index:500;background:#2c2c2e;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,0.6);width:220px;left:${Math.min(ar.left, window.innerWidth-232)}px;top:${Math.max(ar.top-140, 10)}px`;
+      picker.style.cssText = `position:fixed;z-index:500;background:#2c2c2e;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,0.6);width:220px;left:${Math.min(ar.left, window.innerWidth-232)}px;top:${Math.max(ar.bottom+8, 10)}px`;
       picker.innerHTML = `
-        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:10px">SCHEDULE</div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:10px">SCHEDULE HIGHLIGHT</div>
         <input type="datetime-local" id="hlSchedInput" value="${escHtml(current ? current.slice(0,16) : '')}" style="width:100%;background:#1c1c1e;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:#fff;font-size:13px;box-sizing:border-box;color-scheme:dark">
         <div style="display:flex;gap:8px;margin-top:10px">
           ${current ? `<button id="hlSchedClear" type="button" style="flex:1;background:rgba(255,80,80,0.12);border:1px solid rgba(255,80,80,0.2);border-radius:8px;padding:7px;color:#ff6b6b;font-size:12px;cursor:pointer">Clear</button>` : ''}
           <button id="hlSchedSave" type="button" style="flex:2;background:rgba(180,120,255,0.18);border:1px solid rgba(180,120,255,0.3);border-radius:8px;padding:7px;color:#d4aaff;font-size:12px;cursor:pointer;font-weight:600">Save</button>
         </div>`;
       document.body.appendChild(picker);
-      const dismiss = e => { if (!picker.contains(e.target)) { picker.remove(); document.removeEventListener('pointerdown', dismiss); } };
+      const dismiss = e => { if (!picker.contains(e.target) && e.target !== anchorBtn) { picker.remove(); document.removeEventListener('pointerdown', dismiss); } };
       setTimeout(() => document.addEventListener('pointerdown', dismiss), 10);
       picker.querySelector('#hlSchedSave')?.addEventListener('click', () => {
         const val = picker.querySelector('#hlSchedInput').value;
-        const next = getStories().map((s,j) => j===storyIdx ? { ...s, scheduledDate: val ? new Date(val).toISOString() : null } : s);
-        saveStories(next); picker.remove(); document.removeEventListener('pointerdown', dismiss); renderSheet();
+        saveHlSchedule(val ? new Date(val).toISOString() : null);
+        picker.remove(); document.removeEventListener('pointerdown', dismiss); renderSheet();
       });
       picker.querySelector('#hlSchedClear')?.addEventListener('click', () => {
-        const next = getStories().map((s,j) => j===storyIdx ? { ...s, scheduledDate: null } : s);
-        saveStories(next); picker.remove(); document.removeEventListener('pointerdown', dismiss); renderSheet();
+        saveHlSchedule(null);
+        picker.remove(); document.removeEventListener('pointerdown', dismiss); renderSheet();
       });
     }
 
@@ -3512,7 +3523,13 @@ function bindVisualPlanner(brandId, campId) {
             <button id="highlightCoverBtn" type="button" style="width:52px;height:52px;border-radius:50%;border:2px dashed rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);overflow:hidden;flex-shrink:0;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:18px">
               ${hlData.cover?`<img src="${escHtml(hlData.cover)}" style="width:100%;height:100%;object-fit:cover" alt="">`:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'}
             </button>
-            <div style="font-size:16px;font-weight:700;color:#fff">${escHtml(hlData.name)}</div>
+            <div>
+              <div style="font-size:16px;font-weight:700;color:#fff">${escHtml(hlData.name)}</div>
+              <button id="hlSchedBtn" type="button" style="margin-top:3px;background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:${hlData.scheduledDate?'#c8a0ff':'rgba(255,255,255,0.35)'};display:flex;align-items:center;gap:4px">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                ${hlData.scheduledDate ? fmtDate(hlData.scheduledDate) : 'Schedule'}
+              </button>
+            </div>
           </div>
           <button id="highlightClose" type="button" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
         </div>
@@ -3523,7 +3540,6 @@ function bindVisualPlanner(brandId, campId) {
                 ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:''}
                 <button class="hl-drag-handle" data-idx="${i}" type="button" style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.55);border:none;border-radius:4px;width:22px;height:22px;color:rgba(255,255,255,0.65);font-size:13px;cursor:grab;display:flex;align-items:center;justify-content:center;padding:0;touch-action:none">⠿</button>
                 <button data-story-del="${i}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
-                <button data-story-sched="${i}" type="button" style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);border:none;border-radius:6px;padding:3px 5px;color:${s.scheduledDate?'#c8a0ff':'rgba(255,255,255,0.4)'};font-size:9px;cursor:pointer;white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;line-height:1.3">${s.scheduledDate?fmtDate(s.scheduledDate):'+ Sched'}</button>
               </div>`).join('')}
             <button id="highlightAddStory" type="button" style="width:88px;height:156px;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:22px;flex-shrink:0;cursor:pointer">+</button>
           </div>
@@ -3580,8 +3596,8 @@ function bindVisualPlanner(brandId, campId) {
         });
       });
 
-      inner.querySelectorAll('[data-story-sched]').forEach(btn => {
-        btn.addEventListener('click', e => { e.stopPropagation(); openSchedulePicker(+btn.dataset.storySched, btn); });
+      inner.querySelector('#hlSchedBtn')?.addEventListener('click', e => {
+        e.stopPropagation(); openSchedulePicker(e.currentTarget);
       });
 
       bindDrag();
