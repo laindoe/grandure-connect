@@ -3376,14 +3376,14 @@ function bindVisualPlanner(brandId, campId) {
     });
   }
 
-  function openHighlightSheet(bId, platform, highlight) {
+  function openHighlightSheet(bId, platform, highlight, onDone) {
     document.getElementById('highlightSheet')?.remove();
     const sheet = document.createElement('div');
     sheet.id = 'highlightSheet';
     sheet.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,0.5)';
     const stories = highlight.stories||[];
     sheet.innerHTML = `
-      <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));max-height:75vh;display:flex;flex-direction:column">
+      <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));min-height:70vh;max-height:90vh;display:flex;flex-direction:column">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
           <div style="display:flex;align-items:center;gap:12px">
             <button id="highlightCoverBtn" type="button" style="width:52px;height:52px;border-radius:50%;border:2px dashed rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);overflow:hidden;flex-shrink:0;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:18px">
@@ -3425,7 +3425,7 @@ function bindVisualPlanner(brandId, campId) {
           saveBrandOverride(bId, { plannerHighlights: hl });
           const coverBtn = sheet.querySelector('#highlightCoverBtn');
           if (coverBtn) coverBtn.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover" alt="">`;
-          renderContent();
+          (onDone ?? renderContent)();
         };
         reader.readAsDataURL(file);
       };
@@ -3434,23 +3434,31 @@ function bindVisualPlanner(brandId, campId) {
 
     sheet.querySelector('#highlightAddStory')?.addEventListener('click', () => {
       const fi = document.createElement('input');
-      fi.type='file'; fi.accept='image/*';
+      fi.type='file'; fi.accept='image/*'; fi.multiple=true;
       fi.onchange = () => {
-        const file = fi.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = ev => {
-          const b2 = getBrand(bId);
-          const hl = { ...(b2.plannerHighlights||{}) };
-          const list = [...(hl[platform]||[])];
-          const idx = list.findIndex(x=>x.id===highlight.id);
-          if (idx<0) return;
-          list[idx] = { ...list[idx], stories: [...(list[idx].stories||[]), { thumbnail: ev.target.result }] };
-          hl[platform] = list;
-          saveBrandOverride(bId, { plannerHighlights: hl });
-          sheet.remove();
-          renderContent();
-        };
-        reader.readAsDataURL(file);
+        const files = [...fi.files];
+        if (!files.length) return;
+        const results = new Array(files.length);
+        let pending = files.length;
+        files.forEach((file, i) => {
+          const reader = new FileReader();
+          reader.onload = ev => {
+            results[i] = ev.target.result;
+            if (--pending === 0) {
+              const b2 = getBrand(bId);
+              const hl = { ...(b2.plannerHighlights||{}) };
+              const list = [...(hl[platform]||[])];
+              const idx = list.findIndex(x=>x.id===highlight.id);
+              if (idx<0) return;
+              list[idx] = { ...list[idx], stories: [...(list[idx].stories||[]), ...results.map(src=>({ thumbnail: src }))] };
+              hl[platform] = list;
+              saveBrandOverride(bId, { plannerHighlights: hl });
+              sheet.remove();
+              (onDone ?? renderContent)();
+            }
+          };
+          reader.readAsDataURL(file);
+        });
       };
       fi.click();
     });
@@ -3470,7 +3478,7 @@ function bindVisualPlanner(brandId, campId) {
         hl[platform] = list;
         saveBrandOverride(bId, { plannerHighlights: hl });
         sheet.remove();
-        renderContent();
+        (onDone ?? renderContent)();
       });
     });
   }
@@ -3608,17 +3616,17 @@ function bindVisualPlanner(brandId, campId) {
         const highlights = (b2.plannerHighlights||{})[platform]||[];
 
         body.innerHTML = `
-          <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
             ${highlights.map(h=>`
-              <button class="sec-hl" data-hid="${escHtml(h.id)}" type="button" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:0">
-                <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center">
-                  ${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover" alt="">`:'<span style="font-size:20px;color:rgba(255,255,255,0.3)">★</span>'}
+              <button class="sec-hl" data-hid="${escHtml(h.id)}" type="button" style="display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:0;width:100%">
+                <div style="width:100%;aspect-ratio:1/1;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center">
+                  ${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover" alt="">`:'<span style="font-size:24px;color:rgba(255,255,255,0.3)">★</span>'}
                 </div>
-                <div style="font-size:9px;color:rgba(255,255,255,0.45);max-width:60px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(h.name)}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.45);text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%">${escHtml(h.name)}</div>
               </button>`).join('')}
-            <button id="secAddHl" type="button" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:0">
-              <div style="width:56px;height:56px;border-radius:50%;border:2px dashed rgba(255,255,255,0.2);background:transparent;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:22px">+</div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.3)">New</div>
+            <button id="secAddHl" type="button" style="display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:0;width:100%">
+              <div style="width:100%;aspect-ratio:1/1;border-radius:50%;border:2px dashed rgba(255,255,255,0.2);background:transparent;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:22px">+</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.3)">New</div>
             </button>
           </div>`;
 
@@ -3637,7 +3645,7 @@ function bindVisualPlanner(brandId, campId) {
             const b3 = getBrand(bId);
             const hl = (b3.plannerHighlights||{})[platform]||[];
             const h = hl.find(x=>x.id===btn.dataset.hid);
-            if (h) openHighlightSheet(bId, platform, h);
+            if (h) openHighlightSheet(bId, platform, h, renderHighlights);
           });
         });
       }
