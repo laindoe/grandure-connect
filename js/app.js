@@ -3523,10 +3523,10 @@ function bindVisualPlanner(brandId, campId) {
             <button id="highlightCoverBtn" type="button" style="width:52px;height:52px;border-radius:50%;border:2px dashed rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);overflow:hidden;flex-shrink:0;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:18px">
               ${hlData.cover?`<img src="${escHtml(hlData.cover)}" style="width:100%;height:100%;object-fit:cover" alt="">`:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'}
             </button>
-            <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <div style="font-size:16px;font-weight:700;color:#fff">${escHtml(hlData.name)}</div>
-              <button id="hlSchedBtn" type="button" style="margin-top:3px;background:none;border:none;padding:0;cursor:pointer;font-size:11px;color:${hlData.scheduledDate?'#c8a0ff':'rgba(255,255,255,0.35)'};display:flex;align-items:center;gap:4px">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <button id="hlSchedBtn" type="button" style="background:rgba(180,120,255,0.14);border:1px solid rgba(180,120,255,0.28);border-radius:20px;padding:3px 10px;cursor:pointer;font-size:11px;font-weight:600;color:${hlData.scheduledDate?'#d4aaff':'rgba(255,255,255,0.4)'};display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 ${hlData.scheduledDate ? fmtDate(hlData.scheduledDate) : 'Schedule'}
               </button>
             </div>
