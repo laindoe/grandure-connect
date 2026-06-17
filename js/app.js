@@ -229,7 +229,20 @@ function render() {
   } else if (path === '/plan') {
     app.innerHTML = pagePlanPlaceholder();
   } else if (path === '/orbit') {
-    app.innerHTML = pageOrbitPlaceholder();
+    app.innerHTML = pageOrbit();
+    injectOrbitNav('home');
+  } else if (path === '/orbit-productions') {
+    app.innerHTML = pageOrbitProductions();
+    injectOrbitNav('productions');
+  } else if (path === '/orbit-agents') {
+    app.innerHTML = pageOrbitStub('agents', 'Agents', 'AI agents, human contractors, and team members');
+    injectOrbitNav('agents');
+  } else if (path === '/orbit-assets') {
+    app.innerHTML = pageOrbitStub('assets', 'Assets', 'Images, video, audio, documents, and brand resources');
+    injectOrbitNav('assets');
+  } else if (path === '/orbit-inbox') {
+    app.innerHTML = pageOrbitStub('inbox', 'Inbox', 'Agent messages, approvals, mentions, and requests');
+    injectOrbitNav('inbox');
   } else if (path === '/grandure-brand') {
     app.innerHTML = pageGrandureBrandPicker();
   } else if (path === '/gb-home') {
@@ -561,7 +574,7 @@ function openMainMenu() {
     { href: '#/grandure-brand', label: 'Grandure Brand', icon: `<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>` },
     { href: '#/plan', label: 'Grandure Plan', icon: `<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`, soon: true },
     { href: '#/', label: 'Grandure Connect', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
-    { href: '#/orbit', label: 'Grandure Orbit', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>`, soon: true },
+    { href: '#/orbit', label: 'Grandure Orbit', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>` },
   ];
 
   const rowsHTML = rows.map(r => `
@@ -6704,7 +6717,7 @@ function pageHub() {
     { href: '#/grandure-brand', name: 'Grandure Brand', desc: 'Define your universe', icon: `<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>` },
     { href: '#/plan', name: 'Grandure Plan', desc: 'Establish your roadmap', icon: `<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`, soon: true },
     { href: '#/', name: 'Grandure Connect', desc: 'Run your campaigns', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
-    { href: '#/orbit', name: 'Grandure Orbit', desc: 'Execute production', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>`, soon: true },
+    { href: '#/orbit', name: 'Grandure Orbit', desc: 'Execute production', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>` },
   ].map(t => `
     <div class="hub-tile" data-href="${t.href}">
       <div class="hub-tile-icon">
@@ -6780,28 +6793,253 @@ function pagePlanPlaceholder() {
   `;
 }
 
-function pageOrbitPlaceholder() {
-  return `
-    <div class="page" style="padding-bottom:40px">
-      <div class="back-header">
-        <button class="back-btn" data-href="#/hub">‹</button>
-        <div class="back-header-center">
-          <div class="back-header-label">GRANDURE</div>
-          <div class="back-header-title">Grandure Orbit</div>
+/* ── Grandure Orbit ── */
+const ORBIT_DEFAULT = {
+  productions: [
+    { id: 'op1', name: 'homieOStasis MVP', agents: 4, activeTasks: 12, waiting: 2, lastSignalMins: 5 },
+    { id: 'op2', name: 'Grandure Connect', agents: 3, activeTasks: 8, waiting: 1, lastSignalMins: 12 },
+    { id: 'op3', name: 'Founding Homies', agents: 2, activeTasks: 5, waiting: 0, lastSignalMins: 35 },
+    { id: 'op4', name: 'Grandure Orbit', agents: 1, activeTasks: 3, waiting: 1, lastSignalMins: 60 },
+    { id: 'op5', name: 'Ten Grand Website', agents: 2, activeTasks: 6, waiting: 0, lastSignalMins: 120 },
+  ],
+  queue: {
+    attention: [
+      { id: 'qa1', title: 'Approve Prize Categories', production: 'homieOStasis MVP', priority: 'High' },
+      { id: 'qa2', title: 'Approve Puzzle Artwork', production: 'homieOStasis MVP', priority: 'Medium' },
+    ],
+    waiting: [
+      { id: 'qw1', title: 'Assign Bubble Gum Game', production: 'homieOStasis MVP', priority: 'Medium' },
+      { id: 'qw2', title: 'Review Sound Effects', production: 'homieOStasis MVP', priority: 'Low' },
+    ]
+  },
+  signals: [
+    { id: 'sg1', agent: 'Claude Code', action: 'completed', item: 'Puzzle Difficulty Screen', production: 'homieOStasis MVP', mins: 5 },
+    { id: 'sg2', agent: 'Design Agent', action: 'uploaded', item: 'Prize Center Mockup', production: 'homieOStasis MVP', mins: 14 },
+    { id: 'sg3', agent: 'Lain', action: 'approved', item: 'Fruit Snack Frenzy Layout', production: 'homieOStasis MVP', mins: 22 },
+    { id: 'sg4', agent: 'QA Agent', action: 'reported', item: 'Collision Issue', production: 'homieOStasis MVP', mins: 60 },
+  ]
+};
+
+function getOrbitData() {
+  try {
+    const s = localStorage.getItem('gc_orbit');
+    if (s) { const p = JSON.parse(s); return { ...ORBIT_DEFAULT, ...p, productions: p.productions || ORBIT_DEFAULT.productions, queue: p.queue || ORBIT_DEFAULT.queue, signals: p.signals || ORBIT_DEFAULT.signals }; }
+  } catch {}
+  return { ...ORBIT_DEFAULT };
+}
+
+function saveOrbitData(patch) {
+  try { localStorage.setItem('gc_orbit', JSON.stringify({ ...getOrbitData(), ...patch })); } catch {}
+}
+
+function orbitRelTime(mins) {
+  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1440) return `${Math.round(mins / 60)}h ago`;
+  return `${Math.round(mins / 1440)}d ago`;
+}
+
+function orbitSunSmall() {
+  return `<div style="width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 38% 32%, #fef9c3, #fbbf24 28%, #f59e0b 45%, #92400e 68%, #1a0800 100%);box-shadow:0 0 20px rgba(245,158,11,0.6),0 0 40px rgba(245,158,11,0.25);flex-shrink:0"></div>`;
+}
+
+function orbitSunLarge() {
+  return `<div style="width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 38% 32%, #fef9c3, #fbbf24 28%, #f59e0b 45%, #92400e 68%, #1a0800 100%);box-shadow:0 0 28px rgba(245,158,11,0.65),0 0 55px rgba(245,158,11,0.3),0 0 90px rgba(245,158,11,0.1);margin-bottom:12px"></div>`;
+}
+
+function pageOrbit() {
+  const data = getOrbitData();
+  const prods = data.productions || [];
+  const queue = data.queue || { attention: [], waiting: [] };
+  const signals = data.signals || [];
+
+  function priColor(p) { return p === 'High' ? '#f87171' : p === 'Medium' ? '#fb923c' : '#6ee7b7'; }
+
+  function queueItems(items) {
+    if (!items.length) return `<div style="font-size:11px;color:rgba(255,245,230,0.2);text-align:center;padding:8px 0">All clear</div>`;
+    return items.map(item => `
+      <div class="orbit-qi">
+        <div style="display:flex;align-items:flex-start;gap:6px">
+          <div style="width:3px;min-height:30px;border-radius:2px;background:${priColor(item.priority)};flex-shrink:0;margin-top:2px"></div>
+          <div style="min-width:0">
+            <div class="orbit-qi-title">${escHtml(item.title)}</div>
+            <div class="orbit-qi-sub">${escHtml(item.production)}</div>
+          </div>
         </div>
-        <div style="width:36px"></div>
+      </div>`).join('');
+  }
+
+  const signalsHtml = signals.map(s => `
+    <div class="orbit-signal-chip">
+      <div style="width:26px;height:26px;border-radius:50%;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.22);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#f59e0b;margin-bottom:7px">${escHtml(s.agent.trim().charAt(0).toUpperCase())}</div>
+      <div style="font-size:11px;font-weight:600;color:rgba(255,245,230,0.75);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.agent)}</div>
+      <div style="font-size:10px;color:rgba(255,245,230,0.35);line-height:1.4">${escHtml(s.action)}<br><span style="color:rgba(255,245,230,0.55)">${escHtml(s.item)}</span></div>
+      <div style="font-size:9px;color:rgba(245,158,11,0.4);margin-top:7px">${orbitRelTime(s.mins)}</div>
+    </div>`).join('');
+
+  const prodCards = prods.slice(0, 4).map(p => `
+    <div class="orbit-prod-card" data-href="#/orbit-production?id=${escHtml(p.id)}">
+      ${orbitSunLarge()}
+      <div style="font-size:12px;font-weight:700;color:rgba(255,245,230,0.9);text-align:center;margin-bottom:10px;line-height:1.3">${escHtml(p.name)}</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:8px">
+        <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#fbbf24">${p.agents}</div><div style="font-size:8px;color:rgba(255,245,230,0.3);letter-spacing:0.5px">AGENTS</div></div>
+        <div style="width:1px;background:rgba(255,255,255,0.06)"></div>
+        <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#fbbf24">${p.activeTasks}</div><div style="font-size:8px;color:rgba(255,245,230,0.3);letter-spacing:0.5px">TASKS</div></div>
+        ${p.waiting ? `<div style="width:1px;background:rgba(255,255,255,0.06)"></div><div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#f87171">${p.waiting}</div><div style="font-size:8px;color:rgba(255,245,230,0.3);letter-spacing:0.5px">WAITING</div></div>` : ''}
       </div>
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:55vh;padding:0 32px;text-align:center">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="color:#555;margin-bottom:18px"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/></svg>
-        <div style="font-size:19px;font-weight:700;color:#fff;margin-bottom:8px">Grandure Orbit</div>
-        <p style="font-size:14px;color:#888;line-height:1.6;margin-bottom:4px">Executes production and operations.</p>
-        <p style="font-size:13px;color:#555;margin-bottom:26px">Coming soon.</p>
-        <button class="gb-cta-btn" style="max-width:240px" data-href="#/hub">
-          <span class="gb-cta-top"><span class="gb-cta-label">Back to Hub</span></span>
-        </button>
+      <div style="font-size:9px;color:rgba(245,158,11,0.35)">Last signal ${orbitRelTime(p.lastSignalMins)}</div>
+    </div>`).join('');
+
+  const newProdCard = `
+    <div class="orbit-prod-card" data-href="#/orbit-productions" style="border-style:dashed;border-color:rgba(245,158,11,0.15);justify-content:center;min-height:160px">
+      <div style="width:40px;height:40px;border-radius:50%;border:1.5px dashed rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;color:rgba(245,158,11,0.3);font-size:22px;margin-bottom:8px">+</div>
+      <div style="font-size:11px;color:rgba(245,158,11,0.35);font-weight:600">New Production</div>
+    </div>`;
+
+  const aishaSVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>`;
+
+  return `
+    <div class="orbit-page" style="padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
+      <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 20px 0;display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/></svg>
+            <div style="font-size:13px;font-weight:800;letter-spacing:2px;color:#f59e0b">GRANDURE ORBIT</div>
+          </div>
+          <div style="font-size:9px;letter-spacing:1.5px;color:rgba(255,245,230,0.2);margin-bottom:14px">WHERE IDEAS BECOME REALITIES</div>
+          <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.18);border-radius:20px;padding:4px 10px">
+            <div style="width:6px;height:6px;border-radius:50%;background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,0.8)"></div>
+            <div style="font-size:10px;font-weight:700;color:rgba(245,158,11,0.8);letter-spacing:0.5px">${prods.length} ACTIVE PRODUCTIONS</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
+          <button style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.25);padding:4px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </button>
+          <div style="width:32px;height:32px;border-radius:50%;background:rgba(245,158,11,0.15);border:1.5px solid rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#f59e0b">L</div>
+        </div>
       </div>
-    </div>
+
+      <div style="padding:24px 16px 0">
+        <div class="orbit-section-row">
+          <div class="orbit-section-label">MY QUEUE</div>
+          <button style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(245,158,11,0.4);padding:0">View all my tasks ›</button>
+        </div>
+        <div style="display:flex;gap:10px">
+          <div class="orbit-queue-card">
+            <div class="orbit-queue-card-hdr">NEEDS MY ATTENTION</div>
+            ${queueItems(queue.attention)}
+          </div>
+          <div class="orbit-queue-card">
+            <div class="orbit-queue-card-hdr">WAITING ON ME</div>
+            ${queueItems(queue.waiting)}
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:24px 16px 0">
+        <div class="orbit-section-row">
+          <div class="orbit-section-label">SIGNALS</div>
+          <button style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(245,158,11,0.4);padding:0">View all signals ›</button>
+        </div>
+        <div class="orbit-signal-row">${signalsHtml}</div>
+      </div>
+
+      <div style="padding:24px 16px 0">
+        <div class="orbit-section-row">
+          <div class="orbit-section-label">PRODUCTIONS</div>
+          <button class="orbit-section-link" data-href="#/orbit-productions" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(245,158,11,0.4);padding:0">View all productions ›</button>
+        </div>
+        <div class="orbit-prod-grid">
+          ${prodCards}
+          ${newProdCard}
+        </div>
+      </div>
+    </div>`;
+}
+
+function pageOrbitProductions() {
+  const data = getOrbitData();
+  const prods = data.productions || [];
+  const cards = prods.map(p => `
+    <div class="orbit-prod-list-card" data-href="#/orbit-production?id=${escHtml(p.id)}">
+      ${orbitSunSmall()}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:rgba(255,245,230,0.9);margin-bottom:6px">${escHtml(p.name)}</div>
+        <div style="display:flex;gap:12px">
+          <div><span style="font-size:13px;font-weight:700;color:#fbbf24">${p.agents}</span><span style="font-size:9px;color:rgba(255,245,230,0.3);margin-left:3px">Agents</span></div>
+          <div><span style="font-size:13px;font-weight:700;color:#fbbf24">${p.activeTasks}</span><span style="font-size:9px;color:rgba(255,245,230,0.3);margin-left:3px">Tasks</span></div>
+          ${p.waiting ? `<div><span style="font-size:13px;font-weight:700;color:#f87171">${p.waiting}</span><span style="font-size:9px;color:rgba(255,245,230,0.3);margin-left:3px">Waiting</span></div>` : ''}
+        </div>
+      </div>
+      <div style="font-size:9px;color:rgba(245,158,11,0.35);text-align:right;flex-shrink:0">${orbitRelTime(p.lastSignalMins)}</div>
+    </div>`).join('');
+
+  return `
+    <div class="orbit-page" style="padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
+      <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px;display:flex;align-items:center;gap:12px">
+        <button class="back-btn" data-href="#/orbit" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:#f59e0b">‹</button>
+        <div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(245,158,11,0.6)">GRANDURE ORBIT</div>
+          <div style="font-size:18px;font-weight:700;color:rgba(255,245,230,0.9)">Productions</div>
+        </div>
+      </div>
+      <div style="padding:0 16px;display:flex;flex-direction:column;gap:10px">
+        ${cards}
+        <div class="orbit-prod-list-card" data-href="#/orbit-new-production" style="border-style:dashed;border-color:rgba(245,158,11,0.15)">
+          <div style="width:52px;height:52px;border-radius:50%;border:1.5px dashed rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;color:rgba(245,158,11,0.3);font-size:22px;flex-shrink:0">+</div>
+          <div style="font-size:13px;font-weight:600;color:rgba(245,158,11,0.4)">New Production</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function pageOrbitStub(tab, title, desc) {
+  return `
+    <div class="orbit-page" style="padding-bottom:90px">
+      <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px;display:flex;align-items:center;gap:12px">
+        <button class="back-btn" data-href="#/orbit" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:#f59e0b">‹</button>
+        <div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(245,158,11,0.6)">GRANDURE ORBIT</div>
+          <div style="font-size:18px;font-weight:700;color:rgba(255,245,230,0.9)">${escHtml(title)}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;padding:0 32px;text-align:center">
+        <div style="font-size:14px;color:rgba(255,245,230,0.2);margin-bottom:6px">${escHtml(desc || 'Coming soon')}</div>
+        <div style="font-size:11px;color:rgba(245,158,11,0.3)">${escHtml(title)} · Grandure Orbit</div>
+      </div>
+    </div>`;
+}
+
+function injectOrbitNav(active) {
+  document.getElementById('orbitNav')?.remove();
+  const nav = document.createElement('nav');
+  nav.id = 'orbitNav';
+  nav.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(8,6,4,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:space-around;padding:10px 0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))';
+
+  const homeSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+  const prodSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/></svg>`;
+  const assetSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`;
+  const inboxSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`;
+  const aishaSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>`;
+
+  function tabBtn(label, href, svg, key) {
+    const on = active === key;
+    return `<button class="orbit-nav-btn${on ? ' active' : ''}" data-href="${href}">${svg}${label}</button>`;
+  }
+
+  nav.innerHTML = `
+    ${tabBtn('HOME', '#/orbit', homeSVG, 'home')}
+    ${tabBtn('PRODUCTIONS', '#/orbit-productions', prodSVG, 'productions')}
+    <button id="orbitAgentsBtn" style="background:radial-gradient(circle at 40% 35%,#fde68a,#f59e0b 40%,#b45309 80%);box-shadow:0 0 20px rgba(245,158,11,0.65),0 0 40px rgba(245,158,11,0.25);border:none;border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;color:#1a0800;cursor:pointer;margin-top:-18px;flex-shrink:0">${aishaSVG}</button>
+    ${tabBtn('ASSETS', '#/orbit-assets', assetSVG, 'assets')}
+    ${tabBtn('INBOX', '#/orbit-inbox', inboxSVG, 'inbox')}
   `;
+  document.getElementById('app').appendChild(nav);
+  nav.querySelector('#orbitAgentsBtn')?.addEventListener('click', () => navigate('#/orbit-agents'));
+}
+
+function pageOrbitPlaceholder() {
+  return pageOrbit();
 }
 
 function campaignNavHTML(brandId, campId) {
