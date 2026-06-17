@@ -3485,24 +3485,6 @@ function bindVisualPlanner(brandId, campId) {
       saveBrandOverride(bId, { plannerHighlights: hl });
     }
 
-    function openSchedulePicker() {
-      document.getElementById('hlSchedInput')?.remove();
-      const fi = document.createElement('input');
-      fi.id = 'hlSchedInput';
-      fi.type = 'datetime-local';
-      fi.style.cssText = 'position:fixed;opacity:0;pointer-events:none;top:0;left:0;width:1px;height:1px';
-      const current = getHl().scheduledDate;
-      if (current) fi.value = current.slice(0, 16);
-      document.body.appendChild(fi);
-      fi.addEventListener('change', () => {
-        saveHlSchedule(fi.value ? new Date(fi.value).toISOString() : null);
-        fi.remove();
-        renderSheet();
-      });
-      fi.addEventListener('blur', () => setTimeout(() => fi.remove(), 500));
-      try { fi.showPicker(); } catch { fi.click(); }
-    }
-
     function renderSheet() {
       const hlData = getHl();
       const stories = hlData.stories || [];
@@ -3514,10 +3496,11 @@ function bindVisualPlanner(brandId, campId) {
             </button>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <div style="font-size:16px;font-weight:700;color:#fff">${escHtml(hlData.name)}</div>
-              <button id="hlSchedBtn" type="button" style="background:rgba(180,120,255,0.14);border:1px solid rgba(180,120,255,0.28);border-radius:20px;padding:3px 10px;cursor:pointer;font-size:11px;font-weight:600;color:${hlData.scheduledDate?'#d4aaff':'rgba(255,255,255,0.4)'};display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0">
+              <label style="background:rgba(180,120,255,0.14);border:1px solid rgba(180,120,255,0.28);border-radius:20px;padding:3px 10px;cursor:pointer;font-size:11px;font-weight:600;color:${hlData.scheduledDate?'#d4aaff':'rgba(255,255,255,0.4)'};display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;position:relative">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 ${hlData.scheduledDate ? fmtDate(hlData.scheduledDate) : 'Schedule'}
-              </button>
+                <input id="hlSchedInput" type="datetime-local" value="${escHtml(hlData.scheduledDate ? hlData.scheduledDate.slice(0,16) : '')}" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer">
+              </label>
             </div>
           </div>
           <button id="highlightClose" type="button" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
@@ -3584,8 +3567,10 @@ function bindVisualPlanner(brandId, campId) {
         });
       });
 
-      inner.querySelector('#hlSchedBtn')?.addEventListener('click', e => {
-        e.stopPropagation(); openSchedulePicker();
+      inner.querySelector('#hlSchedInput')?.addEventListener('change', e => {
+        const val = e.target.value;
+        saveHlSchedule(val ? new Date(val).toISOString() : null);
+        renderSheet();
       });
 
       bindDrag();
