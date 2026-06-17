@@ -5290,9 +5290,52 @@ function calListHTML(brand, campId, statusFilter) {
     const lbl=new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
     return `
       <div class="cal-list-date-hdr">${escHtml(lbl)}</div>
-      ${ps.map(p=>`<div class="cal-list-item"><div class="cal-list-platform-dot" style="background:${PLAT_DOT_COLORS[p.platform]||'#888'}"></div><div style="flex:1"><div class="cal-list-title">${escHtml(p.title||'Untitled')}</div><div class="cal-list-fmt">${escHtml(p.format)}</div><div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${statusPills(p)}</div></div></div>`).join('')}`;
+      ${ps.map(p=>`<div class="cal-list-item" data-post-id="${escHtml(p.id)}" style="cursor:pointer"><div class="cal-list-platform-dot" style="background:${PLAT_DOT_COLORS[p.platform]||'#888'}"></div><div style="flex:1"><div class="cal-list-title">${escHtml(p.title||'Untitled')}</div><div class="cal-list-fmt">${escHtml(p.format)}</div><div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${statusPills(p)}</div></div>${p.notes?`<div style="font-size:16px;opacity:0.45;flex-shrink:0;align-self:flex-start;margin-top:2px">📝</div>`:''}</div>`).join('')}`;
   }).join('');
   return `${rows}${addBtn}`;
+}
+
+function openCalPostModal(brandId, postId, onClose) {
+  document.getElementById('calPostModal')?.remove();
+  const b = getBrand(brandId);
+  const p = (b.scheduledPosts||[]).find(x=>x.id===postId);
+  if (!p) return;
+  const platName = PLAT_DISPLAY_NAMES[p.platform] || p.platform || '';
+  const dateStr = p.scheduledDate
+    ? new Date(p.scheduledDate + 'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})
+    : 'Unscheduled';
+  const modal = document.createElement('div');
+  modal.id = 'calPostModal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;align-items:flex-end;background:rgba(0,0,0,0.6)';
+  modal.innerHTML = `
+    <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding:24px;padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));width:100%;box-sizing:border-box;max-height:85vh;overflow-y:auto;overscroll-behavior:contain">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,0.35);margin-bottom:5px">${escHtml(platName.toUpperCase())} · ${escHtml(p.format||'')}</div>
+          <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:4px">${escHtml(p.title||'Untitled')}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.35)">${escHtml(dateStr)}</div>
+        </div>
+        <button id="calPostClose" type="button" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:12px">×</button>
+      </div>
+      ${p.thumbnail?`<img src="${escHtml(p.thumbnail)}" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;margin-bottom:20px" alt="">` : ''}
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:8px">NOTES</div>
+      <textarea id="calPostNotes" placeholder="Add notes…" rows="4" style="width:100%;background:#2c2c2e;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px;color:#fff;font-size:14px;box-sizing:border-box;resize:none;font-family:inherit;line-height:1.5">${escHtml(p.notes||'')}</textarea>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button id="calPostCancel" type="button" style="flex:1;background:rgba(255,255,255,0.08);border:none;border-radius:12px;padding:14px;color:rgba(255,255,255,0.55);font-size:14px;cursor:pointer">Cancel</button>
+        <button id="calPostSave" type="button" style="flex:2;background:rgba(180,120,255,0.22);border:1px solid rgba(180,120,255,0.35);border-radius:12px;padding:14px;color:#d4aaff;font-size:14px;font-weight:700;cursor:pointer">Save Notes</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  const close = () => { modal.remove(); requestAnimationFrame(() => onClose?.()); };
+  modal.addEventListener('click', e => { if (e.target === modal) close(); });
+  modal.querySelector('#calPostClose')?.addEventListener('click', close);
+  modal.querySelector('#calPostCancel')?.addEventListener('click', () => modal.remove());
+  modal.querySelector('#calPostSave')?.addEventListener('click', () => {
+    const notes = modal.querySelector('#calPostNotes').value.trim();
+    const b2 = getBrand(brandId);
+    saveBrandOverride(brandId, { scheduledPosts: (b2.scheduledPosts||[]).map(x=>x.id===postId?{...x,notes}:x) });
+    close();
+  });
 }
 
 function bindCalendar(brandId, campId) {
@@ -5345,6 +5388,12 @@ function bindCalendar(brandId, campId) {
         const posts=(b.scheduledPosts||[]).map(p=>p.id===btn.dataset.postId?{...p,postStatus:btn.dataset.status}:p);
         saveBrandOverride(brandId,{scheduledPosts:posts});
         rerender();
+      });
+    });
+    body?.querySelectorAll('.cal-list-item[data-post-id]').forEach(item=>{
+      item.addEventListener('click',e=>{
+        if(e.target.closest('.cal-status-pill')) return;
+        openCalPostModal(brandId, item.dataset.postId, rerender);
       });
     });
     body?.addEventListener('click',e=>{
