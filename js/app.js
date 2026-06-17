@@ -3474,15 +3474,49 @@ function bindVisualPlanner(brandId, campId) {
       document.addEventListener('touchend', _teh);
     }
 
-    function saveHlSchedule(isoOrNull) {
+    function saveHlSchedule(isoOrNull, notes) {
       const b = getBrand(bId);
       const hl = { ...(b.plannerHighlights||{}) };
       const list = [...(hl[platform]||[])];
       const i = list.findIndex(x=>x.id===highlight.id);
       if (i<0) return;
-      list[i] = { ...list[i], scheduledDate: isoOrNull };
+      list[i] = { ...list[i], scheduledDate: isoOrNull, scheduleNotes: notes ?? (list[i].scheduleNotes || '') };
       hl[platform] = list;
       saveBrandOverride(bId, { plannerHighlights: hl });
+    }
+
+    function openSchedulePicker() {
+      document.getElementById('hlSchedModal')?.remove();
+      const hlData = getHl();
+      const modal = document.createElement('div');
+      modal.id = 'hlSchedModal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;align-items:flex-end;background:rgba(0,0,0,0.6)';
+      modal.innerHTML = `
+        <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding:24px;padding-bottom:calc(32px + env(safe-area-inset-bottom,0px));width:100%;box-sizing:border-box">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.35);margin-bottom:6px">SCHEDULE HIGHLIGHT</div>
+          <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:20px">${escHtml(hlData.name)}</div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:8px">DATE & TIME</div>
+          <input type="datetime-local" id="hlSchedDate" value="${escHtml(hlData.scheduledDate ? hlData.scheduledDate.slice(0,16) : '')}" style="width:100%;background:#2c2c2e;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px;color:#fff;font-size:15px;box-sizing:border-box;color-scheme:dark;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:8px">NOTES</div>
+          <textarea id="hlSchedNotes" placeholder="Add any notes…" rows="3" style="width:100%;background:#2c2c2e;border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px;color:#fff;font-size:14px;box-sizing:border-box;resize:none;font-family:inherit;line-height:1.5">${escHtml(hlData.scheduleNotes || '')}</textarea>
+          <div style="display:flex;gap:10px;margin-top:20px">
+            ${hlData.scheduledDate ? `<button id="hlSchedClear" type="button" style="flex:1;background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.2);border-radius:12px;padding:14px;color:#ff6b6b;font-size:14px;cursor:pointer">Clear</button>` : ''}
+            <button id="hlSchedCancel" type="button" style="flex:1;background:rgba(255,255,255,0.08);border:none;border-radius:12px;padding:14px;color:rgba(255,255,255,0.55);font-size:14px;cursor:pointer">Cancel</button>
+            <button id="hlSchedSave" type="button" style="flex:2;background:rgba(180,120,255,0.22);border:1px solid rgba(180,120,255,0.35);border-radius:12px;padding:14px;color:#d4aaff;font-size:14px;font-weight:700;cursor:pointer">Save</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+      modal.querySelector('#hlSchedCancel')?.addEventListener('click', () => modal.remove());
+      modal.querySelector('#hlSchedClear')?.addEventListener('click', () => {
+        saveHlSchedule(null, null); modal.remove(); renderSheet();
+      });
+      modal.querySelector('#hlSchedSave')?.addEventListener('click', () => {
+        const val = modal.querySelector('#hlSchedDate').value;
+        const notes = modal.querySelector('#hlSchedNotes').value.trim();
+        saveHlSchedule(val ? new Date(val).toISOString() : null, notes);
+        modal.remove(); renderSheet();
+      });
     }
 
     function renderSheet() {
@@ -3496,11 +3530,10 @@ function bindVisualPlanner(brandId, campId) {
             </button>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <div style="font-size:16px;font-weight:700;color:#fff">${escHtml(hlData.name)}</div>
-              <label style="background:rgba(180,120,255,0.14);border:1px solid rgba(180,120,255,0.28);border-radius:20px;padding:3px 10px;cursor:pointer;font-size:11px;font-weight:600;color:${hlData.scheduledDate?'#d4aaff':'rgba(255,255,255,0.4)'};display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;position:relative">
+              <button id="hlSchedBtn" type="button" style="background:rgba(180,120,255,0.14);border:1px solid rgba(180,120,255,0.28);border-radius:20px;padding:3px 10px;cursor:pointer;font-size:11px;font-weight:600;color:${hlData.scheduledDate?'#d4aaff':'rgba(255,255,255,0.4)'};display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                 ${hlData.scheduledDate ? fmtDate(hlData.scheduledDate) : 'Schedule'}
-                <input id="hlSchedInput" type="datetime-local" value="${escHtml(hlData.scheduledDate ? hlData.scheduledDate.slice(0,16) : '')}" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer">
-              </label>
+              </button>
             </div>
           </div>
           <button id="highlightClose" type="button" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
@@ -3567,10 +3600,8 @@ function bindVisualPlanner(brandId, campId) {
         });
       });
 
-      inner.querySelector('#hlSchedInput')?.addEventListener('change', e => {
-        const val = e.target.value;
-        saveHlSchedule(val ? new Date(val).toISOString() : null);
-        renderSheet();
+      inner.querySelector('#hlSchedBtn')?.addEventListener('click', e => {
+        e.stopPropagation(); openSchedulePicker();
       });
 
       bindDrag();
