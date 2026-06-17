@@ -678,17 +678,11 @@ function homeDockHTML() {
         </svg>
       </button>
       <div style="position:relative;display:flex;align-items:center;justify-content:center">
-        <div id="lightningMenu" style="display:none;position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:rgba(24,24,26,0.98);border:1px solid rgba(255,255,255,0.1);border-radius:16px;overflow:hidden;min-width:190px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:200;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)">
-          <button class="lightning-menu-item" data-lm="aisha">
-            <span style="font-size:16px">✦</span> Ask Aisha
-          </button>
-          <button class="lightning-menu-item" data-lm="capture">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 13h7l-1 9 10-12h-7z"/></svg> Capture Idea
-          </button>
-        </div>
-        <button class="nav-btn nav-btn-center" id="dockCapture">
+      <button class="nav-btn nav-btn-center" id="dockCapture">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M13 2L4 13h7l-1 9 10-12h-7z"/>
+            <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z"/>
+            <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z" opacity="0.7"/>
+            <path d="M5 17l.6 1.4L7 19l-1.4.6L5 21l-.6-1.4L3 19l1.4-.6z" opacity="0.5"/>
           </svg>
         </button>
       </div>
@@ -1086,29 +1080,11 @@ function bindHomeDock() {
   dockBrands?.addEventListener('click', () => showView('brands'));
   dockCamps?.addEventListener('click', () => showView('campaigns'));
 
-  /* Lightning bolt menu */
-  const lightningMenu = document.getElementById('lightningMenu');
-  document.getElementById('dockCapture')?.addEventListener('click', e => {
-    e.stopPropagation();
-    if (lightningMenu) lightningMenu.style.display = lightningMenu.style.display === 'none' ? 'block' : 'none';
-  });
-  document.addEventListener('click', function closeLightning() {
-    if (lightningMenu) lightningMenu.style.display = 'none';
-    document.removeEventListener('click', closeLightning);
-  });
-  lightningMenu?.querySelectorAll('[data-lm]').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      if (lightningMenu) lightningMenu.style.display = 'none';
-      const action = btn.dataset.lm;
-      if (action === 'aisha') {
-        const firstBrand = BRANDS[0];
-        const firstCamp  = firstBrand?.campaigns?.[0];
-        openAishaSelector(firstBrand?.id, firstCamp?.id);
-      } else if (action === 'capture') {
-        if (window._openCapture) window._openCapture();
-      }
-    });
+  /* Sparkle / Aisha button */
+  document.getElementById('dockCapture')?.addEventListener('click', () => {
+    const firstBrand = BRANDS[0];
+    const firstCamp  = firstBrand?.campaigns?.[0];
+    openAishaSelector(firstBrand?.id, firstCamp?.id);
   });
 
   const openAddMenu = document.getElementById('openAddMenu');
