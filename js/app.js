@@ -3485,32 +3485,22 @@ function bindVisualPlanner(brandId, campId) {
       saveBrandOverride(bId, { plannerHighlights: hl });
     }
 
-    function openSchedulePicker(anchorBtn) {
-      document.getElementById('hlSchedPicker')?.remove();
-      const current = getHl().scheduledDate || '';
-      const picker = document.createElement('div');
-      picker.id = 'hlSchedPicker';
-      const ar = anchorBtn.getBoundingClientRect();
-      picker.style.cssText = `position:fixed;z-index:500;background:#2c2c2e;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,0.6);width:220px;left:${Math.min(ar.left, window.innerWidth-232)}px;top:${Math.max(ar.bottom+8, 10)}px`;
-      picker.innerHTML = `
-        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:10px">SCHEDULE HIGHLIGHT</div>
-        <input type="datetime-local" id="hlSchedInput" value="${escHtml(current ? current.slice(0,16) : '')}" style="width:100%;background:#1c1c1e;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:#fff;font-size:13px;box-sizing:border-box;color-scheme:dark">
-        <div style="display:flex;gap:8px;margin-top:10px">
-          ${current ? `<button id="hlSchedClear" type="button" style="flex:1;background:rgba(255,80,80,0.12);border:1px solid rgba(255,80,80,0.2);border-radius:8px;padding:7px;color:#ff6b6b;font-size:12px;cursor:pointer">Clear</button>` : ''}
-          <button id="hlSchedSave" type="button" style="flex:2;background:rgba(180,120,255,0.18);border:1px solid rgba(180,120,255,0.3);border-radius:8px;padding:7px;color:#d4aaff;font-size:12px;cursor:pointer;font-weight:600">Save</button>
-        </div>`;
-      document.body.appendChild(picker);
-      const dismiss = e => { if (!picker.contains(e.target) && e.target !== anchorBtn) { picker.remove(); document.removeEventListener('pointerdown', dismiss); } };
-      setTimeout(() => document.addEventListener('pointerdown', dismiss), 10);
-      picker.querySelector('#hlSchedSave')?.addEventListener('click', () => {
-        const val = picker.querySelector('#hlSchedInput').value;
-        saveHlSchedule(val ? new Date(val).toISOString() : null);
-        picker.remove(); document.removeEventListener('pointerdown', dismiss); renderSheet();
+    function openSchedulePicker() {
+      document.getElementById('hlSchedInput')?.remove();
+      const fi = document.createElement('input');
+      fi.id = 'hlSchedInput';
+      fi.type = 'datetime-local';
+      fi.style.cssText = 'position:fixed;opacity:0;pointer-events:none;top:0;left:0;width:1px;height:1px';
+      const current = getHl().scheduledDate;
+      if (current) fi.value = current.slice(0, 16);
+      document.body.appendChild(fi);
+      fi.addEventListener('change', () => {
+        saveHlSchedule(fi.value ? new Date(fi.value).toISOString() : null);
+        fi.remove();
+        renderSheet();
       });
-      picker.querySelector('#hlSchedClear')?.addEventListener('click', () => {
-        saveHlSchedule(null);
-        picker.remove(); document.removeEventListener('pointerdown', dismiss); renderSheet();
-      });
+      fi.addEventListener('blur', () => setTimeout(() => fi.remove(), 500));
+      try { fi.showPicker(); } catch { fi.click(); }
     }
 
     function renderSheet() {
@@ -3595,7 +3585,7 @@ function bindVisualPlanner(brandId, campId) {
       });
 
       inner.querySelector('#hlSchedBtn')?.addEventListener('click', e => {
-        e.stopPropagation(); openSchedulePicker(e.currentTarget);
+        e.stopPropagation(); openSchedulePicker();
       });
 
       bindDrag();
