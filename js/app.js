@@ -3424,13 +3424,12 @@ function bindVisualPlanner(brandId, campId) {
 
     function bindDrag() {
       cleanupDrag();
-      inner.querySelectorAll('.hl-drag-handle').forEach(handle => {
-        handle.addEventListener('touchstart', e => {
+      inner.querySelectorAll('.hl-sc').forEach(card => {
+        card.style.touchAction = 'none';
+        card.addEventListener('touchstart', e => {
           e.preventDefault();
-          dragIdx = +handle.dataset.idx;
+          dragIdx = +card.dataset.idx;
           dragTargetIdx = dragIdx;
-          const card = inner.querySelector(`.hl-sc[data-idx="${dragIdx}"]`);
-          if (!card) return;
           const r = card.getBoundingClientRect();
           dragGhost = card.cloneNode(true);
           dragGhost.style.cssText += `;position:fixed;z-index:500;opacity:0.85;pointer-events:none;width:${r.width}px;height:${r.height}px;left:${r.left}px;top:${r.top}px;box-shadow:0 8px 24px rgba(0,0,0,0.6);transform:scale(1.05);transition:none`;
@@ -3538,7 +3537,6 @@ function bindVisualPlanner(brandId, campId) {
             ${stories.map((s,i)=>`
               <div class="hl-sc" data-idx="${i}" style="width:88px;height:156px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;flex-shrink:0">
                 ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:''}
-                <button class="hl-drag-handle" data-idx="${i}" type="button" style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.55);border:none;border-radius:4px;width:22px;height:22px;color:rgba(255,255,255,0.65);font-size:13px;cursor:grab;display:flex;align-items:center;justify-content:center;padding:0;touch-action:none">⠿</button>
                 <button data-story-del="${i}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
               </div>`).join('')}
             <button id="highlightAddStory" type="button" style="width:88px;height:156px;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:22px;flex-shrink:0;cursor:pointer">+</button>
