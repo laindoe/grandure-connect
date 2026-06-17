@@ -3381,106 +3381,213 @@ function bindVisualPlanner(brandId, campId) {
     const sheet = document.createElement('div');
     sheet.id = 'highlightSheet';
     sheet.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,0.5)';
-    const stories = highlight.stories||[];
-    sheet.innerHTML = `
-      <div style="background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));min-height:70vh;max-height:90vh;display:flex;flex-direction:column">
+    const inner = document.createElement('div');
+    inner.style.cssText = 'background:#1c1c1e;border-radius:20px 20px 0 0;padding:20px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));min-height:70vh;max-height:90vh;display:flex;flex-direction:column';
+    sheet.appendChild(inner);
+    document.body.appendChild(sheet);
+
+    sheet.addEventListener('click', e => { if (e.target === sheet) closeSheet(); });
+
+    function closeSheet() { sheet.remove(); (onDone ?? renderContent)(); }
+
+    function getHl() {
+      return (getBrand(bId).plannerHighlights||{})[platform]?.find(x=>x.id===highlight.id) || highlight;
+    }
+    function getStories() { return getHl().stories || []; }
+    function saveStories(next) {
+      const b = getBrand(bId);
+      const hl = { ...(b.plannerHighlights||{}) };
+      const list = [...(hl[platform]||[])];
+      const i = list.findIndex(x=>x.id===highlight.id);
+      if (i<0) return;
+      list[i] = { ...list[i], stories: next };
+      hl[platform] = list;
+      saveBrandOverride(bId, { plannerHighlights: hl });
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    }
+
+    /* ── drag-sort state ── */
+    let dragIdx = null, dragTargetIdx = null, dragGhost = null;
+    let _tmh = null, _teh = null;
+
+    function cleanupDrag() {
+      if (_tmh) { document.removeEventListener('touchmove', _tmh); _tmh = null; }
+      if (_teh) { document.removeEventListener('touchend', _teh); _teh = null; }
+      dragGhost?.remove(); dragGhost = null;
+      dragIdx = null; dragTargetIdx = null;
+    }
+
+    function bindDrag() {
+      cleanupDrag();
+      inner.querySelectorAll('.hl-drag-handle').forEach(handle => {
+        handle.addEventListener('touchstart', e => {
+          e.preventDefault();
+          dragIdx = +handle.dataset.idx;
+          dragTargetIdx = dragIdx;
+          const card = inner.querySelector(`.hl-sc[data-idx="${dragIdx}"]`);
+          if (!card) return;
+          const r = card.getBoundingClientRect();
+          dragGhost = card.cloneNode(true);
+          dragGhost.style.cssText += `;position:fixed;z-index:500;opacity:0.85;pointer-events:none;width:${r.width}px;height:${r.height}px;left:${r.left}px;top:${r.top}px;box-shadow:0 8px 24px rgba(0,0,0,0.6);transform:scale(1.05);transition:none`;
+          document.body.appendChild(dragGhost);
+          card.style.opacity = '0.2';
+        }, { passive: false });
+      });
+
+      _tmh = e => {
+        if (dragIdx === null || !dragGhost) return;
+        e.preventDefault();
+        const t = e.touches[0];
+        dragGhost.style.left = (t.clientX - 44) + 'px';
+        dragGhost.style.top  = (t.clientY - 78) + 'px';
+        const cards = [...inner.querySelectorAll('.hl-sc')];
+        let best = dragIdx, minD = Infinity;
+        cards.forEach(c => {
+          const r = c.getBoundingClientRect();
+          const d = Math.hypot(t.clientX - (r.left+r.width/2), t.clientY - (r.top+r.height/2));
+          if (d < minD) { minD = d; best = +c.dataset.idx; }
+        });
+        if (best !== dragTargetIdx) {
+          dragTargetIdx = best;
+          cards.forEach(c => { c.style.outline = (+c.dataset.idx===dragTargetIdx && dragTargetIdx!==dragIdx) ? '2px solid rgba(180,120,255,0.8)' : 'none'; });
+        }
+      };
+      _teh = () => {
+        if (dragIdx === null) return;
+        inner.querySelectorAll('.hl-sc').forEach(c => { c.style.opacity=''; c.style.outline=''; });
+        const from = dragIdx, to = dragTargetIdx;
+        cleanupDrag();
+        if (to !== null && to !== from) {
+          const next = [...getStories()];
+          const [moved] = next.splice(from, 1);
+          next.splice(to, 0, moved);
+          saveStories(next);
+          renderSheet();
+          (onDone ?? renderContent)();
+        }
+      };
+      document.addEventListener('touchmove', _tmh, { passive: false });
+      document.addEventListener('touchend', _teh);
+    }
+
+    function openSchedulePicker(storyIdx, anchorBtn) {
+      document.getElementById('hlSchedPicker')?.remove();
+      const current = getStories()[storyIdx]?.scheduledDate || '';
+      const picker = document.createElement('div');
+      picker.id = 'hlSchedPicker';
+      const ar = anchorBtn.getBoundingClientRect();
+      picker.style.cssText = `position:fixed;z-index:500;background:#2c2c2e;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px 16px;box-shadow:0 8px 32px rgba(0,0,0,0.6);width:220px;left:${Math.min(ar.left, window.innerWidth-232)}px;top:${Math.max(ar.top-140, 10)}px`;
+      picker.innerHTML = `
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:10px">SCHEDULE</div>
+        <input type="datetime-local" id="hlSchedInput" value="${escHtml(current ? current.slice(0,16) : '')}" style="width:100%;background:#1c1c1e;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px 10px;color:#fff;font-size:13px;box-sizing:border-box;color-scheme:dark">
+        <div style="display:flex;gap:8px;margin-top:10px">
+          ${current ? `<button id="hlSchedClear" type="button" style="flex:1;background:rgba(255,80,80,0.12);border:1px solid rgba(255,80,80,0.2);border-radius:8px;padding:7px;color:#ff6b6b;font-size:12px;cursor:pointer">Clear</button>` : ''}
+          <button id="hlSchedSave" type="button" style="flex:2;background:rgba(180,120,255,0.18);border:1px solid rgba(180,120,255,0.3);border-radius:8px;padding:7px;color:#d4aaff;font-size:12px;cursor:pointer;font-weight:600">Save</button>
+        </div>`;
+      document.body.appendChild(picker);
+      const dismiss = e => { if (!picker.contains(e.target)) { picker.remove(); document.removeEventListener('pointerdown', dismiss); } };
+      setTimeout(() => document.addEventListener('pointerdown', dismiss), 10);
+      picker.querySelector('#hlSchedSave')?.addEventListener('click', () => {
+        const val = picker.querySelector('#hlSchedInput').value;
+        const next = getStories().map((s,j) => j===storyIdx ? { ...s, scheduledDate: val ? new Date(val).toISOString() : null } : s);
+        saveStories(next); picker.remove(); document.removeEventListener('pointerdown', dismiss); renderSheet();
+      });
+      picker.querySelector('#hlSchedClear')?.addEventListener('click', () => {
+        const next = getStories().map((s,j) => j===storyIdx ? { ...s, scheduledDate: null } : s);
+        saveStories(next); picker.remove(); document.removeEventListener('pointerdown', dismiss); renderSheet();
+      });
+    }
+
+    function renderSheet() {
+      const hlData = getHl();
+      const stories = hlData.stories || [];
+      inner.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
           <div style="display:flex;align-items:center;gap:12px">
             <button id="highlightCoverBtn" type="button" style="width:52px;height:52px;border-radius:50%;border:2px dashed rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);overflow:hidden;flex-shrink:0;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:18px">
-              ${highlight.cover?`<img src="${escHtml(highlight.cover)}" style="width:100%;height:100%;object-fit:cover" alt="">`:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'}
+              ${hlData.cover?`<img src="${escHtml(hlData.cover)}" style="width:100%;height:100%;object-fit:cover" alt="">`:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'}
             </button>
-            <div style="font-size:16px;font-weight:700;color:#fff">${escHtml(highlight.name)}</div>
+            <div style="font-size:16px;font-weight:700;color:#fff">${escHtml(hlData.name)}</div>
           </div>
           <button id="highlightClose" type="button" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>
         </div>
         <div style="flex:1;overflow-y:auto;overscroll-behavior:contain">
           <div style="display:flex;gap:8px;flex-wrap:wrap;padding-bottom:8px">
             ${stories.map((s,i)=>`
-              <div style="width:88px;height:156px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;flex-shrink:0">
+              <div class="hl-sc" data-idx="${i}" style="width:88px;height:156px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);position:relative;flex-shrink:0">
                 ${s.thumbnail?`<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`:''}
+                <button class="hl-drag-handle" data-idx="${i}" type="button" style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.55);border:none;border-radius:4px;width:22px;height:22px;color:rgba(255,255,255,0.65);font-size:13px;cursor:grab;display:flex;align-items:center;justify-content:center;padding:0;touch-action:none">⠿</button>
                 <button data-story-del="${i}" type="button" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+                <button data-story-sched="${i}" type="button" style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);border:none;border-radius:6px;padding:3px 5px;color:${s.scheduledDate?'#c8a0ff':'rgba(255,255,255,0.4)'};font-size:9px;cursor:pointer;white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;line-height:1.3">${s.scheduledDate?fmtDate(s.scheduledDate):'+ Sched'}</button>
               </div>`).join('')}
             <button id="highlightAddStory" type="button" style="width:88px;height:156px;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:22px;flex-shrink:0;cursor:pointer">+</button>
           </div>
-        </div>
-      </div>`;
-    document.body.appendChild(sheet);
-    sheet.addEventListener('click', e => { if (e.target===sheet) sheet.remove(); });
-    sheet.querySelector('#highlightClose')?.addEventListener('click', () => sheet.remove());
+        </div>`;
 
-    sheet.querySelector('#highlightCoverBtn')?.addEventListener('click', () => {
-      const fi = document.createElement('input');
-      fi.type = 'file'; fi.accept = 'image/*';
-      fi.onchange = () => {
-        const file = fi.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = ev => {
-          const b2 = getBrand(bId);
-          const hl = { ...(b2.plannerHighlights||{}) };
-          const list = [...(hl[platform]||[])];
-          const idx = list.findIndex(x=>x.id===highlight.id);
-          if (idx < 0) return;
-          list[idx] = { ...list[idx], cover: ev.target.result };
-          hl[platform] = list;
-          saveBrandOverride(bId, { plannerHighlights: hl });
-          const coverBtn = sheet.querySelector('#highlightCoverBtn');
-          if (coverBtn) coverBtn.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover" alt="">`;
-          (onDone ?? renderContent)();
-        };
-        reader.readAsDataURL(file);
-      };
-      fi.click();
-    });
+      inner.querySelector('#highlightClose')?.addEventListener('click', closeSheet);
 
-    sheet.querySelector('#highlightAddStory')?.addEventListener('click', () => {
-      const fi = document.createElement('input');
-      fi.type='file'; fi.accept='image/*'; fi.multiple=true;
-      fi.onchange = () => {
-        const files = [...fi.files];
-        if (!files.length) return;
-        const results = new Array(files.length);
-        let pending = files.length;
-        files.forEach((file, i) => {
+      inner.querySelector('#highlightCoverBtn')?.addEventListener('click', () => {
+        const fi = document.createElement('input'); fi.type='file'; fi.accept='image/*';
+        fi.onchange = () => {
+          const file = fi.files[0]; if (!file) return;
           const reader = new FileReader();
           reader.onload = ev => {
-            results[i] = ev.target.result;
-            if (--pending === 0) {
-              const b2 = getBrand(bId);
-              const hl = { ...(b2.plannerHighlights||{}) };
-              const list = [...(hl[platform]||[])];
-              const idx = list.findIndex(x=>x.id===highlight.id);
-              if (idx<0) return;
-              list[idx] = { ...list[idx], stories: [...(list[idx].stories||[]), ...results.map(src=>({ thumbnail: src }))] };
-              hl[platform] = list;
-              saveBrandOverride(bId, { plannerHighlights: hl });
-              sheet.remove();
-              (onDone ?? renderContent)();
-            }
+            const b2 = getBrand(bId);
+            const hl2 = { ...(b2.plannerHighlights||{}) };
+            const list = [...(hl2[platform]||[])];
+            const idx = list.findIndex(x=>x.id===highlight.id);
+            if (idx<0) return;
+            list[idx] = { ...list[idx], cover: ev.target.result };
+            hl2[platform] = list;
+            saveBrandOverride(bId, { plannerHighlights: hl2 });
+            renderSheet(); (onDone ?? renderContent)();
           };
           reader.readAsDataURL(file);
-        });
-      };
-      fi.click();
-    });
-
-    sheet.querySelectorAll('[data-story-del]').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const i = +btn.dataset.storyDel;
-        const b2 = getBrand(bId);
-        const hl = { ...(b2.plannerHighlights||{}) };
-        const list = [...(hl[platform]||[])];
-        const idx = list.findIndex(x=>x.id===highlight.id);
-        if (idx<0) return;
-        const updStories = [...(list[idx].stories||[])];
-        updStories.splice(i,1);
-        list[idx] = { ...list[idx], stories: updStories };
-        hl[platform] = list;
-        saveBrandOverride(bId, { plannerHighlights: hl });
-        sheet.remove();
-        (onDone ?? renderContent)();
+        };
+        fi.click();
       });
-    });
+
+      inner.querySelector('#highlightAddStory')?.addEventListener('click', () => {
+        const fi = document.createElement('input'); fi.type='file'; fi.accept='image/*'; fi.multiple=true;
+        fi.onchange = () => {
+          const files = [...fi.files]; if (!files.length) return;
+          const results = new Array(files.length); let pending = files.length;
+          files.forEach((file, i) => {
+            const reader = new FileReader();
+            reader.onload = ev => {
+              results[i] = ev.target.result;
+              if (--pending === 0) {
+                saveStories([...getStories(), ...results.map(src => ({ thumbnail: src, scheduledDate: null }))]);
+                renderSheet(); (onDone ?? renderContent)();
+              }
+            };
+            reader.readAsDataURL(file);
+          });
+        };
+        fi.click();
+      });
+
+      inner.querySelectorAll('[data-story-del]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          saveStories(getStories().filter((_,j) => j !== +btn.dataset.storyDel));
+          renderSheet(); (onDone ?? renderContent)();
+        });
+      });
+
+      inner.querySelectorAll('[data-story-sched]').forEach(btn => {
+        btn.addEventListener('click', e => { e.stopPropagation(); openSchedulePicker(+btn.dataset.storySched, btn); });
+      });
+
+      bindDrag();
+    }
+
+    renderSheet();
   }
 
   function openPlannerSectionPage(bId, cId, platform, sectionType, onBack) {
