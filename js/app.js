@@ -3509,13 +3509,13 @@ function bindVisualPlanner(brandId, campId) {
       modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
       modal.querySelector('#hlSchedCancel')?.addEventListener('click', () => modal.remove());
       modal.querySelector('#hlSchedClear')?.addEventListener('click', () => {
-        saveHlSchedule(null, null); modal.remove(); renderSheet();
+        saveHlSchedule(null, null); modal.remove(); requestAnimationFrame(() => renderSheet());
       });
       modal.querySelector('#hlSchedSave')?.addEventListener('click', () => {
         const val = modal.querySelector('#hlSchedDate').value;
         const notes = modal.querySelector('#hlSchedNotes').value.trim();
         saveHlSchedule(val ? new Date(val).toISOString() : null, notes);
-        modal.remove(); renderSheet();
+        modal.remove(); requestAnimationFrame(() => renderSheet());
       });
     }
 
