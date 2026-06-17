@@ -3225,7 +3225,7 @@ function pageVisualPlanner(brandId, campId) {
       const circles = highlights.map(h =>
         `<div class="planner-thumb circle" style="overflow:hidden">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover">`:''}</div>`
       ).join('');
-      html += `<div class="planner-sec-card" data-section="stories" data-platform="${platform}">
+      html += `<div class="planner-sec-card" data-section="highlights" data-platform="${platform}">
         <div class="planner-sec-hd"><div><div class="planner-sec-label">HIGHLIGHTS</div><div class="planner-sec-count">${highlights.length} highlights</div></div><div class="planner-sec-chev">${chev}</div></div>
         ${highlights.length
           ? `<div class="planner-thumb-row">${circles}<div class="planner-thumb circle planner-thumb-add" style="font-size:18px">+</div></div>`
@@ -3327,7 +3327,7 @@ function bindVisualPlanner(brandId, campId) {
       const circles = highlights.map(h =>
         `<div class="planner-thumb circle" style="overflow:hidden">${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover">`:''}</div>`
       ).join('');
-      html += `<div class="planner-sec-card" data-section="stories" data-platform="${activePlatform}">
+      html += `<div class="planner-sec-card" data-section="highlights" data-platform="${activePlatform}">
         <div class="planner-sec-hd"><div><div class="planner-sec-label">HIGHLIGHTS</div><div class="planner-sec-count">${highlights.length} highlights</div></div><div class="planner-sec-chev">${chev}</div></div>
         ${highlights.length
           ? `<div class="planner-thumb-row">${circles}<div class="planner-thumb circle planner-thumb-add" style="font-size:18px">+</div></div>`
@@ -3508,7 +3508,7 @@ function bindVisualPlanner(brandId, campId) {
     const b = getBrand(bId);
     if (!b) return;
 
-    const sectionLabel = { stories:'STORIES', reels:'REELS', feed:'FEED' }[sectionType] || sectionType.toUpperCase();
+    const sectionLabel = { highlights:'HIGHLIGHTS', stories:'STORIES', reels:'REELS', feed:'FEED' }[sectionType] || sectionType.toUpperCase();
     const platName = PLAT_DISPLAY_NAMES[platform] || platform;
 
     const page = document.createElement('div');
@@ -3630,38 +3630,24 @@ function bindVisualPlanner(brandId, campId) {
     }
 
     // ── STORIES ──────────────────────────────────────────
-    if (sectionType === 'stories') {
-      function renderStories() {
+    if (sectionType === 'highlights') {
+      function renderHighlights() {
         const b2 = getBrand(bId);
         const highlights = (b2.plannerHighlights||{})[platform]||[];
-        const storyItems = (b2.scheduledPosts||[]).filter(i=>i.platform===platform && _isStory(i.format) && (!cId||i.campaignId===cId));
-        const thumb = s => s.thumbnail
-          ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
-          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`;
 
         body.innerHTML = `
-          <div style="margin-bottom:28px">
-            <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:12px">HIGHLIGHTS</div>
-            <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px">
-              ${highlights.map(h=>`
-                <button class="sec-hl" data-hid="${escHtml(h.id)}" type="button" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:0">
-                  <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center">
-                    ${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover" alt="">`:'<span style="font-size:20px;color:rgba(255,255,255,0.3)">★</span>'}
-                  </div>
-                  <div style="font-size:9px;color:rgba(255,255,255,0.45);max-width:60px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(h.name)}</div>
-                </button>`).join('')}
-              <button id="secAddHl" type="button" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:0">
-                <div style="width:56px;height:56px;border-radius:50%;border:2px dashed rgba(255,255,255,0.2);background:transparent;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:22px">+</div>
-                <div style="font-size:9px;color:rgba(255,255,255,0.3)">New</div>
-              </button>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.4);margin-bottom:12px">STORIES</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              ${storyItems.map(s=>swipeCard(s.id,'88px','156px',thumb(s))).join('')}
-              <button id="secAddStory" type="button" style="width:88px;height:156px;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;flex-shrink:0;cursor:pointer">+</button>
-            </div>
+          <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px">
+            ${highlights.map(h=>`
+              <button class="sec-hl" data-hid="${escHtml(h.id)}" type="button" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:0">
+                <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center">
+                  ${h.cover?`<img src="${escHtml(h.cover)}" style="width:100%;height:100%;object-fit:cover" alt="">`:'<span style="font-size:20px;color:rgba(255,255,255,0.3)">★</span>'}
+                </div>
+                <div style="font-size:9px;color:rgba(255,255,255,0.45);max-width:60px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(h.name)}</div>
+              </button>`).join('')}
+            <button id="secAddHl" type="button" style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:0">
+              <div style="width:56px;height:56px;border-radius:50%;border:2px dashed rgba(255,255,255,0.2);background:transparent;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.3);font-size:22px">+</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.3)">New</div>
+            </button>
           </div>`;
 
         body.querySelector('#secAddHl')?.addEventListener('click', () => {
@@ -3671,7 +3657,7 @@ function bindVisualPlanner(brandId, campId) {
           const hl = { ...(b3.plannerHighlights||{}) };
           hl[platform] = [...(hl[platform]||[]), { id:uid(), name:name.trim(), cover:'', stories:[] }];
           saveBrandOverride(bId, { plannerHighlights: hl });
-          renderStories();
+          renderHighlights();
         });
 
         body.querySelectorAll('.sec-hl').forEach(btn => {
@@ -3682,6 +3668,22 @@ function bindVisualPlanner(brandId, campId) {
             if (h) openHighlightSheet(bId, platform, h);
           });
         });
+      }
+      renderHighlights();
+
+    } else if (sectionType === 'stories') {
+      function renderStories() {
+        const b2 = getBrand(bId);
+        const storyItems = (b2.scheduledPosts||[]).filter(i=>i.platform===platform && _isStory(i.format) && (!cId||i.campaignId===cId));
+        const thumb = s => s.thumbnail
+          ? `<img src="${escHtml(s.thumbnail)}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0" alt="">`
+          : `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:28px">+</div>`;
+
+        body.innerHTML = `
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${storyItems.map(s=>swipeCard(s.id,'88px','156px',thumb(s))).join('')}
+            <button id="secAddStory" type="button" style="width:88px;height:156px;border-radius:10px;border:2px dashed rgba(255,255,255,0.14);background:transparent;color:rgba(255,255,255,0.3);font-size:28px;flex-shrink:0;cursor:pointer">+</button>
+          </div>`;
 
         body.querySelector('#secAddStory')?.addEventListener('click', () => {
           pickImage(dataUrl => {
