@@ -679,11 +679,7 @@ function homeDockHTML() {
       </button>
       <div style="position:relative;display:flex;align-items:center;justify-content:center">
       <button class="nav-btn nav-btn-center" id="dockCapture">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z"/>
-            <path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z" opacity="0.7"/>
-            <path d="M5 17l.6 1.4L7 19l-1.4.6L5 21l-.6-1.4L3 19l1.4-.6z" opacity="0.5"/>
-          </svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>
         </button>
       </div>
       <button class="nav-btn" id="dockBrands">
