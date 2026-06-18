@@ -7520,11 +7520,14 @@ function openSparkInputModal(mediaType, onDone, mode) {
               if (recordedChunks.length === 0) return;
               const blob = new Blob(recordedChunks, { type: mimeType || 'audio/webm' });
               // Convert to data URL so it persists in localStorage across sessions
+              const saveBtn = document.getElementById('sparkInputSave');
+              if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Processing…'; }
               const reader = new FileReader();
               reader.onload = () => {
                 spark.rawContentUrl = reader.result;
                 spark.rawTextTranscript = `Recorded audio (${elapsedSecs}s)`;
                 if (audioPreview) { audioPreview.src = reader.result; audioPreview.style.display = 'block'; }
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Spark ⚡'; }
               };
               reader.readAsDataURL(blob);
               recordBtn.style.cssText = 'width:100%;padding:18px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.22);border-radius:14px;color:rgba(167,139,250,0.9);font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px';
@@ -7605,7 +7608,7 @@ function openSparkDetailModal(sparkId) {
       ${sp.rawContentUrl && sp.mediaType === 'audio' ? `
         <div style="margin-bottom:16px">
           <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">RECORDING</div>
-          <audio controls src="${escHtml(sp.rawContentUrl)}" style="width:100%;border-radius:10px"></audio>
+          <audio id="sparkDetailAudio" controls style="width:100%;border-radius:10px"></audio>
           ${sp.rawTextTranscript ? `<div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:6px">${escHtml(sp.rawTextTranscript)}</div>` : ''}
         </div>` : ''}
       ${sp.subtitle || sp.aiSummary ? `<div style="font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:16px;background:rgba(255,255,255,0.04);border-radius:12px;padding:12px 14px">${escHtml(sp.subtitle || sp.aiSummary)}</div>` : ''}
@@ -7615,6 +7618,11 @@ function openSparkDetailModal(sparkId) {
     </div>`;
 
   document.body.appendChild(modal);
+  // Set audio src after DOM insertion to avoid innerHTML mangling long data URLs
+  if (sp.rawContentUrl && sp.mediaType === 'audio') {
+    const audioEl = document.getElementById('sparkDetailAudio');
+    if (audioEl) audioEl.src = sp.rawContentUrl;
+  }
   const sheet = document.getElementById('sparkDetailSheet');
   requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
   const close = () => { sheet.style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
