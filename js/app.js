@@ -184,6 +184,7 @@ function render() {
   document.getElementById('brandAppNav')?.remove();
   document.getElementById('orbitNav')?.remove();
   document.getElementById('sparkNav')?.remove();
+  document.getElementById('captureFAB')?.remove();
   document.getElementById('mainMenuOverlay')?.remove();
 
   if (path === '/' || path === '') {
@@ -192,6 +193,7 @@ function render() {
   } else if (path === '/brand') {
     app.innerHTML = pageBrandWorkspace(params.id);
     injectCampaignNav(params.id, params.campId || null, 'visual');
+    injectCaptureFAB();
   } else if (path === '/phase') {
     app.innerHTML = pageCurrentPhase(params.id);
     injectCampaignNav(params.id, params.campId || null, null);
@@ -228,14 +230,17 @@ function render() {
     app.innerHTML = pageDoc(params.brandId, params.campId, params.type);
   } else if (path === '/hub') {
     app.innerHTML = pageHub();
+    bindHubPage();
   } else if (path === '/plan') {
     app.innerHTML = pagePlanPlaceholder();
   } else if (path === '/orbit') {
     app.innerHTML = pageOrbit();
     injectOrbitNav('home');
+    injectCaptureFAB();
   } else if (path === '/orbit-productions') {
     app.innerHTML = pageOrbitProductions();
     injectOrbitNav('productions');
+    injectCaptureFAB();
   } else if (path === '/orbit-agents') {
     app.innerHTML = pageOrbitStub('agents', 'Agents', 'AI agents, human contractors, and team members');
     injectOrbitNav('agents');
@@ -582,11 +587,11 @@ function openMainMenu() {
 
   const rows = [
     { href: '#/hub', label: 'Home', icon: `<path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1v-9.5z"/><path d="M9 21v-9h6v9"/>` },
+    { href: '#/spark', label: 'Grandure Spark', icon: `<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>` },
     { href: '#/grandure-brand', label: 'Grandure Brand', icon: `<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>` },
     { href: '#/plan', label: 'Grandure Plan', icon: `<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`, soon: true },
-    { href: '#/', label: 'Grandure Connect', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
     { href: '#/orbit', label: 'Grandure Orbit', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>` },
-    { href: '#/spark', label: 'Grandure Spark', icon: `<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>` },
+    { href: '#/', label: 'Grandure Connect', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
   ];
 
   const rowsHTML = rows.map(r => `
@@ -6726,11 +6731,11 @@ function pageGrandureBrandStub(brandId, tabId, label) {
 /* ── Grandure Hub ── */
 function pageHub() {
   const ecosystemTiles = [
+    { href: '#/spark', name: 'Grandure Spark', desc: 'Capture your ideas', icon: `<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>` },
     { href: '#/grandure-brand', name: 'Grandure Brand', desc: 'Define your universe', icon: `<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>` },
     { href: '#/plan', name: 'Grandure Plan', desc: 'Establish your roadmap', icon: `<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`, soon: true },
-    { href: '#/', name: 'Grandure Connect', desc: 'Run your campaigns', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
     { href: '#/orbit', name: 'Grandure Orbit', desc: 'Execute production', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>` },
-    { href: '#/spark', name: 'Grandure Spark', desc: 'Capture your ideas', icon: `<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>` },
+    { href: '#/', name: 'Grandure Connect', desc: 'Run your campaigns', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
   ].map(t => `
     <div class="hub-tile" data-href="${t.href}">
       <div class="hub-tile-icon">
@@ -6760,7 +6765,8 @@ function pageHub() {
   }).join('');
 
   return `
-    <div class="page" style="padding-bottom:40px">
+    <div class="page" style="padding-bottom:48px">
+      <!-- Header -->
       <div class="top-header">
         <div class="icon-btn" id="hubMenuBtn">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -6770,6 +6776,16 @@ function pageHub() {
         </div>
         <div style="width:44px"></div>
       </div>
+
+      <!-- Capture orb — front and center -->
+      <div style="display:flex;flex-direction:column;align-items:center;padding:20px 16px 32px">
+        <button id="hubCaptureBtn" class="spark-orb" type="button" style="width:140px;height:140px">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </button>
+        <div style="margin-top:14px;font-size:11px;font-weight:700;letter-spacing:2.5px;color:rgba(255,255,255,0.25)">CAPTURE IDEA</div>
+      </div>
+
+      <!-- Ecosystem tiles -->
       <div style="padding:0 16px">
         <div class="section-label">ECOSYSTEM</div>
         <div class="hub-tile-grid">${ecosystemTiles}</div>
@@ -6779,6 +6795,11 @@ function pageHub() {
       </div>
     </div>
   `;
+}
+
+function bindHubPage() {
+  document.getElementById('hubMenuBtn')?.addEventListener('click', openMainMenu);
+  document.getElementById('hubCaptureBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark-vault'), 'record'));
 }
 
 /* ── Grandure Plan / Orbit placeholders ── */
@@ -7060,6 +7081,18 @@ function injectOrbitNav(active) {
 
 function pageOrbitPlaceholder() {
   return pageOrbit();
+}
+
+/* ── Universal Capture FAB ── */
+function injectCaptureFAB() {
+  document.getElementById('captureFAB')?.remove();
+  const fab = document.createElement('button');
+  fab.id = 'captureFAB';
+  fab.type = 'button';
+  fab.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`;
+  fab.style.cssText = 'position:fixed;bottom:calc(86px + env(safe-area-inset-bottom,0px));right:18px;z-index:250;width:48px;height:48px;border-radius:50%;background:rgba(18,14,32,0.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(140,120,255,0.35);color:rgba(200,180,255,0.9);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 16px rgba(120,80,220,0.25)';
+  document.getElementById('app').appendChild(fab);
+  fab.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark-vault'), 'record'));
 }
 
 /* ── Grandure Spark ── */
