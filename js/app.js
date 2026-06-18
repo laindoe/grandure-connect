@@ -7252,9 +7252,9 @@ function injectSparkNav(active) {
   document.getElementById('app').appendChild(nav);
 
   document.getElementById('sparkMenuBtn')?.addEventListener('click', openMainMenu);
-  document.getElementById('sparkAddBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark')));
-  document.getElementById('sparkOrbBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark')));
-  document.getElementById('sparkUploadBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark')));
+  document.getElementById('sparkAddBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark'), 'record'));
+  document.getElementById('sparkOrbBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark'), 'record'));
+  document.getElementById('sparkUploadBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark'), 'upload'));
 
   const searchInput = document.getElementById('sparkSearch');
   if (searchInput) {
@@ -7315,7 +7315,8 @@ function appendAishaMessage(role, text) {
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function openSparkCaptureModal(onDone, defaultType) {
+function openSparkCaptureModal(onDone, mode) {
+  const defaultType = null;
   const captureTypes = [
     { type:'audio', label:'Audio', color:'#a78bfa' },
     { type:'video', label:'Video', color:'#f472b6' },
@@ -7351,13 +7352,12 @@ function openSparkCaptureModal(onDone, defaultType) {
   modal.querySelectorAll('.spark-capture-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       close();
-      setTimeout(() => openSparkInputModal(btn.dataset.type, onDone), 320);
+      setTimeout(() => openSparkInputModal(btn.dataset.type, onDone, mode), 320);
     });
   });
-  if (defaultType) setTimeout(() => modal.querySelector(`.spark-capture-btn[data-type="${defaultType}"]`)?.click(), 50);
 }
 
-function openSparkInputModal(mediaType, onDone) {
+function openSparkInputModal(mediaType, onDone, mode) {
   const spark = { id: uid(), mediaType, title: '', subtitle: '', rawTextTranscript: '', sourceType: 'manual', brand: '', project: '', tags: [], keywords: [], relatedIdeas: [], aiSummary: '', location: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   const col = SPARK_TYPE_COLORS[mediaType] || '#a78bfa';
   const isLink = mediaType === 'link';
@@ -7379,23 +7379,22 @@ function openSparkInputModal(mediaType, onDone) {
         </div>
       </div>
       ${isLink ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">URL</div><input id="sparkInputLink" type="url" placeholder="Paste link..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>` : ''}
-      ${mediaType === 'audio' ? `
+      ${mediaType === 'audio' && mode !== 'upload' ? `
         <div style="margin-bottom:14px">
-          <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:8px">AUDIO</div>
-          <button id="sparkRecordBtn" style="width:100%;padding:18px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.22);border-radius:14px;color:rgba(167,139,250,0.9);font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:8px">RECORD AUDIO</div>
+          <button id="sparkRecordBtn" style="width:100%;padding:18px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.22);border-radius:14px;color:rgba(167,139,250,0.9);font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
             <span id="sparkRecordLabel">Tap to Record</span>
           </button>
-          <div id="sparkRecordTimer" style="display:none;text-align:center;font-size:13px;font-weight:600;color:rgba(255,100,100,0.85);margin-bottom:10px;letter-spacing:0.5px">● 0:00</div>
-          <audio id="sparkAudioPreview" controls style="width:100%;display:none;margin-bottom:10px;border-radius:10px"></audio>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-            <div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>
-            <span style="font-size:11px;color:rgba(255,255,255,0.2)">or upload file</span>
-            <div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>
-          </div>
-          <button id="sparkFilePickBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.03);border:1.5px dashed rgba(255,255,255,0.09);border-radius:14px;color:rgba(255,255,255,0.3);font-size:13px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
-            <span id="sparkFileLabel">Choose audio file</span>
+          <div id="sparkRecordTimer" style="display:none;text-align:center;font-size:13px;font-weight:600;color:rgba(255,100,100,0.85);margin-top:10px;letter-spacing:0.5px">● 0:00</div>
+          <audio id="sparkAudioPreview" controls style="width:100%;display:none;margin-top:10px;border-radius:10px"></audio>
+        </div>` : ''}
+      ${mediaType === 'audio' && mode === 'upload' ? `
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:8px">AUDIO FILE</div>
+          <button id="sparkFilePickBtn" style="width:100%;padding:20px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.1);border-radius:14px;color:rgba(255,255,255,0.4);font-size:13px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px">
+            <div style="color:${col}">${SPARK_MEDIA_ICONS.audio}</div>
+            <span id="sparkFileLabel">Tap to select audio file</span>
           </button>
           <input id="sparkFileInput" type="file" accept="audio/*" style="display:none">
         </div>` : ''}
