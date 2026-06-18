@@ -7379,7 +7379,27 @@ function openSparkInputModal(mediaType, onDone) {
         </div>
       </div>
       ${isLink ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">URL</div><input id="sparkInputLink" type="url" placeholder="Paste link..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>` : ''}
-      ${isMedia ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">${mediaType.toUpperCase()} FILE</div><button id="sparkFilePickBtn" style="width:100%;padding:20px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.1);border-radius:14px;color:rgba(255,255,255,0.4);font-size:13px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="color:${col}">${SPARK_MEDIA_ICONS[mediaType]}</div><span id="sparkFileLabel">Tap to select ${mediaType} file</span></button><input id="sparkFileInput" type="file" accept="${acceptMap[mediaType]||'*/*'}" style="display:none"></div>` : ''}
+      ${mediaType === 'audio' ? `
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:8px">AUDIO</div>
+          <button id="sparkRecordBtn" style="width:100%;padding:18px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.22);border-radius:14px;color:rgba(167,139,250,0.9);font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            <span id="sparkRecordLabel">Tap to Record</span>
+          </button>
+          <div id="sparkRecordTimer" style="display:none;text-align:center;font-size:13px;font-weight:600;color:rgba(255,100,100,0.85);margin-bottom:10px;letter-spacing:0.5px">● 0:00</div>
+          <audio id="sparkAudioPreview" controls style="width:100%;display:none;margin-bottom:10px;border-radius:10px"></audio>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>
+            <span style="font-size:11px;color:rgba(255,255,255,0.2)">or upload file</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.07)"></div>
+          </div>
+          <button id="sparkFilePickBtn" style="width:100%;padding:14px;background:rgba(255,255,255,0.03);border:1.5px dashed rgba(255,255,255,0.09);border-radius:14px;color:rgba(255,255,255,0.3);font-size:13px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+            <span id="sparkFileLabel">Choose audio file</span>
+          </button>
+          <input id="sparkFileInput" type="file" accept="audio/*" style="display:none">
+        </div>` : ''}
+      ${isMedia && mediaType !== 'audio' ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">${mediaType.toUpperCase()} FILE</div><button id="sparkFilePickBtn" style="width:100%;padding:20px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.1);border-radius:14px;color:rgba(255,255,255,0.4);font-size:13px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="color:${col}">${SPARK_MEDIA_ICONS[mediaType]}</div><span id="sparkFileLabel">Tap to select ${mediaType} file</span></button><input id="sparkFileInput" type="file" accept="${acceptMap[mediaType]||'*/*'}" style="display:none"></div>` : ''}
       <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">TITLE</div><input id="sparkInputTitle" type="text" placeholder="Give it a title..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>
       <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">${isText?'YOUR IDEA':'NOTES'}</div><textarea id="sparkInputNotes" placeholder="${isText?'Write out your idea...':'Any notes or context...'}" rows="4" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:vertical"></textarea></div>
       <div style="margin-bottom:20px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">TAGS</div><input id="sparkInputTags" type="text" placeholder="e.g. branding, launch, story (comma separated)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>
@@ -7392,9 +7412,73 @@ function openSparkInputModal(mediaType, onDone) {
   document.body.appendChild(modal);
   const sheet = document.getElementById('sparkInputSheet');
   requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
-  const close = () => { sheet.style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
+  let _activeRecorder = null;
+  const close = () => {
+    if (_activeRecorder && _activeRecorder.state === 'recording') _activeRecorder.stop();
+    sheet.style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300);
+  };
   document.getElementById('sparkInputBg')?.addEventListener('click', close);
   document.getElementById('sparkInputCancel')?.addEventListener('click', close);
+
+  // Audio recording
+  if (mediaType === 'audio') {
+    const recordBtn = document.getElementById('sparkRecordBtn');
+    const recordLabel = document.getElementById('sparkRecordLabel');
+    const recordTimer = document.getElementById('sparkRecordTimer');
+    const audioPreview = document.getElementById('sparkAudioPreview');
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let timerInterval = null;
+    let elapsedSecs = 0;
+
+    if (recordBtn) {
+      recordBtn.addEventListener('click', async () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        } else {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recordedChunks = [];
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+            mediaRecorder = new MediaRecorder(stream, { mimeType });
+            _activeRecorder = mediaRecorder;
+            mediaRecorder.addEventListener('dataavailable', e => { if (e.data.size > 0) recordedChunks.push(e.data); });
+            mediaRecorder.addEventListener('stop', () => {
+              stream.getTracks().forEach(t => t.stop());
+              clearInterval(timerInterval);
+              const blob = new Blob(recordedChunks, { type: mimeType });
+              const url = URL.createObjectURL(blob);
+              spark.rawContentUrl = url;
+              spark.rawTextTranscript = `Recorded audio (${elapsedSecs}s)`;
+              audioPreview.src = url;
+              audioPreview.style.display = 'block';
+              recordBtn.style.background = 'rgba(167,139,250,0.08)';
+              recordBtn.style.borderColor = 'rgba(167,139,250,0.22)';
+              recordBtn.style.color = 'rgba(167,139,250,0.9)';
+              recordLabel.textContent = 'Record Again';
+              recordTimer.style.display = 'none';
+            });
+            mediaRecorder.start();
+            elapsedSecs = 0;
+            recordTimer.textContent = '● 0:00';
+            recordTimer.style.display = 'block';
+            recordBtn.style.background = 'rgba(255,60,60,0.12)';
+            recordBtn.style.borderColor = 'rgba(255,80,80,0.35)';
+            recordBtn.style.color = 'rgba(255,160,160,0.95)';
+            recordLabel.textContent = 'Stop Recording';
+            timerInterval = setInterval(() => {
+              elapsedSecs++;
+              const m = Math.floor(elapsedSecs / 60);
+              const s = elapsedSecs % 60;
+              recordTimer.textContent = `● ${m}:${s.toString().padStart(2,'0')}`;
+            }, 1000);
+          } catch {
+            alert('Microphone access denied. Please allow microphone access and try again.');
+          }
+        }
+      });
+    }
+  }
 
   const filePickBtn = document.getElementById('sparkFilePickBtn');
   const fileInput = document.getElementById('sparkFileInput');
