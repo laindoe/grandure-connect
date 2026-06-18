@@ -1684,3 +1684,24 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .orbit-prod-list-card { background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.12);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer; }
 .orbit-nav-btn { background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 12px;cursor:pointer;font-size:9px;font-weight:700;letter-spacing:0.5px;color:rgba(255,245,230,0.25);font-family:inherit; }
 .orbit-nav-btn.active { color:rgba(245,158,11,0.9); }
+
+/* ── Grandure Spark ── */
+.spark-page { background:linear-gradient(180deg,#0c0a18 0%,#080612 60%,#060410 100%);min-height:100vh; }
+.spark-orb {
+  width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,rgba(200,180,255,0.18) 0%,rgba(120,80,220,0.12) 40%,rgba(60,30,120,0.06) 70%,transparent 100%);
+  border:1px solid rgba(180,140,255,0.25);
+  box-shadow:0 0 0 1px rgba(140,100,255,0.1),0 0 40px rgba(120,80,220,0.3),0 0 80px rgba(100,60,200,0.15),inset 0 0 60px rgba(180,140,255,0.06),inset 0 1px 0 rgba(255,255,255,0.12);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:box-shadow 0.2s,transform 0.15s;
+}
+.spark-orb:active { transform:scale(0.97);box-shadow:0 0 0 1px rgba(140,100,255,0.2),0 0 60px rgba(120,80,220,0.5),0 0 100px rgba(100,60,200,0.25),inset 0 0 80px rgba(180,140,255,0.1),inset 0 1px 0 rgba(255,255,255,0.15); }
+.spark-nav-pod-btn { width:44px;height:44px;border-radius:50%;border:none;background:none;color:rgba(255,255,255,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:color 0.15s,background 0.15s; }
+.spark-nav-pod-btn.active { color:rgba(200,180,255,0.95); }
+.spark-nav-pod-btn.center { width:50px;height:50px;background:radial-gradient(circle at 40% 35%,rgba(220,200,255,0.25),rgba(100,60,200,0.2) 60%);border:1px solid rgba(180,140,255,0.35);box-shadow:0 0 20px rgba(120,80,220,0.4),0 0 40px rgba(100,60,200,0.2);color:rgba(220,200,255,0.95);margin:0 2px; }
+.spark-nav-pod-btn.center.active { background:radial-gradient(circle at 40% 35%,rgba(230,210,255,0.35),rgba(120,80,220,0.3) 60%);box-shadow:0 0 28px rgba(140,100,255,0.6),0 0 50px rgba(100,60,200,0.3); }
+.spark-filter-chip { background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.4);white-space:nowrap;cursor:pointer;font-family:inherit;flex-shrink:0; }
+.spark-filter-chip.active { background:rgba(140,120,255,0.15);border-color:rgba(140,120,255,0.35);color:rgba(200,180,255,0.9); }
+.spark-vault-card { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:14px;cursor:pointer;transition:background 0.15s,border-color 0.15s; }
+.spark-vault-card:active { background:rgba(140,120,255,0.08);border-color:rgba(140,120,255,0.2); }
+.spark-aisha-chip { background:rgba(140,120,255,0.08);border:1px solid rgba(140,120,255,0.18);border-radius:100px;padding:7px 14px;font-size:12px;color:rgba(180,160,255,0.7);cursor:pointer;font-family:inherit; }

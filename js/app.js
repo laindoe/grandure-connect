@@ -183,6 +183,7 @@ function render() {
   document.getElementById('campaignBottomNav')?.remove();
   document.getElementById('brandAppNav')?.remove();
   document.getElementById('orbitNav')?.remove();
+  document.getElementById('sparkNav')?.remove();
   document.getElementById('mainMenuOverlay')?.remove();
 
   if (path === '/' || path === '') {
@@ -244,6 +245,15 @@ function render() {
   } else if (path === '/orbit-inbox') {
     app.innerHTML = pageOrbitStub('inbox', 'Inbox', 'Agent messages, approvals, mentions, and requests');
     injectOrbitNav('inbox');
+  } else if (path === '/spark') {
+    app.innerHTML = pageSpark();
+    injectSparkNav('home');
+  } else if (path === '/spark-vault') {
+    app.innerHTML = pageSparkVault();
+    injectSparkNav('vault');
+  } else if (path === '/spark-aisha') {
+    app.innerHTML = pageSparkAisha();
+    injectSparkNav('aisha');
   } else if (path === '/grandure-brand') {
     app.innerHTML = pageGrandureBrandPicker();
   } else if (path === '/gb-home') {
@@ -576,6 +586,7 @@ function openMainMenu() {
     { href: '#/plan', label: 'Grandure Plan', icon: `<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`, soon: true },
     { href: '#/', label: 'Grandure Connect', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
     { href: '#/orbit', label: 'Grandure Orbit', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>` },
+    { href: '#/spark', label: 'Grandure Spark', icon: `<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>` },
   ];
 
   const rowsHTML = rows.map(r => `
@@ -6719,6 +6730,7 @@ function pageHub() {
     { href: '#/plan', name: 'Grandure Plan', desc: 'Establish your roadmap', icon: `<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`, soon: true },
     { href: '#/', name: 'Grandure Connect', desc: 'Run your campaigns', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
     { href: '#/orbit', name: 'Grandure Orbit', desc: 'Execute production', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>` },
+    { href: '#/spark', name: 'Grandure Spark', desc: 'Capture your ideas', icon: `<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>` },
   ].map(t => `
     <div class="hub-tile" data-href="${t.href}">
       <div class="hub-tile-icon">
@@ -7048,6 +7060,404 @@ function injectOrbitNav(active) {
 
 function pageOrbitPlaceholder() {
   return pageOrbit();
+}
+
+/* ── Grandure Spark ── */
+const SPARK_LS_KEY = 'gc_spark';
+
+function getSparkData() {
+  try { const s = localStorage.getItem(SPARK_LS_KEY); if (s) return JSON.parse(s); } catch {}
+  return [];
+}
+
+function saveSpark(spark) {
+  const sparks = getSparkData();
+  const idx = sparks.findIndex(s => s.id === spark.id);
+  if (idx >= 0) sparks[idx] = spark; else sparks.unshift(spark);
+  localStorage.setItem(SPARK_LS_KEY, JSON.stringify(sparks));
+}
+
+function deleteSpark(id) {
+  localStorage.setItem(SPARK_LS_KEY, JSON.stringify(getSparkData().filter(s => s.id !== id)));
+}
+
+const SPARK_MEDIA_ICONS = {
+  audio: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`,
+  video: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
+  photo: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+  text:  `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>`,
+  file:  `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`,
+  link:  `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>`,
+};
+
+const SPARK_TYPE_COLORS = { audio:'#a78bfa', video:'#f472b6', photo:'#34d399', text:'#60a5fa', file:'#f59e0b', link:'#fb923c' };
+
+function pageSpark() {
+  return `
+    <div class="spark-page" style="min-height:100vh;display:flex;flex-direction:column;align-items:stretch;padding-bottom:100px">
+      <div style="padding:calc(16px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center;justify-content:space-between">
+        <button id="sparkMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);padding:4px;width:36px;height:36px;display:flex;align-items:center;justify-content:center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div style="text-align:center;flex:1">
+          <div style="font-size:13px;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,0.9)">GRANDURE</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:4px;color:rgba(180,160,255,0.6);margin-top:1px">SPARK</div>
+        </div>
+        <button id="sparkAddBtn" style="background:rgba(140,120,255,0.15);border:1px solid rgba(140,120,255,0.3);border-radius:50%;width:36px;height:36px;cursor:pointer;color:rgba(200,180,255,0.9);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px 24px">
+        <button id="sparkOrbBtn" class="spark-orb" type="button">
+          <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </button>
+        <div style="margin-top:28px;font-size:13px;color:rgba(255,255,255,0.18);letter-spacing:1px">or</div>
+        <button id="sparkUploadBtn" style="margin-top:18px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 24px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1.5" stroke-linecap="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+          <span style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.18)">UPLOAD MANUALLY</span>
+        </button>
+      </div>
+    </div>`;
+}
+
+function pageSparkVault() {
+  const sparks = getSparkData();
+  const sparkCards = sparks.length === 0
+    ? `<div style="text-align:center;padding:60px 32px;color:rgba(255,255,255,0.2)">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" style="margin-bottom:14px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">No sparks yet</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.12)">Capture your first idea from the Spark home</div>
+      </div>`
+    : sparks.map(sp => sparkVaultCardHTML(sp)).join('');
+
+  return `
+    <div class="spark-page" style="min-height:100vh;padding-bottom:100px">
+      <div style="padding:calc(16px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center;gap:12px">
+        <button class="back-btn" data-href="#/spark" style="background:rgba(140,120,255,0.1);border-color:rgba(140,120,255,0.2);color:#a78bfa;flex-shrink:0">‹</button>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(180,160,255,0.5)">GRANDURE SPARK</div>
+          <div style="font-size:17px;font-weight:700;color:rgba(255,255,255,0.9)">Vault</div>
+        </div>
+        <button id="sparkMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.3);padding:4px;width:36px;display:flex;justify-content:flex-end">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="padding:0 16px 14px">
+        <div style="position:relative">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="sparkSearch" type="text" placeholder="Search ideas..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 14px 10px 36px;color:#fff;font-size:14px;font-family:inherit;outline:none">
+        </div>
+      </div>
+      <div style="padding:0 16px 16px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+        ${['All','Audio','Video','Photo','Text','File','Link'].map((ft,i)=>`<button class="spark-filter-chip${i===0?' active':''}" data-filter="${ft.toLowerCase()}">${ft}</button>`).join('')}
+      </div>
+      <div id="sparkVaultList" style="padding:0 16px;display:flex;flex-direction:column;gap:10px">${sparkCards}</div>
+    </div>`;
+}
+
+function sparkVaultCardHTML(sp) {
+  const col = SPARK_TYPE_COLORS[sp.mediaType] || '#a78bfa';
+  return `<div class="spark-vault-card" data-spark-id="${escHtml(sp.id)}">
+    <div style="display:flex;align-items:flex-start;gap:12px">
+      <div style="width:36px;height:36px;border-radius:10px;background:${col}18;border:1px solid ${col}33;display:flex;align-items:center;justify-content:center;color:${col};flex-shrink:0">${SPARK_MEDIA_ICONS[sp.mediaType] || SPARK_MEDIA_ICONS.text}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(sp.title || 'Untitled Spark')}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(sp.aiSummary || sp.subtitle || '')}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${(sp.tags||[]).slice(0,3).map(t=>`<span style="background:rgba(140,120,255,0.12);border:1px solid rgba(140,120,255,0.2);border-radius:20px;padding:2px 8px;font-size:10px;color:rgba(180,160,255,0.8)">#${escHtml(t)}</span>`).join('')}</div>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.2);flex-shrink:0;white-space:nowrap">${sp.createdAt ? new Date(sp.createdAt).toLocaleDateString('en',{month:'short',day:'numeric'}) : ''}</div>
+    </div>
+  </div>`;
+}
+
+function renderSparkVaultList(query, filterType) {
+  const container = document.getElementById('sparkVaultList');
+  if (!container) return;
+  let sparks = getSparkData();
+  if (filterType && filterType !== 'all') sparks = sparks.filter(s => s.mediaType === filterType);
+  if (query) sparks = sparks.filter(s =>
+    (s.title||'').toLowerCase().includes(query) ||
+    (s.aiSummary||'').toLowerCase().includes(query) ||
+    (s.subtitle||'').toLowerCase().includes(query) ||
+    (s.tags||[]).some(t => t.toLowerCase().includes(query)) ||
+    (s.keywords||[]).some(k => k.toLowerCase().includes(query))
+  );
+  if (sparks.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:40px 32px;color:rgba(255,255,255,0.2);font-size:13px">No results</div>`;
+    return;
+  }
+  container.innerHTML = sparks.map(sp => sparkVaultCardHTML(sp)).join('');
+  container.querySelectorAll('.spark-vault-card[data-spark-id]').forEach(card => {
+    card.addEventListener('click', () => openSparkDetailModal(card.dataset.sparkId));
+  });
+}
+
+function pageSparkAisha() {
+  return `
+    <div class="spark-page" style="min-height:100vh;display:flex;flex-direction:column;padding-bottom:100px">
+      <div style="padding:calc(16px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center;gap:12px">
+        <button class="back-btn" data-href="#/spark" style="background:rgba(140,120,255,0.1);border-color:rgba(140,120,255,0.2);color:#a78bfa;flex-shrink:0">‹</button>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(180,160,255,0.5)">GRANDURE SPARK</div>
+          <div style="font-size:17px;font-weight:700;color:rgba(255,255,255,0.9)">Aisha</div>
+        </div>
+        <button id="sparkMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.3);padding:4px;width:36px;display:flex;justify-content:flex-end">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;padding:0 16px">
+        <div style="flex:1;display:flex;flex-direction:column;gap:14px;padding-top:8px" id="sparkAishaMessages">
+          <div style="display:flex;gap:10px">
+            <div style="width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(200,180,255,0.9),rgba(100,60,200,0.8) 60%);flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(140,100,255,0.5)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>
+            </div>
+            <div style="background:rgba(140,120,255,0.1);border:1px solid rgba(140,120,255,0.2);border-radius:0 14px 14px 14px;padding:12px 14px;max-width:80%">
+              <div style="font-size:11px;font-weight:700;color:rgba(180,160,255,0.7);margin-bottom:5px">AISHA</div>
+              <div style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">Hey! I'm Aisha, your creative intelligence. Tell me what's on your mind and I'll help you find, connect, and expand on your ideas in the vault.</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;padding-left:42px">
+            ${['Find ideas about...','Connect this to...','What if I...','Explore themes'].map(s=>`<button class="spark-aisha-chip" data-suggestion="${escHtml(s)}">${escHtml(s)}</button>`).join('')}
+          </div>
+        </div>
+        <div style="padding:12px 0 6px;display:flex;gap:10px;align-items:flex-end">
+          <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(140,120,255,0.2);border-radius:16px;display:flex;align-items:center;padding:10px 14px">
+            <input id="sparkAishaInput" type="text" placeholder="Ask Aisha anything..." style="flex:1;background:none;border:none;color:#fff;font-size:14px;font-family:inherit;outline:none">
+          </div>
+          <button id="sparkAishaSend" style="width:40px;height:40px;border-radius:50%;background:rgba(140,120,255,0.25);border:1px solid rgba(140,120,255,0.4);color:rgba(200,180,255,0.9);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function injectSparkNav(active) {
+  document.getElementById('sparkNav')?.remove();
+  const nav = document.createElement('div');
+  nav.id = 'sparkNav';
+  nav.style.cssText = 'position:fixed;bottom:calc(22px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:2px;background:rgba(18,14,32,0.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(140,120,255,0.2);border-radius:100px;padding:6px 10px;box-shadow:0 8px 32px rgba(0,0,0,0.55),0 0 0 1px rgba(140,120,255,0.08)';
+
+  nav.innerHTML = `
+    <button class="spark-nav-pod-btn${active==='home'?' active':''}" data-href="#/spark">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </button>
+    <button class="spark-nav-pod-btn center${active==='aisha'?' active':''}" data-href="#/spark-aisha">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>
+    </button>
+    <button class="spark-nav-pod-btn${active==='vault'?' active':''}" data-href="#/spark-vault">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    </button>`;
+
+  document.getElementById('app').appendChild(nav);
+
+  document.getElementById('sparkMenuBtn')?.addEventListener('click', openMainMenu);
+  document.getElementById('sparkAddBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark')));
+  document.getElementById('sparkOrbBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark')));
+  document.getElementById('sparkUploadBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark'), 'file'));
+
+  const searchInput = document.getElementById('sparkSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const activeFilter = document.querySelector('.spark-filter-chip.active')?.dataset.filter || 'all';
+      renderSparkVaultList(searchInput.value.toLowerCase(), activeFilter);
+    });
+  }
+  document.querySelectorAll('.spark-filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.spark-filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      renderSparkVaultList(searchInput?.value.toLowerCase() || '', chip.dataset.filter);
+    });
+  });
+  document.querySelectorAll('.spark-vault-card[data-spark-id]').forEach(card => {
+    card.addEventListener('click', () => openSparkDetailModal(card.dataset.sparkId));
+  });
+
+  const aishaInput = document.getElementById('sparkAishaInput');
+  const aishaSend = document.getElementById('sparkAishaSend');
+  if (aishaInput && aishaSend) {
+    const sendAisha = () => {
+      const val = aishaInput.value.trim(); if (!val) return;
+      appendAishaMessage('user', val); aishaInput.value = '';
+      setTimeout(() => appendAishaMessage('aisha', `Interesting — "${val}". I'm still learning your vault. Add more sparks and I'll start making connections.`), 800);
+    };
+    aishaSend.addEventListener('click', sendAisha);
+    aishaInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAisha(); } });
+  }
+  document.querySelectorAll('.spark-aisha-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const inp = document.getElementById('sparkAishaInput');
+      if (inp) { inp.value = chip.dataset.suggestion; inp.focus(); }
+    });
+  });
+}
+
+function appendAishaMessage(role, text) {
+  const msgs = document.getElementById('sparkAishaMessages');
+  if (!msgs) return;
+  const el = document.createElement('div');
+  if (role === 'user') {
+    el.style.cssText = 'display:flex;justify-content:flex-end';
+    el.innerHTML = `<div style="background:rgba(140,120,255,0.2);border:1px solid rgba(140,120,255,0.3);border-radius:14px 0 14px 14px;padding:10px 14px;max-width:75%;font-size:14px;color:rgba(255,255,255,0.9);line-height:1.5">${escHtml(text)}</div>`;
+  } else {
+    el.style.cssText = 'display:flex;gap:10px';
+    el.innerHTML = `
+      <div style="width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 40% 35%,rgba(200,180,255,0.9),rgba(100,60,200,0.8) 60%);flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(140,100,255,0.5)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>
+      </div>
+      <div style="background:rgba(140,120,255,0.1);border:1px solid rgba(140,120,255,0.2);border-radius:0 14px 14px 14px;padding:12px 14px;max-width:80%">
+        <div style="font-size:11px;font-weight:700;color:rgba(180,160,255,0.7);margin-bottom:5px">AISHA</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.5">${escHtml(text)}</div>
+      </div>`;
+  }
+  msgs.appendChild(el);
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function openSparkCaptureModal(onDone, defaultType) {
+  const captureTypes = [
+    { type:'audio', label:'Audio', color:'#a78bfa' },
+    { type:'video', label:'Video', color:'#f472b6' },
+    { type:'photo', label:'Photo', color:'#34d399' },
+    { type:'text',  label:'Text',  color:'#60a5fa' },
+    { type:'file',  label:'File',  color:'#f59e0b' },
+    { type:'link',  label:'Link',  color:'#fb923c' },
+  ];
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;justify-content:flex-end';
+  modal.innerHTML = `
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px)" id="sparkCaptureBg"></div>
+    <div id="sparkCaptureSheet" style="position:relative;background:#12101e;border-radius:24px 24px 0 0;border-top:1px solid rgba(140,120,255,0.2);padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
+      <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 20px"></div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.35);text-align:center;margin-bottom:20px">CAPTURE IDEA</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        ${captureTypes.map(ct=>`
+          <button class="spark-capture-btn" data-type="${ct.type}" style="display:flex;flex-direction:column;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:18px 8px;cursor:pointer">
+            <div style="color:${ct.color};display:flex;align-items:center;justify-content:center">${SPARK_MEDIA_ICONS[ct.type]}</div>
+            <span style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);font-family:inherit">${ct.label}</span>
+          </button>`).join('')}
+      </div>
+      <button id="sparkCaptureCancel" style="width:100%;padding:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;color:rgba(255,255,255,0.35);font-size:14px;font-family:inherit;cursor:pointer">Cancel</button>
+    </div>`;
+
+  document.body.appendChild(modal);
+  const sheet = document.getElementById('sparkCaptureSheet');
+  requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
+  const close = () => { sheet.style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
+  document.getElementById('sparkCaptureBg')?.addEventListener('click', close);
+  document.getElementById('sparkCaptureCancel')?.addEventListener('click', close);
+  modal.querySelectorAll('.spark-capture-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      close();
+      setTimeout(() => openSparkInputModal(btn.dataset.type, onDone), 320);
+    });
+  });
+  if (defaultType) setTimeout(() => modal.querySelector(`.spark-capture-btn[data-type="${defaultType}"]`)?.click(), 50);
+}
+
+function openSparkInputModal(mediaType, onDone) {
+  const spark = { id: uid(), mediaType, title: '', subtitle: '', rawTextTranscript: '', sourceType: 'manual', brand: '', project: '', tags: [], keywords: [], relatedIdeas: [], aiSummary: '', location: '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  const col = SPARK_TYPE_COLORS[mediaType] || '#a78bfa';
+  const isLink = mediaType === 'link';
+  const isText = mediaType === 'text';
+  const isMedia = ['audio','video','photo','file'].includes(mediaType);
+  const acceptMap = { audio:'audio/*', video:'video/*', photo:'image/*', file:'*/*' };
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;justify-content:flex-end';
+  modal.innerHTML = `
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px)" id="sparkInputBg"></div>
+    <div id="sparkInputSheet" style="position:relative;background:#12101e;border-radius:24px 24px 0 0;border-top:1px solid rgba(140,120,255,0.2);padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));max-height:90vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
+      <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <div style="width:32px;height:32px;border-radius:10px;background:${col}18;border:1px solid ${col}33;display:flex;align-items:center;justify-content:center;color:${col};flex-shrink:0">${SPARK_MEDIA_ICONS[mediaType]}</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9)">New ${mediaType.charAt(0).toUpperCase()+mediaType.slice(1)} Spark</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.3)">Capture your idea</div>
+        </div>
+      </div>
+      ${isLink ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">URL</div><input id="sparkInputLink" type="url" placeholder="Paste link..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>` : ''}
+      ${isMedia ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">${mediaType.toUpperCase()} FILE</div><button id="sparkFilePickBtn" style="width:100%;padding:20px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.1);border-radius:14px;color:rgba(255,255,255,0.4);font-size:13px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="color:${col}">${SPARK_MEDIA_ICONS[mediaType]}</div><span id="sparkFileLabel">Tap to select ${mediaType} file</span></button><input id="sparkFileInput" type="file" accept="${acceptMap[mediaType]||'*/*'}" style="display:none"></div>` : ''}
+      <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">TITLE</div><input id="sparkInputTitle" type="text" placeholder="Give it a title..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>
+      <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">${isText?'YOUR IDEA':'NOTES'}</div><textarea id="sparkInputNotes" placeholder="${isText?'Write out your idea...':'Any notes or context...'}" rows="4" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:vertical"></textarea></div>
+      <div style="margin-bottom:20px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">TAGS</div><input id="sparkInputTags" type="text" placeholder="e.g. branding, launch, story (comma separated)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>
+      <div style="display:flex;gap:10px">
+        <button id="sparkInputCancel" style="flex:1;padding:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;color:rgba(255,255,255,0.35);font-size:14px;font-family:inherit;cursor:pointer">Cancel</button>
+        <button id="sparkInputSave" style="flex:2;padding:13px;background:rgba(140,120,255,0.2);border:1px solid rgba(140,120,255,0.4);border-radius:14px;color:rgba(200,180,255,0.95);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">Save Spark ⚡</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  const sheet = document.getElementById('sparkInputSheet');
+  requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
+  const close = () => { sheet.style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
+  document.getElementById('sparkInputBg')?.addEventListener('click', close);
+  document.getElementById('sparkInputCancel')?.addEventListener('click', close);
+
+  const filePickBtn = document.getElementById('sparkFilePickBtn');
+  const fileInput = document.getElementById('sparkFileInput');
+  if (filePickBtn && fileInput) {
+    filePickBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files[0];
+      if (f) { spark.rawTextTranscript = f.name; const lbl = document.getElementById('sparkFileLabel'); if (lbl) lbl.textContent = f.name; }
+    });
+  }
+
+  document.getElementById('sparkInputSave')?.addEventListener('click', () => {
+    spark.title = document.getElementById('sparkInputTitle')?.value.trim() || 'Untitled Spark';
+    spark.subtitle = document.getElementById('sparkInputNotes')?.value.trim() || '';
+    spark.aiSummary = spark.subtitle;
+    spark.tags = (document.getElementById('sparkInputTags')?.value || '').split(',').map(t=>t.trim()).filter(Boolean);
+    const link = document.getElementById('sparkInputLink')?.value.trim();
+    if (link) spark.rawTextTranscript = link;
+    spark.updatedAt = new Date().toISOString();
+    saveSpark(spark);
+    close();
+    requestAnimationFrame(() => onDone?.());
+  });
+}
+
+function openSparkDetailModal(sparkId) {
+  const sp = getSparkData().find(s => s.id === sparkId);
+  if (!sp) return;
+  const col = SPARK_TYPE_COLORS[sp.mediaType] || '#a78bfa';
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;justify-content:flex-end';
+  modal.innerHTML = `
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px)" id="sparkDetailBg"></div>
+    <div id="sparkDetailSheet" style="position:relative;background:#12101e;border-radius:24px 24px 0 0;border-top:1px solid rgba(140,120,255,0.2);padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));max-height:85vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
+      <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:32px;height:32px;border-radius:10px;background:${col}18;border:1px solid ${col}33;display:flex;align-items:center;justify-content:center;color:${col};flex-shrink:0">${SPARK_MEDIA_ICONS[sp.mediaType] || SPARK_MEDIA_ICONS.text}</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:rgba(255,255,255,0.9)">${escHtml(sp.title || 'Untitled Spark')}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.3)">${sp.createdAt ? new Date(sp.createdAt).toLocaleString() : ''}</div>
+          </div>
+        </div>
+        <button id="sparkDetailDelete" style="background:rgba(255,60,60,0.08);border:1px solid rgba(255,60,60,0.15);border-radius:10px;padding:6px 10px;color:rgba(255,120,120,0.7);font-size:12px;font-family:inherit;cursor:pointer">Delete</button>
+      </div>
+      ${sp.subtitle || sp.aiSummary ? `<div style="font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:16px;background:rgba(255,255,255,0.04);border-radius:12px;padding:12px 14px">${escHtml(sp.subtitle || sp.aiSummary)}</div>` : ''}
+      ${sp.rawTextTranscript ? `<div style="margin-bottom:16px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:6px">${sp.mediaType==='link'?'URL':'FILE'}</div><div style="font-size:13px;color:rgba(180,160,255,0.8);word-break:break-all">${escHtml(sp.rawTextTranscript)}</div></div>` : ''}
+      ${sp.tags?.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">${sp.tags.map(t=>`<span style="background:rgba(140,120,255,0.12);border:1px solid rgba(140,120,255,0.2);border-radius:20px;padding:4px 10px;font-size:11px;color:rgba(180,160,255,0.8)">#${escHtml(t)}</span>`).join('')}</div>` : ''}
+      <button id="sparkDetailClose" style="width:100%;padding:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;color:rgba(255,255,255,0.35);font-size:14px;font-family:inherit;cursor:pointer">Close</button>
+    </div>`;
+
+  document.body.appendChild(modal);
+  const sheet = document.getElementById('sparkDetailSheet');
+  requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
+  const close = () => { sheet.style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
+  document.getElementById('sparkDetailBg')?.addEventListener('click', close);
+  document.getElementById('sparkDetailClose')?.addEventListener('click', close);
+  document.getElementById('sparkDetailDelete')?.addEventListener('click', () => {
+    if (!confirm('Delete this spark?')) return;
+    deleteSpark(sp.id); close();
+    requestAnimationFrame(() => renderSparkVaultList('', document.querySelector('.spark-filter-chip.active')?.dataset.filter || 'all'));
+  });
 }
 
 function campaignNavHTML(brandId, campId) {
