@@ -7519,10 +7519,14 @@ function openSparkInputModal(mediaType, onDone, mode) {
               stopVisualizer();
               if (recordedChunks.length === 0) return;
               const blob = new Blob(recordedChunks, { type: mimeType || 'audio/webm' });
-              const url = URL.createObjectURL(blob);
-              spark.rawContentUrl = url;
-              spark.rawTextTranscript = `Recorded audio (${elapsedSecs}s)`;
-              if (audioPreview) { audioPreview.src = url; audioPreview.style.display = 'block'; }
+              // Convert to data URL so it persists in localStorage across sessions
+              const reader = new FileReader();
+              reader.onload = () => {
+                spark.rawContentUrl = reader.result;
+                spark.rawTextTranscript = `Recorded audio (${elapsedSecs}s)`;
+                if (audioPreview) { audioPreview.src = reader.result; audioPreview.style.display = 'block'; }
+              };
+              reader.readAsDataURL(blob);
               recordBtn.style.cssText = 'width:100%;padding:18px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.22);border-radius:14px;color:rgba(167,139,250,0.9);font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px';
               recordLabel.textContent = 'Record Again';
               if (recordTimer) recordTimer.style.display = 'none';
@@ -7598,8 +7602,14 @@ function openSparkDetailModal(sparkId) {
         </div>
         <button id="sparkDetailDelete" style="background:rgba(255,60,60,0.08);border:1px solid rgba(255,60,60,0.15);border-radius:10px;padding:6px 10px;color:rgba(255,120,120,0.7);font-size:12px;font-family:inherit;cursor:pointer">Delete</button>
       </div>
+      ${sp.rawContentUrl && sp.mediaType === 'audio' ? `
+        <div style="margin-bottom:16px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">RECORDING</div>
+          <audio controls src="${escHtml(sp.rawContentUrl)}" style="width:100%;border-radius:10px"></audio>
+          ${sp.rawTextTranscript ? `<div style="font-size:11px;color:rgba(255,255,255,0.25);margin-top:6px">${escHtml(sp.rawTextTranscript)}</div>` : ''}
+        </div>` : ''}
       ${sp.subtitle || sp.aiSummary ? `<div style="font-size:14px;color:rgba(255,255,255,0.65);line-height:1.6;margin-bottom:16px;background:rgba(255,255,255,0.04);border-radius:12px;padding:12px 14px">${escHtml(sp.subtitle || sp.aiSummary)}</div>` : ''}
-      ${sp.rawTextTranscript ? `<div style="margin-bottom:16px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:6px">${sp.mediaType==='link'?'URL':'FILE'}</div><div style="font-size:13px;color:rgba(180,160,255,0.8);word-break:break-all">${escHtml(sp.rawTextTranscript)}</div></div>` : ''}
+      ${sp.rawTextTranscript && sp.mediaType !== 'audio' ? `<div style="margin-bottom:16px"><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:6px">${sp.mediaType==='link'?'URL':'FILE'}</div><div style="font-size:13px;color:rgba(180,160,255,0.8);word-break:break-all">${escHtml(sp.rawTextTranscript)}</div></div>` : ''}
       ${sp.tags?.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">${sp.tags.map(t=>`<span style="background:rgba(140,120,255,0.12);border:1px solid rgba(140,120,255,0.2);border-radius:20px;padding:4px 10px;font-size:11px;color:rgba(180,160,255,0.8)">#${escHtml(t)}</span>`).join('')}</div>` : ''}
       <button id="sparkDetailClose" style="width:100%;padding:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;color:rgba(255,255,255,0.35);font-size:14px;font-family:inherit;cursor:pointer">Close</button>
     </div>`;
