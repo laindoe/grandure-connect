@@ -182,6 +182,7 @@ function render() {
   // Always clear old nav so each page re-injects a fresh one
   document.getElementById('campaignBottomNav')?.remove();
   document.getElementById('brandAppNav')?.remove();
+  document.getElementById('orbitNav')?.remove();
   document.getElementById('mainMenuOverlay')?.remove();
 
   if (path === '/' || path === '') {
@@ -6912,8 +6913,8 @@ function pageOrbit() {
           </div>
         </div>
         <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
-          <button style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.25);padding:4px">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.35);padding:4px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
           <div style="width:32px;height:32px;border-radius:50%;background:rgba(245,158,11,0.15);border:1.5px solid rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#f59e0b">L</div>
         </div>
@@ -6978,10 +6979,13 @@ function pageOrbitProductions() {
     <div class="orbit-page" style="padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px;display:flex;align-items:center;gap:12px">
         <button class="back-btn" data-href="#/orbit" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:#f59e0b">‹</button>
-        <div>
+        <div style="flex:1">
           <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(245,158,11,0.6)">GRANDURE ORBIT</div>
           <div style="font-size:18px;font-weight:700;color:rgba(255,245,230,0.9)">Productions</div>
         </div>
+        <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.35);padding:4px;flex-shrink:0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
       <div style="padding:0 16px;display:flex;flex-direction:column;gap:10px">
         ${cards}
@@ -6998,10 +7002,13 @@ function pageOrbitStub(tab, title, desc) {
     <div class="orbit-page" style="padding-bottom:90px">
       <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px;display:flex;align-items:center;gap:12px">
         <button class="back-btn" data-href="#/orbit" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:#f59e0b">‹</button>
-        <div>
+        <div style="flex:1">
           <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(245,158,11,0.6)">GRANDURE ORBIT</div>
           <div style="font-size:18px;font-weight:700;color:rgba(255,245,230,0.9)">${escHtml(title)}</div>
         </div>
+        <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.35);padding:4px;flex-shrink:0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;padding:0 32px;text-align:center">
         <div style="font-size:14px;color:rgba(255,245,230,0.2);margin-bottom:6px">${escHtml(desc || 'Coming soon')}</div>
@@ -7036,6 +7043,7 @@ function injectOrbitNav(active) {
   `;
   document.getElementById('app').appendChild(nav);
   nav.querySelector('#orbitAgentsBtn')?.addEventListener('click', () => navigate('#/orbit-agents'));
+  document.getElementById('orbitMenuBtn')?.addEventListener('click', openMainMenu);
 }
 
 function pageOrbitPlaceholder() {
