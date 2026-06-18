@@ -6900,23 +6900,23 @@ function pageOrbit() {
 
   return `
     <div class="orbit-page" style="padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
-      <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 20px 0;display:flex;align-items:flex-start;justify-content:space-between">
-        <div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/></svg>
+      <div style="padding:calc(16px + env(safe-area-inset-top,0px)) 16px 0;display:flex;align-items:center;justify-content:space-between">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,0.15);border:1.5px solid rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#f59e0b;flex-shrink:0">L</div>
+        <div style="text-align:center">
+          <div style="display:flex;align-items:center;gap:7px;justify-content:center;margin-bottom:2px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/></svg>
             <div style="font-size:13px;font-weight:800;letter-spacing:2px;color:#f59e0b">GRANDURE ORBIT</div>
           </div>
-          <div style="font-size:9px;letter-spacing:1.5px;color:rgba(255,245,230,0.2);margin-bottom:14px">WHERE IDEAS BECOME REALITIES</div>
-          <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.18);border-radius:20px;padding:4px 10px">
-            <div style="width:6px;height:6px;border-radius:50%;background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,0.8)"></div>
-            <div style="font-size:10px;font-weight:700;color:rgba(245,158,11,0.8);letter-spacing:0.5px">${prods.length} ACTIVE PRODUCTIONS</div>
-          </div>
+          <div style="font-size:8px;letter-spacing:1.5px;color:rgba(255,245,230,0.2)">WHERE IDEAS BECOME REALITIES</div>
         </div>
-        <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
-          <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.35);padding:4px">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          </button>
-          <div style="width:32px;height:32px;border-radius:50%;background:rgba(245,158,11,0.15);border:1.5px solid rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#f59e0b">L</div>
+        <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.35);padding:4px;flex-shrink:0;width:36px;display:flex;justify-content:center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+      </div>
+      <div style="padding:14px 16px 0;display:flex;justify-content:center">
+        <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.18);border-radius:20px;padding:4px 10px">
+          <div style="width:6px;height:6px;border-radius:50%;background:#f59e0b;box-shadow:0 0 6px rgba(245,158,11,0.8)"></div>
+          <div style="font-size:10px;font-weight:700;color:rgba(245,158,11,0.8);letter-spacing:0.5px">${prods.length} ACTIVE PRODUCTIONS</div>
         </div>
       </div>
 
@@ -6978,12 +6978,12 @@ function pageOrbitProductions() {
   return `
     <div class="orbit-page" style="padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px;display:flex;align-items:center;gap:12px">
-        <button class="back-btn" data-href="#/orbit" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:#f59e0b">‹</button>
-        <div style="flex:1">
+        <button class="back-btn" data-href="#/orbit" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:#f59e0b;flex-shrink:0">‹</button>
+        <div style="flex:1;text-align:center">
           <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(245,158,11,0.6)">GRANDURE ORBIT</div>
-          <div style="font-size:18px;font-weight:700;color:rgba(255,245,230,0.9)">Productions</div>
+          <div style="font-size:17px;font-weight:700;color:rgba(255,245,230,0.9)">Productions</div>
         </div>
-        <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.35);padding:4px;flex-shrink:0">
+        <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.35);padding:4px;flex-shrink:0;width:36px;display:flex;justify-content:flex-end">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
       </div>
@@ -7001,12 +7001,12 @@ function pageOrbitStub(tab, title, desc) {
   return `
     <div class="orbit-page" style="padding-bottom:90px">
       <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px;display:flex;align-items:center;gap:12px">
-        <button class="back-btn" data-href="#/orbit" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:#f59e0b">‹</button>
-        <div style="flex:1">
+        <button class="back-btn" data-href="#/orbit" style="background:rgba(245,158,11,0.1);border-color:rgba(245,158,11,0.2);color:#f59e0b;flex-shrink:0">‹</button>
+        <div style="flex:1;text-align:center">
           <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(245,158,11,0.6)">GRANDURE ORBIT</div>
-          <div style="font-size:18px;font-weight:700;color:rgba(255,245,230,0.9)">${escHtml(title)}</div>
+          <div style="font-size:17px;font-weight:700;color:rgba(255,245,230,0.9)">${escHtml(title)}</div>
         </div>
-        <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.35);padding:4px;flex-shrink:0">
+        <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,245,230,0.35);padding:4px;flex-shrink:0;width:36px;display:flex;justify-content:flex-end">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
       </div>
