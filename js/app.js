@@ -7254,7 +7254,7 @@ function injectSparkNav(active) {
   document.getElementById('sparkMenuBtn')?.addEventListener('click', openMainMenu);
   document.getElementById('sparkAddBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark')));
   document.getElementById('sparkOrbBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark')));
-  document.getElementById('sparkUploadBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark'), 'file'));
+  document.getElementById('sparkUploadBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark')));
 
   const searchInput = document.getElementById('sparkSearch');
   if (searchInput) {
