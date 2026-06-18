@@ -7382,11 +7382,12 @@ function openSparkInputModal(mediaType, onDone, mode) {
       ${mediaType === 'audio' && mode !== 'upload' ? `
         <div style="margin-bottom:14px">
           <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:8px">RECORD AUDIO</div>
+          <canvas id="sparkWaveCanvas" width="600" height="80" style="display:none;width:100%;height:80px;border-radius:12px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);margin-bottom:10px"></canvas>
+          <div id="sparkRecordTimer" style="display:none;text-align:center;font-size:13px;font-weight:600;color:rgba(255,100,100,0.85);margin-bottom:10px;letter-spacing:0.5px">● 0:00</div>
           <button id="sparkRecordBtn" style="width:100%;padding:18px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.22);border-radius:14px;color:rgba(167,139,250,0.9);font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
             <span id="sparkRecordLabel">Tap to Record</span>
           </button>
-          <div id="sparkRecordTimer" style="display:none;text-align:center;font-size:13px;font-weight:600;color:rgba(255,100,100,0.85);margin-top:10px;letter-spacing:0.5px">● 0:00</div>
           <audio id="sparkAudioPreview" controls style="width:100%;display:none;margin-top:10px;border-radius:10px"></audio>
         </div>` : ''}
       ${mediaType === 'audio' && mode === 'upload' ? `
@@ -7413,66 +7414,139 @@ function openSparkInputModal(mediaType, onDone, mode) {
   requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
   let _activeRecorder = null;
   const close = () => {
-    if (_activeRecorder && _activeRecorder.state === 'recording') _activeRecorder.stop();
+    if (_activeRecorder && _activeRecorder.state !== 'inactive') _activeRecorder.stop();
     sheet.style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300);
   };
   document.getElementById('sparkInputBg')?.addEventListener('click', close);
   document.getElementById('sparkInputCancel')?.addEventListener('click', close);
 
   // Audio recording
-  if (mediaType === 'audio') {
-    const recordBtn = document.getElementById('sparkRecordBtn');
+  if (mediaType === 'audio' && mode !== 'upload') {
+    const recordBtn   = document.getElementById('sparkRecordBtn');
     const recordLabel = document.getElementById('sparkRecordLabel');
     const recordTimer = document.getElementById('sparkRecordTimer');
     const audioPreview = document.getElementById('sparkAudioPreview');
+    const waveCanvas  = document.getElementById('sparkWaveCanvas');
     let mediaRecorder = null;
     let recordedChunks = [];
     let timerInterval = null;
     let elapsedSecs = 0;
+    let animFrameId = null;
+    let analyser = null;
+    let audioCtx = null;
+
+    function drawWave() {
+      if (!analyser || !waveCanvas) return;
+      const ctx = waveCanvas.getContext('2d');
+      const W = waveCanvas.width, H = waveCanvas.height;
+      const bufLen = analyser.frequencyBinCount;
+      const data = new Uint8Array(bufLen);
+      analyser.getByteFrequencyData(data);
+
+      ctx.clearRect(0, 0, W, H);
+      const barCount = 60;
+      const barW = Math.floor(W / barCount) - 2;
+      const step = Math.floor(bufLen / barCount);
+      for (let i = 0; i < barCount; i++) {
+        const val = data[i * step] / 255;
+        const barH = Math.max(4, val * H * 0.9);
+        const x = i * (barW + 2) + 1;
+        const alpha = 0.4 + val * 0.6;
+        ctx.fillStyle = `rgba(167,139,250,${alpha})`;
+        ctx.beginPath();
+        ctx.roundRect(x, (H - barH) / 2, barW, barH, 3);
+        ctx.fill();
+      }
+      animFrameId = requestAnimationFrame(drawWave);
+    }
+
+    function stopVisualizer() {
+      if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+      if (audioCtx) { audioCtx.close().catch(() => {}); audioCtx = null; analyser = null; }
+      if (waveCanvas) {
+        const ctx = waveCanvas.getContext('2d');
+        ctx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+        waveCanvas.style.display = 'none';
+      }
+    }
+
+    function startVisualizer(stream) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        audioCtx.createMediaStreamSource(stream).connect(analyser);
+        if (waveCanvas) waveCanvas.style.display = 'block';
+        drawWave();
+      } catch {}
+    }
+
+    // Resume AudioContext on iOS after user gesture
+    function resumeCtx() { if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    }
+
+    // Stop if page is hidden (app backgrounded on mobile)
+    const onVisChange = () => { if (document.hidden) stopRecording(); };
+    document.addEventListener('visibilitychange', onVisChange);
 
     if (recordBtn) {
       recordBtn.addEventListener('click', async () => {
         if (mediaRecorder && mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
+          stopRecording();
         } else {
           try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             recordedChunks = [];
-            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-            mediaRecorder = new MediaRecorder(stream, { mimeType });
+
+            // Pick best supported mime type
+            const mimeType = ['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(t => {
+              try { return MediaRecorder.isTypeSupported(t); } catch { return false; }
+            }) || '';
+
+            mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
             _activeRecorder = mediaRecorder;
-            mediaRecorder.addEventListener('dataavailable', e => { if (e.data.size > 0) recordedChunks.push(e.data); });
+
+            // timeslice: collect data every 250ms so nothing is lost if recording cuts off
+            mediaRecorder.addEventListener('dataavailable', e => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); });
+
             mediaRecorder.addEventListener('stop', () => {
+              document.removeEventListener('visibilitychange', onVisChange);
               stream.getTracks().forEach(t => t.stop());
               clearInterval(timerInterval);
-              const blob = new Blob(recordedChunks, { type: mimeType });
+              stopVisualizer();
+              if (recordedChunks.length === 0) return;
+              const blob = new Blob(recordedChunks, { type: mimeType || 'audio/webm' });
               const url = URL.createObjectURL(blob);
               spark.rawContentUrl = url;
               spark.rawTextTranscript = `Recorded audio (${elapsedSecs}s)`;
-              audioPreview.src = url;
-              audioPreview.style.display = 'block';
-              recordBtn.style.background = 'rgba(167,139,250,0.08)';
-              recordBtn.style.borderColor = 'rgba(167,139,250,0.22)';
-              recordBtn.style.color = 'rgba(167,139,250,0.9)';
+              if (audioPreview) { audioPreview.src = url; audioPreview.style.display = 'block'; }
+              recordBtn.style.cssText = 'width:100%;padding:18px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.22);border-radius:14px;color:rgba(167,139,250,0.9);font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px';
               recordLabel.textContent = 'Record Again';
-              recordTimer.style.display = 'none';
+              if (recordTimer) recordTimer.style.display = 'none';
             });
-            mediaRecorder.start();
+
+            mediaRecorder.addEventListener('error', () => stopRecording());
+
+            startVisualizer(stream);
+            mediaRecorder.start(250); // chunked every 250ms
             elapsedSecs = 0;
-            recordTimer.textContent = '● 0:00';
-            recordTimer.style.display = 'block';
+            if (recordTimer) { recordTimer.textContent = '● 0:00'; recordTimer.style.display = 'block'; }
             recordBtn.style.background = 'rgba(255,60,60,0.12)';
             recordBtn.style.borderColor = 'rgba(255,80,80,0.35)';
             recordBtn.style.color = 'rgba(255,160,160,0.95)';
             recordLabel.textContent = 'Stop Recording';
             timerInterval = setInterval(() => {
+              resumeCtx();
               elapsedSecs++;
               const m = Math.floor(elapsedSecs / 60);
               const s = elapsedSecs % 60;
-              recordTimer.textContent = `● ${m}:${s.toString().padStart(2,'0')}`;
+              if (recordTimer) recordTimer.textContent = `● ${m}:${s.toString().padStart(2,'0')}`;
             }, 1000);
           } catch {
-            alert('Microphone access denied. Please allow microphone access and try again.');
+            alert('Microphone access is required. Please allow access and try again.');
           }
         }
       });
