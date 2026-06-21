@@ -1688,7 +1688,7 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .orbit-nav-btn.active { color:#fff; }
 
 /* ── Grandure Spark ── */
-.spark-page { background:linear-gradient(180deg,#0c0a18 0%,#080612 60%,#060410 100%);min-height:100vh; }
+.spark-page { background:#000;min-height:100vh; }
 .spark-orb {
   width:200px;height:200px;border-radius:50%;
   background:radial-gradient(circle at 38% 32%,rgba(200,180,255,0.18) 0%,rgba(120,80,220,0.12) 40%,rgba(60,30,120,0.06) 70%,transparent 100%);

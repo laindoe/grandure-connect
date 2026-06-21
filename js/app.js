@@ -7127,7 +7127,7 @@ const SPARK_TYPE_COLORS = { audio:'#a78bfa', video:'#f472b6', photo:'#34d399', t
 
 function pageSpark() {
   return `
-    <div class="spark-page" style="min-height:100vh;display:flex;flex-direction:column;align-items:stretch;padding-bottom:100px">
+    <div class="spark-page" style="background:#000;min-height:100vh;display:flex;flex-direction:column;align-items:stretch;padding-bottom:100px">
       <div style="padding:calc(16px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center;justify-content:space-between">
         <button id="sparkMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);padding:4px;width:36px;height:36px;display:flex;align-items:center;justify-content:center">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -7164,7 +7164,7 @@ function pageSparkVault() {
     : sparks.map(sp => sparkVaultCardHTML(sp)).join('');
 
   return `
-    <div class="spark-page" style="min-height:100vh;padding-bottom:100px">
+    <div class="spark-page" style="background:#000;min-height:100vh;padding-bottom:100px">
       <div style="padding:calc(16px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center;gap:12px">
         <button class="back-btn" data-href="#/spark" style="background:rgba(140,120,255,0.1);border-color:rgba(140,120,255,0.2);color:#a78bfa;flex-shrink:0">‹</button>
         <div style="flex:1;text-align:center">
