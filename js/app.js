@@ -7661,19 +7661,15 @@ function openSparkDetailModal(sparkId) {
   const isAudio = sp.mediaType === 'audio';
   const isLink  = sp.mediaType === 'link';
   const isText  = sp.mediaType === 'text';
-
-  // For audio: rawTextTranscript holds either "Recorded audio (Xs)" or user-typed transcript
-  // We separate display of duration from editable transcript
   const transcriptVal = (isAudio && sp.rawTextTranscript?.startsWith('Recorded audio')) ? '' : (sp.rawTextTranscript || '');
 
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;justify-content:flex-end';
   modal.innerHTML = `
     <div style="position:absolute;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px)" id="sparkDetailBg"></div>
-    <div id="sparkDetailSheet" style="position:relative;background:#12101e;border-radius:24px 24px 0 0;border-top:1px solid rgba(140,120,255,0.2);padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
+    <div id="sparkDetailSheet" style="position:relative;background:#12101e;border-radius:24px 24px 0 0;border-top:1px solid rgba(140,120,255,0.2);padding:20px 20px 0;max-height:92vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
       <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:0 auto 16px"></div>
 
-      <!-- Header row -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         <div style="width:32px;height:32px;border-radius:10px;background:${col}18;border:1px solid ${col}33;display:flex;align-items:center;justify-content:center;color:${col};flex-shrink:0">${SPARK_MEDIA_ICONS[sp.mediaType] || SPARK_MEDIA_ICONS.text}</div>
         <input id="sdTitle" type="text" value="${escHtml(sp.title || '')}" placeholder="Title" style="flex:1;background:none;border:none;font-size:16px;font-weight:700;color:#fff;font-family:inherit;outline:none;padding:0;min-width:0">
@@ -7681,41 +7677,35 @@ function openSparkDetailModal(sparkId) {
       </div>
       <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:20px;padding-left:42px">${sp.createdAt ? new Date(sp.createdAt).toLocaleString() : ''}</div>
 
-      <!-- Audio player -->
       ${isAudio && sp.rawContentUrl ? `
         <div style="margin-bottom:18px">
           <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">RECORDING</div>
           <audio id="sparkDetailAudio" controls style="width:100%;border-radius:10px"></audio>
         </div>` : ''}
 
-      <!-- Transcript (audio only) -->
       ${isAudio ? `
         <div style="margin-bottom:18px">
           <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:6px">TRANSCRIPT</div>
-          <textarea id="sdTranscript" placeholder="Add a transcript or notes about what was said..." rows="4" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.5">${escHtml(transcriptVal)}</textarea>
+          <textarea id="sdTranscript" placeholder="Type what was said..." rows="3" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.5">${escHtml(transcriptVal)}</textarea>
         </div>` : ''}
 
-      <!-- Link URL -->
       ${isLink ? `
         <div style="margin-bottom:18px">
           <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:6px">URL</div>
-          <input id="sdLink" type="url" value="${escHtml(sp.rawTextTranscript || '')}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:rgba(180,160,255,0.9);font-size:13px;font-family:inherit;outline:none;word-break:break-all">
+          <input id="sdLink" type="url" value="${escHtml(sp.rawTextTranscript || '')}" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:rgba(180,160,255,0.9);font-size:13px;font-family:inherit;outline:none">
         </div>` : ''}
 
-      <!-- Notes / content -->
       <div style="margin-bottom:18px">
         <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:6px">${isText ? 'CONTENT' : 'NOTES'}</div>
-        <textarea id="sdNotes" placeholder="${isText ? 'Your idea...' : 'Notes or context...'}" rows="4" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.5">${escHtml(sp.subtitle || '')}</textarea>
+        <textarea id="sdNotes" placeholder="${isText ? 'Your idea...' : 'Notes or context...'}" rows="3" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.5">${escHtml(sp.subtitle || '')}</textarea>
       </div>
 
-      <!-- Tags -->
-      <div style="margin-bottom:22px">
+      <div style="margin-bottom:24px">
         <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:6px">TAGS</div>
-        <input id="sdTags" type="text" value="${escHtml((sp.tags||[]).join(', '))}" placeholder="branding, launch, story (comma separated)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:13px;font-family:inherit;outline:none">
+        <div id="sdTagsWrap" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:8px 10px;min-height:44px;cursor:text"></div>
       </div>
 
-      <!-- Actions -->
-      <div style="display:flex;gap:10px">
+      <div style="display:flex;gap:10px;padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))">
         <button id="sparkDetailClose" style="flex:1;padding:13px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;color:rgba(255,255,255,0.35);font-size:14px;font-family:inherit;cursor:pointer">Close</button>
         <button id="sparkDetailSave" style="flex:2;padding:13px;background:rgba(140,120,255,0.2);border:1px solid rgba(140,120,255,0.4);border-radius:14px;color:rgba(200,180,255,0.95);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">Save Changes</button>
       </div>
@@ -7723,6 +7713,39 @@ function openSparkDetailModal(sparkId) {
 
   document.body.appendChild(modal);
 
+  // ── Tag chip widget ──
+  let _tags = [...(sp.tags || [])];
+  const wrap = document.getElementById('sdTagsWrap');
+
+  function renderTags() {
+    wrap.innerHTML = '';
+    _tags.forEach((t, i) => {
+      const chip = document.createElement('span');
+      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;background:rgba(140,120,255,0.15);border:1px solid rgba(140,120,255,0.3);border-radius:20px;padding:3px 8px 3px 10px;font-size:12px;color:rgba(200,180,255,0.9);white-space:nowrap';
+      chip.innerHTML = `${escHtml(t)}<button type="button" style="background:none;border:none;color:rgba(200,180,255,0.5);font-size:14px;line-height:1;cursor:pointer;padding:0 0 0 2px" data-i="${i}">×</button>`;
+      chip.querySelector('button').addEventListener('click', () => { _tags.splice(i, 1); renderTags(); });
+      wrap.appendChild(chip);
+    });
+    const inp = document.createElement('input');
+    inp.id = 'sdTagInput';
+    inp.type = 'text';
+    inp.placeholder = _tags.length ? '' : 'Add tag, press Space or Enter';
+    inp.style.cssText = 'background:none;border:none;outline:none;color:#fff;font-size:13px;font-family:inherit;flex:1;min-width:80px;padding:3px 2px';
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === ',') {
+        e.preventDefault();
+        const val = inp.value.replace(/[, ]+$/, '').trim();
+        if (val) { _tags.push(val); renderTags(); document.getElementById('sdTagInput')?.focus(); }
+      } else if (e.key === 'Backspace' && inp.value === '' && _tags.length) {
+        _tags.pop(); renderTags(); document.getElementById('sdTagInput')?.focus();
+      }
+    });
+    wrap.appendChild(inp);
+    wrap.addEventListener('click', () => document.getElementById('sdTagInput')?.focus());
+  }
+  renderTags();
+
+  // ── Audio playback ──
   if (isAudio && sp.rawContentUrl) {
     const audioEl = document.getElementById('sparkDetailAudio');
     if (audioEl) {
@@ -7745,13 +7768,21 @@ function openSparkDetailModal(sparkId) {
   document.getElementById('sparkDetailClose')?.addEventListener('click', close);
 
   document.getElementById('sparkDetailSave')?.addEventListener('click', () => {
-    sp.title = document.getElementById('sdTitle')?.value.trim() || 'Untitled Spark';
+    // Commit any partially-typed tag in the input before saving
+    const tagInput = document.getElementById('sdTagInput');
+    const pending = tagInput?.value.replace(/[, ]+$/, '').trim();
+    if (pending) _tags.push(pending);
+
+    // Blur everything so iOS collapses keyboard without scrolling
+    document.activeElement?.blur();
+
+    sp.title    = document.getElementById('sdTitle')?.value.trim() || 'Untitled Spark';
     sp.subtitle = document.getElementById('sdNotes')?.value.trim() || '';
     sp.aiSummary = sp.subtitle;
-    sp.tags = (document.getElementById('sdTags')?.value || '').split(',').map(t => t.trim()).filter(Boolean);
+    sp.tags = _tags;
     if (isAudio) {
-      const t = document.getElementById('sdTranscript')?.value.trim() || '';
-      sp.rawTextTranscript = t || sp.rawTextTranscript;
+      const t = document.getElementById('sdTranscript')?.value.trim();
+      if (t) sp.rawTextTranscript = t;
     }
     if (isLink) {
       sp.rawTextTranscript = document.getElementById('sdLink')?.value.trim() || sp.rawTextTranscript;
