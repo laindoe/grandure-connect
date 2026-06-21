@@ -6932,7 +6932,7 @@ function pageOrbit() {
   const aishaSVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>`;
 
   return `
-    <div class="orbit-page" style="padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div class="orbit-page" style="background:#000;padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <div style="padding:calc(16px + env(safe-area-inset-top,0px)) 16px 0;display:flex;align-items:center;justify-content:space-between">
         <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);flex-shrink:0">L</div>
         <div style="text-align:center">
@@ -7009,7 +7009,7 @@ function pageOrbitProductions() {
     </div>`).join('');
 
   return `
-    <div class="orbit-page" style="padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div class="orbit-page" style="background:#000;padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px;display:flex;align-items:center;gap:12px">
         <button class="back-btn" data-href="#/orbit" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
         <div style="flex:1;text-align:center">
@@ -7032,7 +7032,7 @@ function pageOrbitProductions() {
 
 function pageOrbitStub(tab, title, desc) {
   return `
-    <div class="orbit-page" style="padding-bottom:90px">
+    <div class="orbit-page" style="background:#000;padding-bottom:90px">
       <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px;display:flex;align-items:center;gap:12px">
         <button class="back-btn" data-href="#/orbit" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
         <div style="flex:1;text-align:center">
