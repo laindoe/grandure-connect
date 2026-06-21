@@ -1667,23 +1667,25 @@ button { background: none; border: none; cursor: pointer; font-family: inherit; 
 .as-section { margin-bottom:28px; }
 
 /* ── Grandure Orbit ── */
-.orbit-page { background:#080604;min-height:100vh; }
+.orbit-page { background:#000;min-height:100vh; }
 .orbit-section-row { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
-.orbit-section-label { font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(245,158,11,0.6); }
-.orbit-queue-card { background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.1);border-radius:14px;padding:14px;flex:1;min-width:0; }
-.orbit-queue-card-hdr { font-size:9px;font-weight:800;letter-spacing:1.5px;color:rgba(245,158,11,0.5);margin-bottom:10px; }
-.orbit-qi { border-bottom:1px solid rgba(255,255,255,0.04);padding-bottom:8px;margin-bottom:8px; }
+.orbit-section-label { font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.35); }
+.orbit-queue-card { background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.09);border-radius:16px;padding:14px;flex:1;min-width:0;box-shadow:0 4px 20px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.06); }
+.orbit-queue-card-hdr { font-size:9px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,0.25);margin-bottom:10px; }
+.orbit-qi { border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;margin-bottom:8px; }
 .orbit-qi:last-child { border-bottom:none;padding-bottom:0;margin-bottom:0; }
-.orbit-qi-title { font-size:12px;font-weight:600;color:rgba(255,245,230,0.85);margin-bottom:2px;line-height:1.3; }
-.orbit-qi-sub { font-size:10px;color:rgba(255,245,230,0.3); }
+.orbit-qi-title { font-size:12px;font-weight:600;color:rgba(255,255,255,0.85);margin-bottom:2px;line-height:1.3; }
+.orbit-qi-sub { font-size:10px;color:rgba(255,255,255,0.3); }
 .orbit-signal-row { display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch; }
 .orbit-signal-row::-webkit-scrollbar { display:none; }
-.orbit-signal-chip { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 12px;min-width:148px;flex-shrink:0; }
+.orbit-signal-chip { background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:12px;min-width:148px;flex-shrink:0;box-shadow:0 4px 16px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.05); }
 .orbit-prod-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
-.orbit-prod-card { background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.12);border-radius:16px;overflow:hidden;padding:16px;display:flex;flex-direction:column;align-items:center;cursor:pointer; }
-.orbit-prod-list-card { background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.12);border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer; }
-.orbit-nav-btn { background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 12px;cursor:pointer;font-size:9px;font-weight:700;letter-spacing:0.5px;color:rgba(255,245,230,0.25);font-family:inherit; }
-.orbit-nav-btn.active { color:rgba(245,158,11,0.9); }
+.orbit-prod-card { background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.09);border-radius:18px;overflow:hidden;padding:16px;display:flex;flex-direction:column;align-items:center;cursor:pointer;box-shadow:0 4px 24px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.07); }
+.orbit-prod-card:active { background:rgba(255,255,255,0.08); }
+.orbit-prod-list-card { background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.09);border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.06); }
+.orbit-prod-list-card:active { background:rgba(255,255,255,0.08); }
+.orbit-nav-btn { background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 12px;cursor:pointer;font-size:9px;font-weight:700;letter-spacing:0.5px;color:rgba(255,255,255,0.25);font-family:inherit; }
+.orbit-nav-btn.active { color:#fff; }
 
 /* ── Grandure Spark ── */
 .spark-page { background:linear-gradient(180deg,#0c0a18 0%,#080612 60%,#060410 100%);min-height:100vh; }
