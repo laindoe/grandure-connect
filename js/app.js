@@ -7685,8 +7685,14 @@ function openSparkDetailModal(sparkId) {
 
       ${isAudio ? `
         <div style="margin-bottom:18px">
-          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:6px">TRANSCRIPT</div>
-          <textarea id="sdTranscript" placeholder="Type what was said..." rows="3" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.5">${escHtml(transcriptVal)}</textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3)">TRANSCRIPT</div>
+            <button id="sdTranscribeBtn" style="font-size:11px;font-weight:600;font-family:inherit;padding:4px 10px;border-radius:20px;background:rgba(140,120,255,0.12);border:1px solid rgba(140,120,255,0.25);color:rgba(180,160,255,0.8);cursor:pointer;display:flex;align-items:center;gap:5px">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              Transcribe
+            </button>
+          </div>
+          <textarea id="sdTranscript" placeholder="Tap Transcribe and speak, or type manually..." rows="3" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.5">${escHtml(transcriptVal)}</textarea>
         </div>` : ''}
 
       ${isLink ? `
@@ -7744,6 +7750,62 @@ function openSparkDetailModal(sparkId) {
     wrap.addEventListener('click', () => document.getElementById('sdTagInput')?.focus());
   }
   renderTags();
+
+  // ── Title case ──
+  document.getElementById('sdTitle')?.addEventListener('input', function() {
+    const pos = this.selectionStart;
+    const titled = this.value.replace(/(?:^|\s)\S/g, c => c.toUpperCase());
+    if (titled !== this.value) { this.value = titled; try { this.setSelectionRange(pos, pos); } catch {} }
+  });
+
+  // ── Transcription ──
+  if (isAudio) {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const transcribeBtn = document.getElementById('sdTranscribeBtn');
+    if (!SpeechRec) {
+      if (transcribeBtn) transcribeBtn.style.display = 'none';
+    } else {
+      let recognizing = false;
+      let rec = null;
+      transcribeBtn?.addEventListener('click', () => {
+        if (recognizing) { rec?.stop(); return; }
+        rec = new SpeechRec();
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.lang = 'en-US';
+        const ta = document.getElementById('sdTranscript');
+        let base = ta?.value.trim() ? ta.value.trim() + ' ' : '';
+        let finalText = base;
+        rec.onresult = e => {
+          let interim = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+            else interim = e.results[i][0].transcript;
+          }
+          if (ta) ta.value = finalText + interim;
+        };
+        rec.onend = () => {
+          recognizing = false;
+          if (ta) ta.value = finalText.trim();
+          if (transcribeBtn) {
+            transcribeBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Transcribe`;
+            transcribeBtn.style.background = 'rgba(140,120,255,0.12)';
+            transcribeBtn.style.borderColor = 'rgba(140,120,255,0.25)';
+            transcribeBtn.style.color = 'rgba(180,160,255,0.8)';
+          }
+        };
+        rec.onerror = () => { rec?.stop(); };
+        try {
+          rec.start();
+          recognizing = true;
+          transcribeBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Stop`;
+          transcribeBtn.style.background = 'rgba(255,60,60,0.12)';
+          transcribeBtn.style.borderColor = 'rgba(255,80,80,0.3)';
+          transcribeBtn.style.color = 'rgba(255,130,130,0.9)';
+        } catch {}
+      });
+    }
+  }
 
   // ── Audio playback ──
   if (isAudio && sp.rawContentUrl) {
