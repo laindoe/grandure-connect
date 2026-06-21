@@ -7098,6 +7098,38 @@ function injectCaptureFAB() {
 /* ── Grandure Spark ── */
 const SPARK_LS_KEY = 'gc_spark';
 
+// IndexedDB for audio blobs — avoids base64/localStorage size limits and iOS playback errors
+function _sparkAudioDb() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('gc_spark_audio', 1);
+    r.onupgradeneeded = e => e.target.result.createObjectStore('blobs', { keyPath: 'id' });
+    r.onsuccess = e => res(e.target.result);
+    r.onerror = e => rej(e.target.error);
+  });
+}
+function saveAudioBlob(id, blob) {
+  return _sparkAudioDb().then(db => new Promise((res, rej) => {
+    const tx = db.transaction('blobs', 'readwrite');
+    tx.objectStore('blobs').put({ id, blob });
+    tx.oncomplete = res; tx.onerror = e => rej(e.target.error);
+  }));
+}
+function getAudioBlob(id) {
+  return _sparkAudioDb().then(db => new Promise((res, rej) => {
+    const tx = db.transaction('blobs', 'readonly');
+    const r = tx.objectStore('blobs').get(id);
+    r.onsuccess = e => res(e.target.result?.blob || null);
+    r.onerror = e => rej(e.target.error);
+  }));
+}
+function deleteAudioBlob(id) {
+  return _sparkAudioDb().then(db => new Promise((res, rej) => {
+    const tx = db.transaction('blobs', 'readwrite');
+    tx.objectStore('blobs').delete(id);
+    tx.oncomplete = res; tx.onerror = e => rej(e.target.error);
+  }));
+}
+
 function getSparkData() {
   try { const s = localStorage.getItem(SPARK_LS_KEY); if (s) return JSON.parse(s); } catch {}
   return [];
@@ -7112,6 +7144,7 @@ function saveSpark(spark) {
 
 function deleteSpark(id) {
   localStorage.setItem(SPARK_LS_KEY, JSON.stringify(getSparkData().filter(s => s.id !== id)));
+  deleteAudioBlob(id).catch(() => {});
 }
 
 const SPARK_MEDIA_ICONS = {
@@ -7552,17 +7585,21 @@ function openSparkInputModal(mediaType, onDone, mode) {
               stopVisualizer();
               if (recordedChunks.length === 0) return;
               const blob = new Blob(recordedChunks, { type: mimeType || 'audio/webm' });
-              // Convert to data URL so it persists in localStorage across sessions
               const saveBtn = document.getElementById('sparkInputSave');
               if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Processing…'; }
-              const reader = new FileReader();
-              reader.onload = () => {
-                spark.rawContentUrl = reader.result;
+              // Store raw blob in IndexedDB — avoids base64 size limits and iOS audio errors
+              saveAudioBlob(spark.id, blob).then(() => {
+                spark.rawContentUrl = '__idb__';
                 spark.rawTextTranscript = `Recorded audio (${elapsedSecs}s)`;
-                if (audioPreview) { audioPreview.src = reader.result; audioPreview.style.display = 'block'; }
+                if (audioPreview) {
+                  const previewUrl = URL.createObjectURL(blob);
+                  audioPreview.src = previewUrl;
+                  audioPreview.style.display = 'block';
+                }
                 if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Spark ⚡'; }
-              };
-              reader.readAsDataURL(blob);
+              }).catch(() => {
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Spark ⚡'; }
+              });
               recordBtn.style.cssText = 'width:100%;padding:18px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.22);border-radius:14px;color:rgba(167,139,250,0.9);font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px';
               recordLabel.textContent = 'Record Again';
               if (recordTimer) recordTimer.style.display = 'none';
@@ -7651,10 +7688,18 @@ function openSparkDetailModal(sparkId) {
     </div>`;
 
   document.body.appendChild(modal);
-  // Set audio src after DOM insertion to avoid innerHTML mangling long data URLs
   if (sp.rawContentUrl && sp.mediaType === 'audio') {
     const audioEl = document.getElementById('sparkDetailAudio');
-    if (audioEl) audioEl.src = sp.rawContentUrl;
+    if (audioEl) {
+      if (sp.rawContentUrl === '__idb__') {
+        getAudioBlob(sp.id).then(blob => {
+          if (blob && audioEl.isConnected) audioEl.src = URL.createObjectURL(blob);
+        }).catch(() => {});
+      } else {
+        // legacy base64 fallback
+        audioEl.src = sp.rawContentUrl;
+      }
+    }
   }
   const sheet = document.getElementById('sparkDetailSheet');
   requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
