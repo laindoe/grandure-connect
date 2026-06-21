@@ -7767,73 +7767,62 @@ function openSparkDetailModal(sparkId) {
     } else {
       let recognizing = false;
       let rec = null;
-      transcribeBtn?.addEventListener('click', () => {
-        if (recognizing) { rec?.stop(); return; }
+      const ta = document.getElementById('sdTranscript');
+      let finalText = '';
+
+      const micSVG  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
+      const stopSVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
+
+      function setIdleUI() {
+        recognizing = false;
+        if (transcribeBtn) {
+          transcribeBtn.innerHTML = `${micSVG} Transcribe`;
+          transcribeBtn.style.cssText = 'font-size:11px;font-weight:600;font-family:inherit;padding:4px 10px;border-radius:20px;background:rgba(140,120,255,0.12);border:1px solid rgba(140,120,255,0.25);color:rgba(180,160,255,0.8);cursor:pointer;display:flex;align-items:center;gap:5px';
+        }
+      }
+      function setActiveUI() {
+        if (transcribeBtn) {
+          transcribeBtn.innerHTML = `${stopSVG} Stop`;
+          transcribeBtn.style.cssText = 'font-size:11px;font-weight:600;font-family:inherit;padding:4px 10px;border-radius:20px;background:rgba(255,60,60,0.12);border:1px solid rgba(255,80,80,0.3);color:rgba(255,130,130,0.9);cursor:pointer;display:flex;align-items:center;gap:5px';
+        }
+      }
+      function startListening() {
         rec = new SpeechRec();
-        const ta = document.getElementById('sdTranscript');
-        let finalText = ta?.value.trim() ? ta.value.trim() + ' ' : '';
+        rec.continuous = false; // iOS requires false — we restart manually on each onend
+        rec.interimResults = true;
+        rec.lang = 'en-US';
+        rec.onresult = e => {
+          let interim = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+            else interim = e.results[i][0].transcript;
+          }
+          if (ta) ta.value = finalText + interim;
+        };
+        rec.onend = () => {
+          if (recognizing) { try { startListening(); return; } catch {} }
+          if (ta) ta.value = finalText.trim();
+          setIdleUI();
+        };
+        rec.onerror = e => {
+          if (e.error === 'no-speech') return;
+          if (ta) ta.value = finalText.trim();
+          setIdleUI();
+        };
+        try { rec.start(); } catch { setIdleUI(); }
+      }
 
-        const micSVG  = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
-        const stopSVG = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`;
-
-        function setIdleUI() {
+      transcribeBtn.addEventListener('click', () => {
+        if (recognizing) {
           recognizing = false;
-          if (transcribeBtn) {
-            transcribeBtn.innerHTML = `${micSVG} Transcribe`;
-            transcribeBtn.style.cssText = 'font-size:11px;font-weight:600;font-family:inherit;padding:4px 10px;border-radius:20px;background:rgba(140,120,255,0.12);border:1px solid rgba(140,120,255,0.25);color:rgba(180,160,255,0.8);cursor:pointer;display:flex;align-items:center;gap:5px';
-          }
+          try { rec?.stop(); } catch {}
+          return;
         }
-        function setActiveUI() {
-          if (transcribeBtn) {
-            transcribeBtn.innerHTML = `${stopSVG} Stop`;
-            transcribeBtn.style.cssText = 'font-size:11px;font-weight:600;font-family:inherit;padding:4px 10px;border-radius:20px;background:rgba(255,60,60,0.12);border:1px solid rgba(255,80,80,0.3);color:rgba(255,130,130,0.9);cursor:pointer;display:flex;align-items:center;gap:5px';
-          }
-        }
-
-        function startListening() {
-          rec = new SpeechRec();
-          // continuous:false is required on iOS Safari — we restart manually on each onend
-          rec.continuous = false;
-          rec.interimResults = true;
-          rec.lang = 'en-US';
-
-          rec.onresult = e => {
-            let interim = '';
-            for (let i = e.resultIndex; i < e.results.length; i++) {
-              if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
-              else interim = e.results[i][0].transcript;
-            }
-            if (ta) ta.value = finalText + interim;
-          };
-
-          rec.onend = () => {
-            if (recognizing) {
-              // iOS ends after each pause — restart immediately to stay live
-              try { startListening(); return; } catch {}
-            }
-            if (ta) ta.value = finalText.trim();
-            setIdleUI();
-          };
-
-          rec.onerror = e => {
-            if (e.error === 'no-speech') return; // normal pause, onend will restart
-            if (ta) ta.value = finalText.trim();
-            setIdleUI();
-          };
-
-          try { rec.start(); } catch { setIdleUI(); }
-        }
-
-        transcribeBtn?.addEventListener('click', () => {
-          if (recognizing) {
-            recognizing = false; // onend will see this and finalize
-            try { rec?.stop(); } catch {}
-            return;
-          }
-          recognizing = true;
-          setActiveUI();
-          startListening();
-        });
+        finalText = ta?.value.trim() ? ta.value.trim() + ' ' : '';
+        recognizing = true;
+        setActiveUI();
+        startListening();
+      });
     }
   }
 
