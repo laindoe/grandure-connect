@@ -1,4 +1,4 @@
-const CACHE = 'gc-v6';
+const CACHE = 'gc-v7';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
   './img/icon-192.png',
   './img/icon-512.png',
   './img/aisha.jpeg',
+  './img/orbit-hero.png',
 ];
 
 self.addEventListener('install', e => {

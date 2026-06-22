@@ -234,9 +234,17 @@ function render() {
   } else if (path === '/plan') {
     app.innerHTML = pagePlanPlaceholder();
   } else if (path === '/orbit') {
+    app.innerHTML = pageOrbitHome();
+    injectOrbitNav('home');
+    bindOrbitHomePage();
+  } else if (path === '/orbit-dashboard') {
     app.innerHTML = pageOrbit();
     injectOrbitNav('home');
     injectCaptureFAB();
+  } else if (path === '/orbit-chat') {
+    const agentId = params.agent || 'aisha';
+    app.innerHTML = pageOrbitChat(agentId);
+    bindOrbitChat(agentId);
   } else if (path === '/orbit-productions') {
     app.innerHTML = pageOrbitProductions();
     injectOrbitNav('productions');
@@ -375,8 +383,9 @@ function bottomNavHTML() {
         </svg>
       </button>
       <button class="nav-btn nav-btn-center" id="navCapture">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M13 2L4 13h7l-1 9 10-12h-7z"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>
+          <ellipse cx="12" cy="12" rx="10.5" ry="3.5" transform="rotate(-22 12 12)"/>
         </svg>
       </button>
       <button class="nav-btn" id="navSettings">
@@ -709,7 +718,10 @@ function homeDockHTML() {
       </button>
       <div style="position:relative;display:flex;align-items:center;justify-content:center">
       <button class="nav-btn nav-btn-center" id="dockCapture">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+            <circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>
+            <ellipse cx="12" cy="12" rx="10.5" ry="3.5" transform="rotate(-22 12 12)"/>
+          </svg>
         </button>
       </div>
       <button class="nav-btn" id="dockBrands">
@@ -751,7 +763,7 @@ function bindCapture() {
   window._openCapture = open;
   const close = () => { overlay.style.display = 'none'; };
 
-  document.getElementById('navCapture')?.addEventListener('click', open);
+  document.getElementById('navCapture')?.addEventListener('click', () => navigate('#/orbit'));
   document.getElementById('captureCancel')?.addEventListener('click', () => { reset(); close(); });
   document.getElementById('navHome')?.addEventListener('click', () => navigate('/'));
   overlay.addEventListener('click', e => { if (e.target === overlay) { reset(); close(); } });
@@ -1106,12 +1118,8 @@ function bindHomeDock() {
   dockBrands?.addEventListener('click', () => showView('brands'));
   dockCamps?.addEventListener('click', () => showView('campaigns'));
 
-  /* Sparkle / Aisha button */
-  document.getElementById('dockCapture')?.addEventListener('click', () => {
-    const firstBrand = BRANDS[0];
-    const firstCamp  = firstBrand?.campaigns?.[0];
-    openAishaSelector(firstBrand?.id, firstCamp?.id);
-  });
+  /* Saturn / Orbit button */
+  document.getElementById('dockCapture')?.addEventListener('click', () => navigate('#/orbit'));
 
   const openAddMenu = document.getElementById('openAddMenu');
   const addMenu     = document.getElementById('addMenu');
@@ -6878,6 +6886,253 @@ function orbitSunSmall() {
 
 function orbitSunLarge() {
   return `<div style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);box-shadow:0 4px 24px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);margin-bottom:12px;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/></svg></div>`;
+}
+
+/* ── ORBIT HOME (hero page) ── */
+const ORBIT_AGENTS = [
+  { id: 'aisha',    name: 'Aisha',    role: 'Creative Intelligence', color: '#a78bfa', img: './img/aisha.jpeg' },
+  { id: 'braindon', name: 'Braindon', role: 'Strategy Lead',         color: '#34d399', img: null },
+  { id: 'shaine',   name: 'Shaine',   role: 'Production Manager',    color: '#fb923c', img: null },
+  { id: 'shayna',   name: 'Shayna',   role: 'Brand Visionary',       color: '#f472b6', img: null },
+];
+
+function pageOrbitHome() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  const agentBtns = ORBIT_AGENTS.map(a => `
+    <button data-href="#/orbit-chat?agent=${a.id}" style="display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:none;cursor:pointer;flex-shrink:0;min-width:70px;padding:0">
+      <div style="width:62px;height:62px;border-radius:50%;border:2px solid ${a.color};overflow:hidden;background:rgba(255,255,255,0.05);flex-shrink:0;display:flex;align-items:center;justify-content:center">
+        ${a.img ? `<img src="${a.img}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:22px;font-weight:800;color:${a.color}">${a.name.charAt(0)}</span>`}
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:8px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.35)">TALK TO</div>
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.9)">${escHtml(a.name)}</div>
+      </div>
+    </button>`).join('');
+
+  const meetingBtn = `
+    <button id="orbitCallMeetingBtn" style="display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:none;cursor:pointer;flex-shrink:0;min-width:70px;padding:0">
+      <div style="width:62px;height:62px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="16" cy="7" r="3"/><path d="M3 21c0-3.3 2.7-6 6-6"/><path d="M21 21c0-3.3-2.7-6-6-6"/><path d="M9 15c0 3.3 1.3 6 3 6s3-2.7 3-6"/></svg>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:8px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.35)">CALL A</div>
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.9)">MEETING</div>
+      </div>
+    </button>`;
+
+  return `
+    <div class="orbit-page" style="background:#000;min-height:100vh;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;background-image:url('./img/orbit-hero.png');background-size:cover;background-position:center top;z-index:0"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.08) 35%,rgba(0,0,0,0.65) 58%,rgba(0,0,0,0.92) 72%,#000 82%);z-index:1"></div>
+      <div style="position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))">
+        <div style="padding:calc(14px + env(safe-area-inset-top,0px)) 18px 0;display:flex;align-items:center;justify-content:space-between">
+          <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:rgba(255,255,255,0.7)">L</div>
+          <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);padding:4px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/><circle cx="5" cy="12" r="1.2" fill="currentColor"/></svg>
+          </button>
+        </div>
+        <div style="flex:1"></div>
+        <div style="padding:0 18px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:2.5px;color:rgba(255,255,255,0.5);margin-bottom:18px;text-align:center">HOW CAN I HELP?</div>
+          <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">
+            ${agentBtns}
+            ${meetingBtn}
+          </div>
+        </div>
+        <div id="orbitBriefBar" style="margin:20px 18px 0;background:rgba(10,10,10,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,0.4)">ORBIT BRIEF</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.22)">${dateStr} · ${timeStr}</div>
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">3 projects in progress. 2 tasks overdue.</div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:rgba(99,200,255,0.9);white-space:nowrap;flex-shrink:0">VIEW BRIEF →</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function bindOrbitHomePage() {
+  document.getElementById('orbitMenuBtn')?.addEventListener('click', openMainMenu);
+  document.getElementById('orbitBriefBar')?.addEventListener('click', openOrbitBriefModal);
+  document.getElementById('orbitCallMeetingBtn')?.addEventListener('click', openOrbitMeetingModal);
+}
+
+function openOrbitBriefModal() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  const modal = document.createElement('div');
+  modal.id = 'orbitBriefModal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center';
+  modal.innerHTML = `
+    <div id="orbitBriefBg" style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)"></div>
+    <div id="orbitBriefSheet" style="position:relative;width:100%;max-width:480px;background:#0a0a0a;border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid rgba(255,255,255,0.08);padding:20px 20px calc(32px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
+      <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.12);margin:0 auto 20px"></div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:4px">ORBIT BRIEF</div>
+          <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:2px">${dateStr}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.35)">${timeStr}</div>
+        </div>
+        <button id="orbitBriefClose" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;flex-shrink:0">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.15);border-radius:14px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(248,113,113,0.7);margin-bottom:8px">NEEDS ATTENTION</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.8);line-height:1.6">2 tasks overdue · Creative review at 1:00 PM</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">IN PROGRESS</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6">3 projects active · Aisha is working on campaign copy · Braindon has your strategy deck ready</div>
+        </div>
+        <div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.12);border-radius:14px;padding:14px 16px">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(74,222,128,0.6);margin-bottom:8px">COMPLETED YESTERDAY</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6">Brand audit finished · Social calendar approved</div>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => { document.getElementById('orbitBriefSheet').style.transform = 'translateY(0)'; });
+  const close = () => { document.getElementById('orbitBriefSheet').style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
+  document.getElementById('orbitBriefBg')?.addEventListener('click', close);
+  document.getElementById('orbitBriefClose')?.addEventListener('click', close);
+}
+
+function openOrbitMeetingModal() {
+  const modal = document.createElement('div');
+  modal.id = 'orbitMeetingModal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center';
+  modal.innerHTML = `
+    <div id="orbitMeetingBg" style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)"></div>
+    <div id="orbitMeetingSheet" style="position:relative;width:100%;max-width:480px;background:#0a0a0a;border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid rgba(255,255,255,0.08);padding:20px 20px calc(32px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
+      <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.12);margin:0 auto 20px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div style="font-size:17px;font-weight:700;color:#fff">Call a Meeting</div>
+        <button id="orbitMeetingClose" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1">×</button>
+      </div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:16px">Select agents to join the group chat:</div>
+      <div style="display:flex;flex-direction:column;gap:10px" id="orbitMeetingAgents">
+        ${ORBIT_AGENTS.map(a => `
+          <label style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px 14px;cursor:pointer">
+            <input type="checkbox" data-agent="${a.id}" style="width:18px;height:18px;accent-color:${a.color};flex-shrink:0">
+            <div style="width:38px;height:38px;border-radius:50%;border:2px solid ${a.color};overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center">
+              ${a.img ? `<img src="${a.img}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:15px;font-weight:800;color:${a.color}">${a.name.charAt(0)}</span>`}
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.85)">${escHtml(a.name)}</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.35)">${escHtml(a.role)}</div>
+            </div>
+          </label>`).join('')}
+      </div>
+      <button id="orbitMeetingStart" style="width:100%;margin-top:16px;padding:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:14px;color:rgba(255,255,255,0.7);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer">Start Meeting</button>
+    </div>`;
+
+  document.body.appendChild(modal);
+  requestAnimationFrame(() => { document.getElementById('orbitMeetingSheet').style.transform = 'translateY(0)'; });
+  const close = () => { document.getElementById('orbitMeetingSheet').style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
+  document.getElementById('orbitMeetingBg')?.addEventListener('click', close);
+  document.getElementById('orbitMeetingClose')?.addEventListener('click', close);
+  document.getElementById('orbitMeetingStart')?.addEventListener('click', () => {
+    const selected = [...document.querySelectorAll('#orbitMeetingAgents input:checked')].map(cb => cb.dataset.agent);
+    if (!selected.length) return;
+    close();
+    navigate(`#/orbit-chat?agent=${selected[0]}&meeting=1`);
+  });
+}
+
+function pageOrbitChat(agentId) {
+  const agent = ORBIT_AGENTS.find(a => a.id === agentId) || ORBIT_AGENTS[0];
+  const greeting = {
+    aisha:    "Hey! I'm Aisha, your creative intelligence. I help you find, connect, and expand on your ideas. What's on your mind?",
+    braindon: "What's up — I'm Braindon. I handle strategy and make sure we're moving in the right direction. What do you need?",
+    shaine:   "Hey, I'm Shaine. I keep production on track and make sure things get done. What are we working on?",
+    shayna:   "Hi! I'm Shayna, your brand visionary. I bring brand stories to life. What are we creating today?",
+  }[agentId] || "Hey! How can I help you today?";
+
+  const avatarInner = agent.img
+    ? `<img src="${agent.img}" style="width:100%;height:100%;object-fit:cover">`
+    : `<span style="font-size:16px;font-weight:800;color:${agent.color}">${agent.name.charAt(0)}</span>`;
+
+  return `
+    <div style="min-height:100vh;background:#000;display:flex;flex-direction:column">
+      <div style="padding:calc(14px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);background:#000">
+        <button class="back-btn" data-href="#/orbit" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
+        <div style="width:38px;height:38px;border-radius:50%;border:2px solid ${agent.color};overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center">${avatarInner}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:16px;font-weight:700;color:rgba(255,255,255,0.9)">${escHtml(agent.name)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.35)">${escHtml(agent.role)}</div>
+        </div>
+        <button id="orbitChatVoiceBtn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:50%;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.45);flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
+      </div>
+      <div id="orbitChatMessages" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:14px;padding-bottom:90px">
+        <div style="display:flex;gap:10px">
+          <div style="width:32px;height:32px;border-radius:50%;border:2px solid ${agent.color};overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center">${avatarInner}</div>
+          <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:0 14px 14px 14px;padding:12px 14px;max-width:82%">
+            <div style="font-size:10px;font-weight:700;color:${agent.color};margin-bottom:5px;letter-spacing:0.5px">${agent.name.toUpperCase()}</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.55">${escHtml(greeting)}</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.95);border-top:1px solid rgba(255,255,255,0.06);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))">
+        <div style="display:flex;gap:10px;align-items:center">
+          <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:22px;padding:10px 16px">
+            <input id="orbitChatInput" type="text" placeholder="Message ${escHtml(agent.name)}..." style="width:100%;background:none;border:none;color:#fff;font-size:14px;font-family:inherit;outline:none">
+          </div>
+          <button id="orbitChatSend" style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid ${agent.color}66;color:${agent.color};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function bindOrbitChat(agentId) {
+  const agent = ORBIT_AGENTS.find(a => a.id === agentId) || ORBIT_AGENTS[0];
+  const messages = document.getElementById('orbitChatMessages');
+  const input    = document.getElementById('orbitChatInput');
+  const sendBtn  = document.getElementById('orbitChatSend');
+
+  const avatarHtml = agent.img
+    ? `<img src="${agent.img}" style="width:100%;height:100%;object-fit:cover">`
+    : `<span style="font-size:12px;font-weight:800;color:${agent.color}">${agent.name.charAt(0)}</span>`;
+
+  function addMessage(text, fromUser) {
+    const div = document.createElement('div');
+    if (fromUser) {
+      div.style.cssText = 'display:flex;justify-content:flex-end';
+      div.innerHTML = `<div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.08);border-radius:14px 0 14px 14px;padding:10px 14px;max-width:82%;font-size:14px;color:rgba(255,255,255,0.9);line-height:1.5">${escHtml(text)}</div>`;
+    } else {
+      div.style.cssText = 'display:flex;gap:10px';
+      div.innerHTML = `
+        <div style="width:32px;height:32px;border-radius:50%;border:2px solid ${agent.color};overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center">${avatarHtml}</div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:0 14px 14px 14px;padding:12px 14px;max-width:82%">
+          <div style="font-size:10px;font-weight:700;color:${agent.color};margin-bottom:5px;letter-spacing:0.5px">${agent.name.toUpperCase()}</div>
+          <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.55">${escHtml(text)}</div>
+        </div>`;
+    }
+    messages?.appendChild(div);
+    messages?.scrollTo({ top: messages.scrollHeight, behavior: 'smooth' });
+  }
+
+  function send() {
+    const text = input?.value.trim();
+    if (!text) return;
+    addMessage(text, true);
+    if (input) input.value = '';
+    setTimeout(() => addMessage("I hear you — AI integration is coming soon. I'll be able to help you fully very shortly!", false), 900);
+  }
+
+  sendBtn?.addEventListener('click', send);
+  input?.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 }
 
 function pageOrbit() {
