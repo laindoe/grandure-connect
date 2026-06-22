@@ -7466,13 +7466,13 @@ function openSparkInputModal(mediaType, onDone, mode) {
           <input id="sparkFileInput" type="file" accept="audio/*" style="display:none">
         </div>` : ''}
       ${mediaType === 'video' && mode !== 'upload' ? `
-        <div style="margin-bottom:14px">
+        <div style="margin-bottom:14px;position:relative">
           <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:8px">VIDEO</div>
-          <button id="sparkVideoRecordBtn" style="width:100%;padding:24px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.18);border-radius:14px;color:rgba(248,113,113,0.85);font-size:14px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px">
+          <input id="sparkVideoCaptureInput" type="file" accept="video/*" capture="environment" style="position:absolute;opacity:0;width:1px;height:1px;left:0;top:0;overflow:hidden">
+          <label for="sparkVideoCaptureInput" id="sparkVideoRecordBtn" style="width:100%;padding:24px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.18);border-radius:14px;color:rgba(248,113,113,0.85);font-size:14px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;box-sizing:border-box">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
             <span id="sparkVideoLabel">Tap to Record</span>
-          </button>
-          <input id="sparkVideoCaptureInput" type="file" accept="video/*" capture="environment" style="display:none">
+          </label>
         </div>` : ''}
       ${(mediaType !== 'video' || mode === 'upload') && isMedia && mediaType !== 'audio' ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">${mediaType.toUpperCase()} FILE</div><button id="sparkFilePickBtn" style="width:100%;padding:20px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.1);border-radius:14px;color:rgba(255,255,255,0.4);font-size:13px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="color:${col}">${SPARK_MEDIA_ICONS[mediaType]}</div><span id="sparkFileLabel">Tap to select ${mediaType} file</span></button><input id="sparkFileInput" type="file" accept="${acceptMap[mediaType]||'*/*'}" style="display:none"></div>` : ''}
       <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">TITLE</div><input id="sparkInputTitle" type="text" placeholder="Give it a title..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>
@@ -7641,14 +7641,12 @@ function openSparkInputModal(mediaType, onDone, mode) {
     }
   }
 
-  // Video recording — triggers native camera via file input with capture attribute
+  // Video recording — label-for-input triggers native full-screen camera on iOS
   if (mediaType === 'video' && mode !== 'upload') {
-    const recordBtn     = document.getElementById('sparkVideoRecordBtn');
     const captureInput  = document.getElementById('sparkVideoCaptureInput');
+    const recordBtn     = document.getElementById('sparkVideoRecordBtn');
     const recordLabel   = document.getElementById('sparkVideoLabel');
     const saveBtn       = document.getElementById('sparkInputSave');
-
-    recordBtn?.addEventListener('click', () => captureInput?.click());
 
     captureInput?.addEventListener('change', () => {
       const file = captureInput.files?.[0];
