@@ -7465,7 +7465,18 @@ function openSparkInputModal(mediaType, onDone, mode) {
           </button>
           <input id="sparkFileInput" type="file" accept="audio/*" style="display:none">
         </div>` : ''}
-      ${isMedia && mediaType !== 'audio' ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">${mediaType.toUpperCase()} FILE</div><button id="sparkFilePickBtn" style="width:100%;padding:20px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.1);border-radius:14px;color:rgba(255,255,255,0.4);font-size:13px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="color:${col}">${SPARK_MEDIA_ICONS[mediaType]}</div><span id="sparkFileLabel">Tap to select ${mediaType} file</span></button><input id="sparkFileInput" type="file" accept="${acceptMap[mediaType]||'*/*'}" style="display:none"></div>` : ''}
+      ${mediaType === 'video' && mode !== 'upload' ? `
+        <div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:8px">RECORD VIDEO</div>
+          <video id="sparkCameraPreview" autoplay playsinline muted style="display:none;width:100%;aspect-ratio:16/9;border-radius:12px;background:#000;object-fit:cover;margin-bottom:10px"></video>
+          <div id="sparkVideoTimer" style="display:none;text-align:center;font-size:13px;font-weight:600;color:rgba(255,100,100,0.85);margin-bottom:10px;letter-spacing:0.5px">● 0:00</div>
+          <button id="sparkVideoRecordBtn" style="width:100%;padding:18px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.22);border-radius:14px;color:rgba(248,113,113,0.9);font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+            <span id="sparkVideoLabel">Tap to Record</span>
+          </button>
+          <video id="sparkVideoPreview" controls playsinline style="display:none;width:100%;margin-top:10px;border-radius:10px;background:#000"></video>
+        </div>` : ''}
+      ${(mediaType !== 'video' || mode === 'upload') && isMedia && mediaType !== 'audio' ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">${mediaType.toUpperCase()} FILE</div><button id="sparkFilePickBtn" style="width:100%;padding:20px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.1);border-radius:14px;color:rgba(255,255,255,0.4);font-size:13px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="color:${col}">${SPARK_MEDIA_ICONS[mediaType]}</div><span id="sparkFileLabel">Tap to select ${mediaType} file</span></button><input id="sparkFileInput" type="file" accept="${acceptMap[mediaType]||'*/*'}" style="display:none"></div>` : ''}
       <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">TITLE</div><input id="sparkInputTitle" type="text" placeholder="Give it a title..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>
       <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">${isText?'YOUR IDEA':'NOTES'}</div><textarea id="sparkInputNotes" placeholder="${isText?'Write out your idea...':'Any notes or context...'}" rows="4" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none;resize:vertical"></textarea></div>
       <div style="margin-bottom:20px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">TAGS</div><input id="sparkInputTags" type="text" placeholder="e.g. branding, launch, story (comma separated)" style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>
@@ -7479,8 +7490,10 @@ function openSparkInputModal(mediaType, onDone, mode) {
   const sheet = document.getElementById('sparkInputSheet');
   requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
   let _activeRecorder = null;
+  let _extraCleanup = null;
   const close = () => {
     if (_activeRecorder && _activeRecorder.state !== 'inactive') _activeRecorder.stop();
+    _extraCleanup?.();
     sheet.style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300);
   };
   document.getElementById('sparkInputBg')?.addEventListener('click', close);
@@ -7630,6 +7643,98 @@ function openSparkInputModal(mediaType, onDone, mode) {
     }
   }
 
+  // Video recording
+  if (mediaType === 'video' && mode !== 'upload') {
+    let cameraStream = null;
+    let videoRecorder = null;
+    let videoChunks = [];
+    let videoElapsed = 0;
+    let videoTimerInterval = null;
+    let isRecording = false;
+
+    const recordBtn    = document.getElementById('sparkVideoRecordBtn');
+    const recordLabel  = document.getElementById('sparkVideoLabel');
+    const recordTimer  = document.getElementById('sparkVideoTimer');
+    const camPreview   = document.getElementById('sparkCameraPreview');
+    const vidPreview   = document.getElementById('sparkVideoPreview');
+    const saveBtn      = document.getElementById('sparkInputSave');
+
+    function stopCamera() { cameraStream?.getTracks().forEach(t => t.stop()); cameraStream = null; }
+    _extraCleanup = stopCamera;
+
+    function startCamera() {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true })
+        .catch(() => navigator.mediaDevices.getUserMedia({ video: true, audio: true }))
+        .then(stream => {
+          cameraStream = stream;
+          if (camPreview) { camPreview.srcObject = stream; camPreview.style.display = 'block'; }
+        })
+        .catch(() => {
+          if (recordBtn) { recordBtn.disabled = true; recordLabel.textContent = 'Camera unavailable'; }
+        });
+    }
+    startCamera();
+
+    recordBtn?.addEventListener('click', () => {
+      if (!cameraStream && !isRecording) { startCamera(); return; }
+
+      if (isRecording) {
+        isRecording = false;
+        videoRecorder?.stop();
+        return;
+      }
+
+      // Record again — re-init camera from preview
+      if (!cameraStream) { startCamera(); return; }
+
+      videoChunks = [];
+      const mimeType = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8','video/webm','video/mp4']
+        .find(t => { try { return MediaRecorder.isTypeSupported(t); } catch { return false; } }) || '';
+      try {
+        videoRecorder = mimeType ? new MediaRecorder(cameraStream, { mimeType }) : new MediaRecorder(cameraStream);
+      } catch { videoRecorder = new MediaRecorder(cameraStream); }
+
+      _activeRecorder = videoRecorder;
+
+      videoRecorder.addEventListener('dataavailable', e => { if (e.data.size > 0) videoChunks.push(e.data); });
+      videoRecorder.addEventListener('stop', () => {
+        clearInterval(videoTimerInterval);
+        if (recordTimer) recordTimer.style.display = 'none';
+        const blob = new Blob(videoChunks, { type: mimeType || 'video/webm' });
+        if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Processing…'; }
+        saveAudioBlob(spark.id, blob).then(() => {
+          spark.rawContentUrl = '__idb__';
+          spark.rawTextTranscript = `Recorded video (${videoElapsed}s)`;
+          stopCamera();
+          if (camPreview) { camPreview.style.display = 'none'; camPreview.srcObject = null; }
+          if (vidPreview) { vidPreview.src = URL.createObjectURL(blob); vidPreview.style.display = 'block'; }
+          if (recordLabel) recordLabel.textContent = 'Record Again';
+          if (recordBtn) {
+            recordBtn.style.background = 'rgba(255,255,255,0.04)';
+            recordBtn.style.borderColor = 'rgba(255,255,255,0.1)';
+            recordBtn.style.color = 'rgba(255,255,255,0.4)';
+          }
+          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Spark ⚡'; }
+        }).catch(() => { if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Spark ⚡'; } });
+      });
+
+      videoRecorder.start(250);
+      isRecording = true;
+      videoElapsed = 0;
+      videoTimerInterval = setInterval(() => {
+        videoElapsed++;
+        const m = Math.floor(videoElapsed / 60), s = videoElapsed % 60;
+        if (recordTimer) { recordTimer.textContent = `● ${m}:${String(s).padStart(2, '0')}`; recordTimer.style.display = 'block'; }
+      }, 1000);
+      if (recordLabel) recordLabel.textContent = 'Stop Recording';
+      if (recordBtn) {
+        recordBtn.style.background = 'rgba(255,60,60,0.12)';
+        recordBtn.style.borderColor = 'rgba(255,80,80,0.35)';
+        recordBtn.style.color = 'rgba(255,160,160,0.95)';
+      }
+    });
+  }
+
   const filePickBtn = document.getElementById('sparkFilePickBtn');
   const fileInput = document.getElementById('sparkFileInput');
   if (filePickBtn && fileInput) {
@@ -7659,6 +7764,7 @@ function openSparkDetailModal(sparkId) {
   if (!sp) return;
   const col = SPARK_TYPE_COLORS[sp.mediaType] || '#a78bfa';
   const isAudio = sp.mediaType === 'audio';
+  const isVideo = sp.mediaType === 'video';
   const isLink  = sp.mediaType === 'link';
   const isText  = sp.mediaType === 'text';
   const transcriptVal = (isAudio && sp.rawTextTranscript?.startsWith('Recorded audio')) ? '' : (sp.rawTextTranscript || '');
@@ -7681,6 +7787,12 @@ function openSparkDetailModal(sparkId) {
         <div style="margin-bottom:18px">
           <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">RECORDING</div>
           <audio id="sparkDetailAudio" controls style="width:100%;border-radius:10px"></audio>
+        </div>` : ''}
+
+      ${isVideo && sp.rawContentUrl ? `
+        <div style="margin-bottom:18px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px">VIDEO</div>
+          <video id="sparkDetailVideo" controls playsinline style="width:100%;border-radius:10px;background:#000;display:block"></video>
         </div>` : ''}
 
       ${isAudio ? `
@@ -7836,6 +7948,20 @@ function openSparkDetailModal(sparkId) {
         }).catch(() => {});
       } else {
         audioEl.src = sp.rawContentUrl;
+      }
+    }
+  }
+
+  // ── Video playback ──
+  if (isVideo && sp.rawContentUrl) {
+    const videoEl = document.getElementById('sparkDetailVideo');
+    if (videoEl) {
+      if (sp.rawContentUrl === '__idb__') {
+        getAudioBlob(sp.id).then(blob => {
+          if (blob && videoEl.isConnected) videoEl.src = URL.createObjectURL(blob);
+        }).catch(() => {});
+      } else {
+        videoEl.src = sp.rawContentUrl;
       }
     }
   }
