@@ -7467,14 +7467,12 @@ function openSparkInputModal(mediaType, onDone, mode) {
         </div>` : ''}
       ${mediaType === 'video' && mode !== 'upload' ? `
         <div style="margin-bottom:14px">
-          <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:8px">RECORD VIDEO</div>
-          <video id="sparkCameraPreview" autoplay playsinline muted style="display:none;width:100%;aspect-ratio:16/9;border-radius:12px;background:#000;object-fit:cover;margin-bottom:10px"></video>
-          <div id="sparkVideoTimer" style="display:none;text-align:center;font-size:13px;font-weight:600;color:rgba(255,100,100,0.85);margin-bottom:10px;letter-spacing:0.5px">● 0:00</div>
-          <button id="sparkVideoRecordBtn" style="width:100%;padding:18px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.22);border-radius:14px;color:rgba(248,113,113,0.9);font-size:14px;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:8px">VIDEO</div>
+          <button id="sparkVideoRecordBtn" style="width:100%;padding:24px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.18);border-radius:14px;color:rgba(248,113,113,0.85);font-size:14px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
             <span id="sparkVideoLabel">Tap to Record</span>
           </button>
-          <video id="sparkVideoPreview" controls playsinline style="display:none;width:100%;margin-top:10px;border-radius:10px;background:#000"></video>
+          <input id="sparkVideoCaptureInput" type="file" accept="video/*" capture="environment" style="display:none">
         </div>` : ''}
       ${(mediaType !== 'video' || mode === 'upload') && isMedia && mediaType !== 'audio' ? `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">${mediaType.toUpperCase()} FILE</div><button id="sparkFilePickBtn" style="width:100%;padding:20px;background:rgba(255,255,255,0.04);border:2px dashed rgba(255,255,255,0.1);border-radius:14px;color:rgba(255,255,255,0.4);font-size:13px;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><div style="color:${col}">${SPARK_MEDIA_ICONS[mediaType]}</div><span id="sparkFileLabel">Tap to select ${mediaType} file</span></button><input id="sparkFileInput" type="file" accept="${acceptMap[mediaType]||'*/*'}" style="display:none"></div>` : ''}
       <div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;letter-spacing:0.8px;color:rgba(255,255,255,0.35);margin-bottom:6px">TITLE</div><input id="sparkInputTitle" type="text" placeholder="Give it a title..." style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:11px 13px;color:#fff;font-size:14px;font-family:inherit;outline:none"></div>
@@ -7643,95 +7641,32 @@ function openSparkInputModal(mediaType, onDone, mode) {
     }
   }
 
-  // Video recording
+  // Video recording — triggers native camera via file input with capture attribute
   if (mediaType === 'video' && mode !== 'upload') {
-    let cameraStream = null;
-    let videoRecorder = null;
-    let videoChunks = [];
-    let videoElapsed = 0;
-    let videoTimerInterval = null;
-    let isRecording = false;
+    const recordBtn     = document.getElementById('sparkVideoRecordBtn');
+    const captureInput  = document.getElementById('sparkVideoCaptureInput');
+    const recordLabel   = document.getElementById('sparkVideoLabel');
+    const saveBtn       = document.getElementById('sparkInputSave');
 
-    const recordBtn    = document.getElementById('sparkVideoRecordBtn');
-    const recordLabel  = document.getElementById('sparkVideoLabel');
-    const recordTimer  = document.getElementById('sparkVideoTimer');
-    const camPreview   = document.getElementById('sparkCameraPreview');
-    const vidPreview   = document.getElementById('sparkVideoPreview');
-    const saveBtn      = document.getElementById('sparkInputSave');
+    recordBtn?.addEventListener('click', () => captureInput?.click());
 
-    function stopCamera() { cameraStream?.getTracks().forEach(t => t.stop()); cameraStream = null; }
-    _extraCleanup = stopCamera;
-
-    function startCamera() {
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true })
-        .catch(() => navigator.mediaDevices.getUserMedia({ video: true, audio: true }))
-        .then(stream => {
-          cameraStream = stream;
-          if (camPreview) { camPreview.srcObject = stream; camPreview.style.display = 'block'; }
-        })
-        .catch(() => {
-          if (recordBtn) { recordBtn.disabled = true; recordLabel.textContent = 'Camera unavailable'; }
-        });
-    }
-    startCamera();
-
-    recordBtn?.addEventListener('click', () => {
-      if (!cameraStream && !isRecording) { startCamera(); return; }
-
-      if (isRecording) {
-        isRecording = false;
-        videoRecorder?.stop();
-        return;
-      }
-
-      // Record again — re-init camera from preview
-      if (!cameraStream) { startCamera(); return; }
-
-      videoChunks = [];
-      const mimeType = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8','video/webm','video/mp4']
-        .find(t => { try { return MediaRecorder.isTypeSupported(t); } catch { return false; } }) || '';
-      try {
-        videoRecorder = mimeType ? new MediaRecorder(cameraStream, { mimeType }) : new MediaRecorder(cameraStream);
-      } catch { videoRecorder = new MediaRecorder(cameraStream); }
-
-      _activeRecorder = videoRecorder;
-
-      videoRecorder.addEventListener('dataavailable', e => { if (e.data.size > 0) videoChunks.push(e.data); });
-      videoRecorder.addEventListener('stop', () => {
-        clearInterval(videoTimerInterval);
-        if (recordTimer) recordTimer.style.display = 'none';
-        const blob = new Blob(videoChunks, { type: mimeType || 'video/webm' });
-        if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Processing…'; }
-        saveAudioBlob(spark.id, blob).then(() => {
-          spark.rawContentUrl = '__idb__';
-          spark.rawTextTranscript = `Recorded video (${videoElapsed}s)`;
-          stopCamera();
-          if (camPreview) { camPreview.style.display = 'none'; camPreview.srcObject = null; }
-          if (vidPreview) { vidPreview.src = URL.createObjectURL(blob); vidPreview.style.display = 'block'; }
-          if (recordLabel) recordLabel.textContent = 'Record Again';
-          if (recordBtn) {
-            recordBtn.style.background = 'rgba(255,255,255,0.04)';
-            recordBtn.style.borderColor = 'rgba(255,255,255,0.1)';
-            recordBtn.style.color = 'rgba(255,255,255,0.4)';
-          }
-          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Spark ⚡'; }
-        }).catch(() => { if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Spark ⚡'; } });
+    captureInput?.addEventListener('change', () => {
+      const file = captureInput.files?.[0];
+      if (!file) return;
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Processing…'; }
+      saveAudioBlob(spark.id, file).then(() => {
+        spark.rawContentUrl = '__idb__';
+        spark.rawTextTranscript = `Recorded video`;
+        if (recordBtn) {
+          recordBtn.style.background = 'rgba(74,222,128,0.08)';
+          recordBtn.style.borderColor = 'rgba(74,222,128,0.2)';
+          recordBtn.style.color = 'rgba(74,222,128,0.9)';
+        }
+        if (recordLabel) recordLabel.textContent = 'Video saved ✓  Tap to re-record';
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Spark ⚡'; }
+      }).catch(() => {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Spark ⚡'; }
       });
-
-      videoRecorder.start(250);
-      isRecording = true;
-      videoElapsed = 0;
-      videoTimerInterval = setInterval(() => {
-        videoElapsed++;
-        const m = Math.floor(videoElapsed / 60), s = videoElapsed % 60;
-        if (recordTimer) { recordTimer.textContent = `● ${m}:${String(s).padStart(2, '0')}`; recordTimer.style.display = 'block'; }
-      }, 1000);
-      if (recordLabel) recordLabel.textContent = 'Stop Recording';
-      if (recordBtn) {
-        recordBtn.style.background = 'rgba(255,60,60,0.12)';
-        recordBtn.style.borderColor = 'rgba(255,80,80,0.35)';
-        recordBtn.style.color = 'rgba(255,160,160,0.95)';
-      }
     });
   }
 
