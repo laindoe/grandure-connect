@@ -241,6 +241,11 @@ function render() {
     app.innerHTML = pageOrbit();
     injectOrbitNav('home');
     injectCaptureFAB();
+  } else if (path === '/orbit-boardroom') {
+    const agentIds = (params.agents || '').split(',').filter(Boolean);
+    const projectId = params.project || null;
+    app.innerHTML = pageOrbitBoardroom(agentIds, projectId);
+    bindOrbitBoardroom(agentIds);
   } else if (path === '/orbit-chat') {
     const agentId = params.agent || 'aisha';
     app.innerHTML = pageOrbitChat(agentId);
@@ -7043,8 +7048,173 @@ function openOrbitMeetingModal() {
     const selected = [...document.querySelectorAll('#orbitMeetingAgents input:checked')].map(cb => cb.dataset.agent);
     if (!selected.length) return;
     close();
-    navigate(`#/orbit-chat?agent=${selected[0]}&meeting=1`);
+    navigate(`#/orbit-boardroom?agents=${selected.join(',')}`);
   });
+}
+
+/* ── BOARDROOM SCAFFOLD (Phase 01) ── */
+const BOARDROOM_TABS = [
+  { id: 'conversation', label: 'Conversation' },
+  { id: 'studio',       label: 'Studio'       },
+  { id: 'context',      label: 'Context'      },
+  { id: 'decisions',    label: 'Decisions'    },
+];
+
+function pageOrbitBoardroom(agentIds, projectId) {
+  const agents = agentIds.length
+    ? agentIds.map(id => ORBIT_AGENTS.find(a => a.id === id)).filter(Boolean)
+    : ORBIT_AGENTS.slice(0, 2);
+
+  const avatarRow = agents.map(a => `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0">
+      <div style="width:44px;height:44px;border-radius:50%;border:2px solid ${a.color};overflow:hidden;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center">
+        ${a.img ? `<img src="${a.img}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:15px;font-weight:800;color:${a.color}">${a.name.charAt(0)}</span>`}
+      </div>
+      <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,0.5);letter-spacing:0.3px">${escHtml(a.name)}</div>
+    </div>`).join('');
+
+  const tabBar = BOARDROOM_TABS.map((t, i) => `
+    <button class="brm-tab${i === 0 ? ' brm-tab--active' : ''}" data-tab="${t.id}" style="flex:1;padding:8px 4px;background:none;border:none;border-bottom:2px solid ${i === 0 ? 'rgba(255,255,255,0.7)' : 'transparent'};color:${i === 0 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)'};font-size:11px;font-weight:700;letter-spacing:0.5px;cursor:pointer;font-family:inherit;transition:color 0.2s,border-color 0.2s">${t.label.toUpperCase()}</button>`).join('');
+
+  const projectBadge = projectId
+    ? `<div style="font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:3px 8px;margin-top:4px">PROJECT: ${escHtml(projectId.toUpperCase())}</div>`
+    : '';
+
+  return `
+    <div id="boardroomPage" style="min-height:100vh;background:#000;display:flex;flex-direction:column">
+
+      <!-- header -->
+      <div style="padding:calc(14px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);background:#000;flex-shrink:0">
+        <button class="back-btn" data-href="#/orbit" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center">
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.3)">GRANDURE</div>
+          <div style="font-size:17px;font-weight:700;color:#fff">Boardroom</div>
+          ${projectBadge}
+        </div>
+        <div style="width:36px"></div>
+      </div>
+
+      <!-- present in room -->
+      <div style="padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.25);margin-bottom:10px">PRESENT IN ROOM</div>
+        <div style="display:flex;gap:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none">
+          ${avatarRow}
+        </div>
+      </div>
+
+      <!-- tab bar -->
+      <div id="brmTabBar" style="display:flex;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0">
+        ${tabBar}
+      </div>
+
+      <!-- tab panels -->
+      <div id="brmPanels" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+        <div data-panel="conversation" style="padding:24px 18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:10px">
+            ${agents[0] ? `<div style="width:32px;height:32px;border-radius:50%;border:2px solid ${agents[0].color};overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center">${agents[0].img ? `<img src="${agents[0].img}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:11px;font-weight:800;color:${agents[0].color}">${agents[0].name.charAt(0)}</span>`}</div>` : ''}
+            <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:0 14px 14px 14px;padding:12px 14px;max-width:82%">
+              ${agents[0] ? `<div style="font-size:10px;font-weight:700;color:${agents[0].color};margin-bottom:5px;letter-spacing:0.5px">${agents[0].name.toUpperCase()}</div>` : ''}
+              <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.55">The Boardroom is ready. AI replies will be live after integration. You can open a topic or bring in context from the Context tab.</div>
+            </div>
+          </div>
+          <div id="brmConvMessages" style="display:flex;flex-direction:column;gap:12px"></div>
+        </div>
+
+        <div data-panel="studio" style="display:none;padding:24px 18px">
+          <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:8px">Studio</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.3);line-height:1.6">The Studio panel will surface generative tools — brief builder, visual reference handoff to Aisia, Magic SVG instructions, and file attachments. Available in a future phase.</div>
+        </div>
+
+        <div data-panel="context" style="display:none;padding:24px 18px">
+          <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:8px">Context</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.3);line-height:1.6">Attach a production, campaign, or brand brief here to give every specialist shared context before the meeting starts. Available in a future phase.</div>
+        </div>
+
+        <div data-panel="decisions" style="display:none;padding:24px 18px">
+          <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:8px">Decisions</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.3);line-height:1.6">Decisions logged here will carry back to the Orbit dashboard queue. Tap any message in the Conversation tab to mark it as a decision. Available in a future phase.</div>
+          <div id="brmDecisionsList" style="margin-top:16px;display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+
+      </div>
+
+      <!-- input bar -->
+      <div style="background:rgba(0,0,0,0.96);border-top:1px solid rgba(255,255,255,0.06);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));flex-shrink:0">
+        <div style="display:flex;gap:10px;align-items:center">
+          <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:22px;padding:10px 16px">
+            <input id="brmInput" type="text" placeholder="Address the room…" style="width:100%;background:none;border:none;color:#fff;font-size:14px;font-family:inherit;outline:none">
+          </div>
+          <button id="brmSend" style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>`;
+}
+
+function bindOrbitBoardroom(agentIds) {
+  const agents = agentIds.length
+    ? agentIds.map(id => ORBIT_AGENTS.find(a => a.id === id)).filter(Boolean)
+    : ORBIT_AGENTS.slice(0, 2);
+
+  /* tab switching */
+  document.getElementById('brmTabBar')?.addEventListener('click', e => {
+    const btn = e.target.closest('.brm-tab');
+    if (!btn) return;
+    const tabId = btn.dataset.tab;
+
+    document.querySelectorAll('.brm-tab').forEach(b => {
+      const on = b.dataset.tab === tabId;
+      b.style.borderBottomColor = on ? 'rgba(255,255,255,0.7)' : 'transparent';
+      b.style.color = on ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)';
+    });
+    document.querySelectorAll('#brmPanels [data-panel]').forEach(p => {
+      p.style.display = p.dataset.panel === tabId ? 'block' : 'none';
+      if (p.dataset.panel === 'conversation') p.style.display = tabId === 'conversation' ? 'flex' : 'none';
+    });
+  });
+
+  /* send — placeholder only; real AI replies arrive post-integration */
+  const input   = document.getElementById('brmInput');
+  const sendBtn = document.getElementById('brmSend');
+  const msgs    = document.getElementById('brmConvMessages');
+
+  function addMessage(text, fromUser, agent) {
+    const div = document.createElement('div');
+    if (fromUser) {
+      div.style.cssText = 'display:flex;justify-content:flex-end';
+      div.innerHTML = `<div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.08);border-radius:14px 0 14px 14px;padding:10px 14px;max-width:82%;font-size:14px;color:rgba(255,255,255,0.9);line-height:1.5">${escHtml(text)}</div>`;
+    } else if (agent) {
+      const avatarHtml = agent.img
+        ? `<img src="${agent.img}" style="width:100%;height:100%;object-fit:cover">`
+        : `<span style="font-size:11px;font-weight:800;color:${agent.color}">${agent.name.charAt(0)}</span>`;
+      div.style.cssText = 'display:flex;gap:10px';
+      div.innerHTML = `
+        <div style="width:32px;height:32px;border-radius:50%;border:2px solid ${agent.color};overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center">${avatarHtml}</div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:0 14px 14px 14px;padding:12px 14px;max-width:82%">
+          <div style="font-size:10px;font-weight:700;color:${agent.color};margin-bottom:5px;letter-spacing:0.5px">${agent.name.toUpperCase()}</div>
+          <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.55">${escHtml(text)}</div>
+        </div>`;
+    }
+    msgs?.appendChild(div);
+    msgs?.scrollTo({ top: msgs.scrollHeight, behavior: 'smooth' });
+  }
+
+  function send() {
+    const text = input?.value.trim();
+    if (!text) return;
+    addMessage(text, true);
+    if (input) input.value = '';
+    /* rotate through agents for placeholder turns */
+    agents.forEach((a, i) => {
+      setTimeout(() => addMessage("AI replies are coming soon — the Boardroom wiring is in place.", false, a), 900 + i * 600);
+    });
+  }
+
+  sendBtn?.addEventListener('click', send);
+  input?.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 }
 
 function pageOrbitChat(agentId) {
