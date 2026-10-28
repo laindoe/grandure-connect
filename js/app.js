@@ -241,7 +241,7 @@ function render() {
     app.innerHTML = pageOrbit();
     injectOrbitNav('home');
     injectCaptureFAB();
-  } else if (path === '/orbit-boardroom') {
+  } else if (path === '/grandure-boardroom') {
     const meetingSetup = loadMeetingSetup(params.mid || null, params.agents || null);
     app.innerHTML = pageOrbitBoardroom(meetingSetup);
     bindOrbitBoardroom(meetingSetup);
@@ -7157,7 +7157,7 @@ function openOrbitMeetingModal() {
     const setup = { id: meetingId, agentIds: selected, projectId: null, topic, leadId, inviteMaia, createdAt: new Date().toISOString() };
     saveMeetingSetup(setup);
     close();
-    navigate(`#/orbit-boardroom?mid=${meetingId}`);
+    navigate(`#/grandure-boardroom?mid=${meetingId}`);
   });
 }
 
