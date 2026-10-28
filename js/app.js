@@ -182,7 +182,7 @@ function render() {
   // Always clear old nav so each page re-injects a fresh one
   document.getElementById('campaignBottomNav')?.remove();
   document.getElementById('brandAppNav')?.remove();
-  document.getElementById('orbitNav')?.remove();
+  document.getElementById('grandureNav')?.remove();
   document.getElementById('sparkNav')?.remove();
   document.getElementById('captureFAB')?.remove();
   document.getElementById('mainMenuOverlay')?.remove();
@@ -233,35 +233,35 @@ function render() {
     bindHubPage();
   } else if (path === '/plan') {
     app.innerHTML = pagePlanPlaceholder();
-  } else if (path === '/orbit') {
-    app.innerHTML = pageOrbitHome();
-    injectOrbitNav('home');
-    bindOrbitHomePage();
-  } else if (path === '/orbit-dashboard') {
-    app.innerHTML = pageOrbit();
-    injectOrbitNav('home');
+  } else if (path === '/grandure') {
+    app.innerHTML = pageGrandureHome();
+    injectGrandureNav('home');
+    bindGrandureHomePage();
+  } else if (path === '/grandure-dashboard') {
+    app.innerHTML = pageGrandure();
+    injectGrandureNav('home');
     injectCaptureFAB();
   } else if (path === '/grandure-boardroom') {
     const meetingSetup = loadMeetingSetup(params.mid || null, params.agents || null);
-    app.innerHTML = pageOrbitBoardroom(meetingSetup);
-    bindOrbitBoardroom(meetingSetup);
-  } else if (path === '/orbit-chat') {
+    app.innerHTML = pageGrandureBoardroom(meetingSetup);
+    bindGrandureBoardroom(meetingSetup);
+  } else if (path === '/grandure-chat') {
     const agentId = params.agent || 'aisha';
-    app.innerHTML = pageOrbitChat(agentId);
-    bindOrbitChat(agentId);
-  } else if (path === '/orbit-productions') {
-    app.innerHTML = pageOrbitProductions();
-    injectOrbitNav('productions');
+    app.innerHTML = pageGrandureChat(agentId);
+    bindGrandureChat(agentId);
+  } else if (path === '/grandure-productions') {
+    app.innerHTML = pageGrandureProductions();
+    injectGrandureNav('productions');
     injectCaptureFAB();
-  } else if (path === '/orbit-agents') {
-    app.innerHTML = pageOrbitStub('agents', 'Agents', 'AI agents, human contractors, and team members');
-    injectOrbitNav('agents');
-  } else if (path === '/orbit-assets') {
-    app.innerHTML = pageOrbitStub('assets', 'Assets', 'Images, video, audio, documents, and brand resources');
-    injectOrbitNav('assets');
-  } else if (path === '/orbit-inbox') {
-    app.innerHTML = pageOrbitStub('inbox', 'Inbox', 'Agent messages, approvals, mentions, and requests');
-    injectOrbitNav('inbox');
+  } else if (path === '/grandure-agents') {
+    app.innerHTML = pageGrandureStub('agents', 'Agents', 'AI agents, human contractors, and team members');
+    injectGrandureNav('agents');
+  } else if (path === '/grandure-assets') {
+    app.innerHTML = pageGrandureStub('assets', 'Assets', 'Images, video, audio, documents, and brand resources');
+    injectGrandureNav('assets');
+  } else if (path === '/grandure-inbox') {
+    app.innerHTML = pageGrandureStub('inbox', 'Inbox', 'Agent messages, approvals, mentions, and requests');
+    injectGrandureNav('inbox');
   } else if (path === '/spark') {
     app.innerHTML = pageSpark();
     injectSparkNav('home');
@@ -603,7 +603,7 @@ function openMainMenu() {
     { href: '#/spark', label: 'Grandure Spark', icon: `<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>` },
     { href: '#/grandure-brand', label: 'Grandure Brand', icon: `<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>` },
     { href: '#/plan', label: 'Grandure Plan', icon: `<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`, soon: true },
-    { href: '#/orbit', label: 'Grandure Orbit', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>` },
+    { href: '#/grandure', label: 'Grandure', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>` },
     { href: '#/', label: 'Grandure Connect', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
   ];
 
@@ -767,7 +767,7 @@ function bindCapture() {
   window._openCapture = open;
   const close = () => { overlay.style.display = 'none'; };
 
-  document.getElementById('navCapture')?.addEventListener('click', () => navigate('#/orbit'));
+  document.getElementById('navCapture')?.addEventListener('click', () => navigate('#/grandure'));
   document.getElementById('captureCancel')?.addEventListener('click', () => { reset(); close(); });
   document.getElementById('navHome')?.addEventListener('click', () => navigate('/'));
   overlay.addEventListener('click', e => { if (e.target === overlay) { reset(); close(); } });
@@ -1122,8 +1122,8 @@ function bindHomeDock() {
   dockBrands?.addEventListener('click', () => showView('brands'));
   dockCamps?.addEventListener('click', () => showView('campaigns'));
 
-  /* Saturn / Orbit button */
-  document.getElementById('dockCapture')?.addEventListener('click', () => navigate('#/orbit'));
+  /* Saturn / Grandure button */
+  document.getElementById('dockCapture')?.addEventListener('click', () => navigate('#/grandure'));
 
   const openAddMenu = document.getElementById('openAddMenu');
   const addMenu     = document.getElementById('addMenu');
@@ -6746,7 +6746,7 @@ function pageHub() {
     { href: '#/spark', name: 'Grandure Spark', desc: 'Capture your ideas', icon: `<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>` },
     { href: '#/grandure-brand', name: 'Grandure Brand', desc: 'Define your universe', icon: `<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/>` },
     { href: '#/plan', name: 'Grandure Plan', desc: 'Establish your roadmap', icon: `<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`, soon: true },
-    { href: '#/orbit', name: 'Grandure Orbit', desc: 'Execute production', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>` },
+    { href: '#/grandure', name: 'Grandure', desc: 'Execute production', icon: `<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/>` },
     { href: '#/', name: 'Grandure Connect', desc: 'Run your campaigns', icon: `<circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/>` },
   ].map(t => `
     <div class="hub-tile" data-href="${t.href}">
@@ -6814,7 +6814,7 @@ function bindHubPage() {
   document.getElementById('hubCaptureBtn')?.addEventListener('click', () => openSparkCaptureModal(() => navigate('#/spark-vault'), 'record'));
 }
 
-/* ── Grandure Plan / Orbit placeholders ── */
+/* ── Grandure Plan placeholders ── */
 function pagePlanPlaceholder() {
   return `
     <div class="page" style="padding-bottom:40px">
@@ -6839,13 +6839,13 @@ function pagePlanPlaceholder() {
   `;
 }
 
-/* ── Grandure Orbit ── */
-const ORBIT_DEFAULT = {
+/* ── Grandure ── */
+const GRANDURE_DEFAULT = {
   productions: [
     { id: 'op1', name: 'homieOStasis MVP', agents: 4, activeTasks: 12, waiting: 2, lastSignalMins: 5 },
     { id: 'op2', name: 'Grandure Connect', agents: 3, activeTasks: 8, waiting: 1, lastSignalMins: 12 },
     { id: 'op3', name: 'Founding Homies', agents: 2, activeTasks: 5, waiting: 0, lastSignalMins: 35 },
-    { id: 'op4', name: 'Grandure Orbit', agents: 1, activeTasks: 3, waiting: 1, lastSignalMins: 60 },
+    { id: 'op4', name: 'Grandure', agents: 1, activeTasks: 3, waiting: 1, lastSignalMins: 60 },
     { id: 'op5', name: 'Ten Grand Website', agents: 2, activeTasks: 6, waiting: 0, lastSignalMins: 120 },
   ],
   queue: {
@@ -6866,47 +6866,47 @@ const ORBIT_DEFAULT = {
   ]
 };
 
-function getOrbitData() {
+function getGrandureData() {
   try {
-    const s = localStorage.getItem('gc_orbit');
-    if (s) { const p = JSON.parse(s); return { ...ORBIT_DEFAULT, ...p, productions: p.productions || ORBIT_DEFAULT.productions, queue: p.queue || ORBIT_DEFAULT.queue, signals: p.signals || ORBIT_DEFAULT.signals }; }
+    const s = localStorage.getItem('gc_grandure');
+    if (s) { const p = JSON.parse(s); return { ...GRANDURE_DEFAULT, ...p, productions: p.productions || GRANDURE_DEFAULT.productions, queue: p.queue || GRANDURE_DEFAULT.queue, signals: p.signals || GRANDURE_DEFAULT.signals }; }
   } catch {}
-  return { ...ORBIT_DEFAULT };
+  return { ...GRANDURE_DEFAULT };
 }
 
-function saveOrbitData(patch) {
-  try { localStorage.setItem('gc_orbit', JSON.stringify({ ...getOrbitData(), ...patch })); } catch {}
+function saveGrandureData(patch) {
+  try { localStorage.setItem('gc_grandure', JSON.stringify({ ...getGrandureData(), ...patch })); } catch {}
 }
 
-function orbitRelTime(mins) {
+function grandureRelTime(mins) {
   if (mins < 60) return `${mins}m ago`;
   if (mins < 1440) return `${Math.round(mins / 60)}h ago`;
   return `${Math.round(mins / 1440)}d ago`;
 }
 
-function orbitSunSmall() {
+function grandureSunSmall() {
   return `<div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);box-shadow:0 4px 16px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.08);flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/></svg></div>`;
 }
 
-function orbitSunLarge() {
+function grandureSunLarge() {
   return `<div style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);box-shadow:0 4px 24px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);margin-bottom:12px;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/></svg></div>`;
 }
 
-/* ── ORBIT HOME (hero page) ── */
-const ORBIT_AGENTS = [
+/* ── GRANDURE HOME (hero page) ── */
+const GRANDURE_AGENTS = [
   { id: 'aisha',    name: 'Aisha',    role: 'Creative Intelligence', color: '#a78bfa', img: './img/aisha.jpeg' },
   { id: 'braindon', name: 'Braindon', role: 'Strategy Lead',         color: '#34d399', img: null },
   { id: 'shaine',   name: 'Shaine',   role: 'Production Manager',    color: '#fb923c', img: null },
   { id: 'shaina',   name: 'Shaina',   role: 'Brand Visionary',       color: '#f472b6', img: null },
 ];
 
-function pageOrbitHome() {
+function pageGrandureHome() {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
-  const agentBtns = ORBIT_AGENTS.map(a => `
-    <button data-href="#/orbit-chat?agent=${a.id}" style="display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:none;cursor:pointer;flex-shrink:0;min-width:70px;padding:0">
+  const agentBtns = GRANDURE_AGENTS.map(a => `
+    <button data-href="#/grandure-chat?agent=${a.id}" style="display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:none;cursor:pointer;flex-shrink:0;min-width:70px;padding:0">
       <div style="width:62px;height:62px;border-radius:50%;border:2px solid ${a.color};overflow:hidden;background:rgba(255,255,255,0.05);flex-shrink:0;display:flex;align-items:center;justify-content:center">
         ${a.img ? `<img src="${a.img}" style="width:100%;height:100%;object-fit:cover">` : `<span style="font-size:22px;font-weight:800;color:${a.color}">${a.name.charAt(0)}</span>`}
       </div>
@@ -6917,7 +6917,7 @@ function pageOrbitHome() {
     </button>`).join('');
 
   const meetingBtn = `
-    <button id="orbitCallMeetingBtn" style="display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:none;cursor:pointer;flex-shrink:0;min-width:70px;padding:0">
+    <button id="grandureCallMeetingBtn" style="display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:none;cursor:pointer;flex-shrink:0;min-width:70px;padding:0">
       <div style="width:62px;height:62px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3"/><circle cx="16" cy="7" r="3"/><path d="M3 21c0-3.3 2.7-6 6-6"/><path d="M21 21c0-3.3-2.7-6-6-6"/><path d="M9 15c0 3.3 1.3 6 3 6s3-2.7 3-6"/></svg>
       </div>
@@ -6928,13 +6928,13 @@ function pageOrbitHome() {
     </button>`;
 
   return `
-    <div class="orbit-page" style="background:#000;min-height:100vh;position:relative;overflow:hidden">
-      <div style="position:absolute;inset:0;background-image:url('./img/orbit-hero.png');background-size:cover;background-position:center top;z-index:0"></div>
+    <div class="grandure-page" style="background:#000;min-height:100vh;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;background-image:url('./img/grandure-hero.png');background-size:cover;background-position:center top;z-index:0"></div>
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.08) 35%,rgba(0,0,0,0.65) 58%,rgba(0,0,0,0.92) 72%,#000 82%);z-index:1"></div>
       <div style="position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))">
         <div style="padding:calc(14px + env(safe-area-inset-top,0px)) 18px 0;display:flex;align-items:center;justify-content:space-between">
           <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:rgba(255,255,255,0.7)">L</div>
-          <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);padding:4px">
+          <button id="grandureMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);padding:4px">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/><circle cx="5" cy="12" r="1.2" fill="currentColor"/></svg>
           </button>
         </div>
@@ -6946,10 +6946,10 @@ function pageOrbitHome() {
             ${meetingBtn}
           </div>
         </div>
-        <div id="orbitBriefBar" style="margin:20px 18px 0;background:rgba(10,10,10,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px">
+        <div id="grandureBriefBar" style="margin:20px 18px 0;background:rgba(10,10,10,0.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px">
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,0.4)">ORBIT BRIEF</div>
+              <div style="font-size:10px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,0.4)">GRANDURE BRIEF</div>
               <div style="font-size:9px;color:rgba(255,255,255,0.22)">${dateStr} · ${timeStr}</div>
             </div>
             <div style="font-size:12px;color:rgba(255,255,255,0.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">3 projects in progress. 2 tasks overdue.</div>
@@ -6960,31 +6960,31 @@ function pageOrbitHome() {
     </div>`;
 }
 
-function bindOrbitHomePage() {
-  document.getElementById('orbitMenuBtn')?.addEventListener('click', openMainMenu);
-  document.getElementById('orbitBriefBar')?.addEventListener('click', openOrbitBriefModal);
-  document.getElementById('orbitCallMeetingBtn')?.addEventListener('click', openOrbitMeetingModal);
+function bindGrandureHomePage() {
+  document.getElementById('grandureMenuBtn')?.addEventListener('click', openMainMenu);
+  document.getElementById('grandureBriefBar')?.addEventListener('click', openGrandureBriefModal);
+  document.getElementById('grandureCallMeetingBtn')?.addEventListener('click', openGrandureMeetingModal);
 }
 
-function openOrbitBriefModal() {
+function openGrandureBriefModal() {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
   const modal = document.createElement('div');
-  modal.id = 'orbitBriefModal';
+  modal.id = 'grandureBriefModal';
   modal.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center';
   modal.innerHTML = `
-    <div id="orbitBriefBg" style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)"></div>
-    <div id="orbitBriefSheet" style="position:relative;width:100%;max-width:480px;background:#0a0a0a;border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid rgba(255,255,255,0.08);padding:20px 20px calc(32px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
+    <div id="grandureBriefBg" style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)"></div>
+    <div id="grandureBriefSheet" style="position:relative;width:100%;max-width:480px;background:#0a0a0a;border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid rgba(255,255,255,0.08);padding:20px 20px calc(32px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
       <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.12);margin:0 auto 20px"></div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
         <div>
-          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:4px">ORBIT BRIEF</div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-bottom:4px">GRANDURE BRIEF</div>
           <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:2px">${dateStr}</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.35)">${timeStr}</div>
         </div>
-        <button id="orbitBriefClose" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;flex-shrink:0">×</button>
+        <button id="grandureBriefClose" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;flex-shrink:0">×</button>
       </div>
       <div style="display:flex;flex-direction:column;gap:10px">
         <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.15);border-radius:14px;padding:14px 16px">
@@ -7003,10 +7003,10 @@ function openOrbitBriefModal() {
     </div>`;
 
   document.body.appendChild(modal);
-  requestAnimationFrame(() => { document.getElementById('orbitBriefSheet').style.transform = 'translateY(0)'; });
-  const close = () => { document.getElementById('orbitBriefSheet').style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
-  document.getElementById('orbitBriefBg')?.addEventListener('click', close);
-  document.getElementById('orbitBriefClose')?.addEventListener('click', close);
+  requestAnimationFrame(() => { document.getElementById('grandureBriefSheet').style.transform = 'translateY(0)'; });
+  const close = () => { document.getElementById('grandureBriefSheet').style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
+  document.getElementById('grandureBriefBg')?.addEventListener('click', close);
+  document.getElementById('grandureBriefClose')?.addEventListener('click', close);
 }
 
 /* ── Meeting-setup localStorage persistence ── */
@@ -7037,12 +7037,12 @@ function loadMeetingSetup(mid, agentsCsv) {
   return { id: null, agentIds: [], projectId: null, topic: '', leadId: null, inviteMaia: false };
 }
 
-function openOrbitMeetingModal() {
+function openGrandureMeetingModal() {
   const modal = document.createElement('div');
-  modal.id = 'orbitMeetingModal';
+  modal.id = 'grandureMeetingModal';
   modal.style.cssText = 'position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center';
 
-  const agentRows = ORBIT_AGENTS.map(a => `
+  const agentRows = GRANDURE_AGENTS.map(a => `
     <label class="brm-agent-label" style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:12px 14px;cursor:pointer">
       <input type="checkbox" class="brm-specialist-cb" data-agent="${a.id}" style="width:18px;height:18px;accent-color:${a.color};flex-shrink:0">
       <div style="width:38px;height:38px;border-radius:50%;border:2px solid ${a.color};overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center">
@@ -7055,18 +7055,18 @@ function openOrbitMeetingModal() {
     </label>`).join('');
 
   modal.innerHTML = `
-    <div id="orbitMeetingBg" style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)"></div>
-    <div id="orbitMeetingSheet" style="position:relative;width:100%;max-width:480px;background:#0a0a0a;border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid rgba(255,255,255,0.08);padding:20px 20px calc(32px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
+    <div id="grandureMeetingBg" style="position:absolute;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)"></div>
+    <div id="grandureMeetingSheet" style="position:relative;width:100%;max-width:480px;background:#0a0a0a;border-top-left-radius:24px;border-top-right-radius:24px;border-top:1px solid rgba(255,255,255,0.08);padding:20px 20px calc(32px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow-y:auto;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1)">
       <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.12);margin:0 auto 20px"></div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
         <div style="font-size:17px;font-weight:700;color:#fff">Call a Meeting</div>
-        <button id="orbitMeetingClose" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1">×</button>
+        <button id="grandureMeetingClose" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:50%;width:32px;height:32px;cursor:pointer;color:rgba(255,255,255,0.4);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1">×</button>
       </div>
 
       <!-- Specialists -->
       <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:10px">SPECIALISTS</div>
-      <div id="orbitMeetingAgents" style="display:flex;flex-direction:column;gap:8px">
+      <div id="grandureMeetingAgents" style="display:flex;flex-direction:column;gap:8px">
         ${agentRows}
       </div>
 
@@ -7096,15 +7096,15 @@ function openOrbitMeetingModal() {
       <!-- Validation error area -->
       <div id="brmMeetingError" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.2);border-radius:10px;font-size:12px;color:#f87171"></div>
 
-      <button id="orbitMeetingStart" style="width:100%;margin-top:16px;padding:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:14px;color:rgba(255,255,255,0.7);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer">Start Meeting</button>
+      <button id="grandureMeetingStart" style="width:100%;margin-top:16px;padding:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:14px;color:rgba(255,255,255,0.7);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer">Start Meeting</button>
     </div>`;
 
   document.body.appendChild(modal);
-  requestAnimationFrame(() => { document.getElementById('orbitMeetingSheet').style.transform = 'translateY(0)'; });
+  requestAnimationFrame(() => { document.getElementById('grandureMeetingSheet').style.transform = 'translateY(0)'; });
 
-  const close = () => { document.getElementById('orbitMeetingSheet').style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
-  document.getElementById('orbitMeetingBg')?.addEventListener('click', close);
-  document.getElementById('orbitMeetingClose')?.addEventListener('click', close);
+  const close = () => { document.getElementById('grandureMeetingSheet').style.transform = 'translateY(100%)'; setTimeout(() => modal.remove(), 300); };
+  document.getElementById('grandureMeetingBg')?.addEventListener('click', close);
+  document.getElementById('grandureMeetingClose')?.addEventListener('click', close);
 
   /* Dynamically rebuild the lead picker whenever a specialist is checked/unchecked */
   function refreshLeadOptions() {
@@ -7120,7 +7120,7 @@ function openOrbitMeetingModal() {
     const defaultLead = checked.includes('shaina') ? 'shaina' : checked[0];
     const selectedLead = (currentLead && checked.includes(currentLead)) ? currentLead : defaultLead;
     leadDiv.innerHTML = checked.map(id => {
-      const a = ORBIT_AGENTS.find(x => x.id === id);
+      const a = GRANDURE_AGENTS.find(x => x.id === id);
       if (!a) return '';
       const isShayna = id === 'shaina';
       return `
@@ -7132,10 +7132,10 @@ function openOrbitMeetingModal() {
     }).join('');
   }
 
-  document.getElementById('orbitMeetingAgents')?.addEventListener('change', refreshLeadOptions);
+  document.getElementById('grandureMeetingAgents')?.addEventListener('change', refreshLeadOptions);
 
   /* Validation and save on Start Meeting */
-  document.getElementById('orbitMeetingStart')?.addEventListener('click', () => {
+  document.getElementById('grandureMeetingStart')?.addEventListener('click', () => {
     const selected = [...document.querySelectorAll('.brm-specialist-cb:checked')].map(cb => cb.dataset.agent);
     const errEl = document.getElementById('brmMeetingError');
 
@@ -7172,13 +7172,13 @@ const BOARDROOM_TABS = [
 /* Maia — receptionist, invitation-only, never auto-added */
 const MAIA_AGENT = { id: 'maia', name: 'Maia', role: 'Receptionist', color: '#94a3b8', img: null };
 
-function pageOrbitBoardroom(setup) {
+function pageGrandureBoardroom(setup) {
   const { agentIds = [], projectId = null, topic = '', leadId = null, inviteMaia = false } = setup || {};
 
   /* Resolve participants — specialists only, Maia added separately if explicitly invited */
-  const specialists = agentIds.map(id => ORBIT_AGENTS.find(a => a.id === id)).filter(Boolean);
+  const specialists = agentIds.map(id => GRANDURE_AGENTS.find(a => a.id === id)).filter(Boolean);
   const participants = inviteMaia ? [...specialists, MAIA_AGENT] : specialists;
-  const lead = ORBIT_AGENTS.find(a => a.id === leadId) || specialists[0] || null;
+  const lead = GRANDURE_AGENTS.find(a => a.id === leadId) || specialists[0] || null;
 
   function avatarItem(a) {
     const isLead = a.id === leadId;
@@ -7227,7 +7227,7 @@ function pageOrbitBoardroom(setup) {
     <div id="boardroomPage" style="min-height:100vh;background:#000;display:flex;flex-direction:column">
 
       <div style="padding:calc(14px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);background:#000;flex-shrink:0">
-        <button class="back-btn" data-href="#/orbit" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
+        <button class="back-btn" data-href="#/grandure" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center">
           <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.3)">GRANDURE</div>
           <div style="font-size:17px;font-weight:700;color:#fff">Boardroom</div>
@@ -7293,9 +7293,9 @@ function pageOrbitBoardroom(setup) {
     </div>`;
 }
 
-function bindOrbitBoardroom(setup) {
+function bindGrandureBoardroom(setup) {
   const { agentIds = [], leadId = null, inviteMaia = false } = setup || {};
-  const specialists = agentIds.map(id => ORBIT_AGENTS.find(a => a.id === id)).filter(Boolean);
+  const specialists = agentIds.map(id => GRANDURE_AGENTS.find(a => a.id === id)).filter(Boolean);
   const participants = inviteMaia ? [...specialists, MAIA_AGENT] : specialists;
 
   /* tab switching */
@@ -7356,8 +7356,8 @@ function bindOrbitBoardroom(setup) {
   input?.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 }
 
-function pageOrbitChat(agentId) {
-  const agent = ORBIT_AGENTS.find(a => a.id === agentId) || ORBIT_AGENTS[0];
+function pageGrandureChat(agentId) {
+  const agent = GRANDURE_AGENTS.find(a => a.id === agentId) || GRANDURE_AGENTS[0];
   const greeting = {
     aisha:    "Hey! I'm Aisha, your creative intelligence. I help you find, connect, and expand on your ideas. What's on your mind?",
     braindon: "What's up — I'm Braindon. I handle strategy and make sure we're moving in the right direction. What do you need?",
@@ -7372,17 +7372,17 @@ function pageOrbitChat(agentId) {
   return `
     <div style="min-height:100vh;background:#000;display:flex;flex-direction:column">
       <div style="padding:calc(14px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,0.06);background:#000">
-        <button class="back-btn" data-href="#/orbit" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
+        <button class="back-btn" data-href="#/grandure" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
         <div style="width:38px;height:38px;border-radius:50%;border:2px solid ${agent.color};overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center">${avatarInner}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:16px;font-weight:700;color:rgba(255,255,255,0.9)">${escHtml(agent.name)}</div>
           <div style="font-size:11px;color:rgba(255,255,255,0.35)">${escHtml(agent.role)}</div>
         </div>
-        <button id="orbitChatVoiceBtn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:50%;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.45);flex-shrink:0">
+        <button id="grandureChatVoiceBtn" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:50%;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.45);flex-shrink:0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
         </button>
       </div>
-      <div id="orbitChatMessages" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:14px;padding-bottom:90px">
+      <div id="grandureChatMessages" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:14px;padding-bottom:90px">
         <div style="display:flex;gap:10px">
           <div style="width:32px;height:32px;border-radius:50%;border:2px solid ${agent.color};overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center">${avatarInner}</div>
           <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:0 14px 14px 14px;padding:12px 14px;max-width:82%">
@@ -7394,9 +7394,9 @@ function pageOrbitChat(agentId) {
       <div style="position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.95);border-top:1px solid rgba(255,255,255,0.06);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))">
         <div style="display:flex;gap:10px;align-items:center">
           <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:22px;padding:10px 16px">
-            <input id="orbitChatInput" type="text" placeholder="Message ${escHtml(agent.name)}..." style="width:100%;background:none;border:none;color:#fff;font-size:14px;font-family:inherit;outline:none">
+            <input id="grandureChatInput" type="text" placeholder="Message ${escHtml(agent.name)}..." style="width:100%;background:none;border:none;color:#fff;font-size:14px;font-family:inherit;outline:none">
           </div>
-          <button id="orbitChatSend" style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid ${agent.color}66;color:${agent.color};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+          <button id="grandureChatSend" style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid ${agent.color}66;color:${agent.color};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
@@ -7404,11 +7404,11 @@ function pageOrbitChat(agentId) {
     </div>`;
 }
 
-function bindOrbitChat(agentId) {
-  const agent = ORBIT_AGENTS.find(a => a.id === agentId) || ORBIT_AGENTS[0];
-  const messages = document.getElementById('orbitChatMessages');
-  const input    = document.getElementById('orbitChatInput');
-  const sendBtn  = document.getElementById('orbitChatSend');
+function bindGrandureChat(agentId) {
+  const agent = GRANDURE_AGENTS.find(a => a.id === agentId) || GRANDURE_AGENTS[0];
+  const messages = document.getElementById('grandureChatMessages');
+  const input    = document.getElementById('grandureChatInput');
+  const sendBtn  = document.getElementById('grandureChatSend');
 
   const avatarHtml = agent.img
     ? `<img src="${agent.img}" style="width:100%;height:100%;object-fit:cover">`
@@ -7444,8 +7444,8 @@ function bindOrbitChat(agentId) {
   input?.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 }
 
-function pageOrbit() {
-  const data = getOrbitData();
+function pageGrandure() {
+  const data = getGrandureData();
   const prods = data.productions || [];
   const queue = data.queue || { attention: [], waiting: [] };
   const signals = data.signals || [];
@@ -7455,28 +7455,28 @@ function pageOrbit() {
   function queueItems(items) {
     if (!items.length) return `<div style="font-size:11px;color:rgba(255,255,255,0.2);text-align:center;padding:8px 0">All clear</div>`;
     return items.map(item => `
-      <div class="orbit-qi">
+      <div class="grandure-qi">
         <div style="display:flex;align-items:flex-start;gap:6px">
           <div style="width:3px;min-height:30px;border-radius:2px;background:${priColor(item.priority)};flex-shrink:0;margin-top:2px"></div>
           <div style="min-width:0">
-            <div class="orbit-qi-title">${escHtml(item.title)}</div>
-            <div class="orbit-qi-sub">${escHtml(item.production)}</div>
+            <div class="grandure-qi-title">${escHtml(item.title)}</div>
+            <div class="grandure-qi-sub">${escHtml(item.production)}</div>
           </div>
         </div>
       </div>`).join('');
   }
 
   const signalsHtml = signals.map(s => `
-    <div class="orbit-signal-chip">
+    <div class="grandure-signal-chip">
       <div style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);margin-bottom:7px">${escHtml(s.agent.trim().charAt(0).toUpperCase())}</div>
       <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(s.agent)}</div>
       <div style="font-size:10px;color:rgba(255,255,255,0.35);line-height:1.4">${escHtml(s.action)}<br><span style="color:rgba(255,255,255,0.55)">${escHtml(s.item)}</span></div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:7px">${orbitRelTime(s.mins)}</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:7px">${grandureRelTime(s.mins)}</div>
     </div>`).join('');
 
   const prodCards = prods.slice(0, 4).map(p => `
-    <div class="orbit-prod-card" data-href="#/orbit-production?id=${escHtml(p.id)}">
-      ${orbitSunLarge()}
+    <div class="grandure-prod-card" data-href="#/grandure-production?id=${escHtml(p.id)}">
+      ${grandureSunLarge()}
       <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.9);text-align:center;margin-bottom:10px;line-height:1.3">${escHtml(p.name)}</div>
       <div style="display:flex;gap:10px;justify-content:center;margin-bottom:8px">
         <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#fff">${p.agents}</div><div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:0.5px">AGENTS</div></div>
@@ -7484,11 +7484,11 @@ function pageOrbit() {
         <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#fff">${p.activeTasks}</div><div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:0.5px">TASKS</div></div>
         ${p.waiting ? `<div style="width:1px;background:rgba(255,255,255,0.08)"></div><div style="text-align:center"><div style="font-size:14px;font-weight:700;color:#f87171">${p.waiting}</div><div style="font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:0.5px">WAITING</div></div>` : ''}
       </div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.25)">Last signal ${orbitRelTime(p.lastSignalMins)}</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.25)">Last signal ${grandureRelTime(p.lastSignalMins)}</div>
     </div>`).join('');
 
   const newProdCard = `
-    <div class="orbit-prod-card" data-href="#/orbit-productions" style="border-style:dashed;border-color:rgba(255,255,255,0.1);justify-content:center;min-height:160px">
+    <div class="grandure-prod-card" data-href="#/grandure-productions" style="border-style:dashed;border-color:rgba(255,255,255,0.1);justify-content:center;min-height:160px">
       <div style="width:40px;height:40px;border-radius:50%;border:1.5px dashed rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.25);font-size:22px;margin-bottom:8px">+</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.3);font-weight:600">New Production</div>
     </div>`;
@@ -7496,17 +7496,17 @@ function pageOrbit() {
   const aishaSVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.09 6.26L20 10l-5.91 2.09L12 18l-2.09-5.91L4 10l5.91-1.74z"/></svg>`;
 
   return `
-    <div class="orbit-page" style="background:#000;padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div class="grandure-page" style="background:#000;padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <div style="padding:calc(16px + env(safe-area-inset-top,0px)) 16px 0;display:flex;align-items:center;justify-content:space-between">
         <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:rgba(255,255,255,0.7);flex-shrink:0">L</div>
         <div style="text-align:center">
           <div style="display:flex;align-items:center;gap:7px;justify-content:center;margin-bottom:2px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/></svg>
-            <div style="font-size:13px;font-weight:800;letter-spacing:2px;color:#fff">GRANDURE ORBIT</div>
+            <div style="font-size:13px;font-weight:800;letter-spacing:2px;color:#fff">GRANDURE</div>
           </div>
           <div style="font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,0.2)">WHERE IDEAS BECOME REALITIES</div>
         </div>
-        <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);padding:4px;flex-shrink:0;width:36px;display:flex;justify-content:center">
+        <button id="grandureMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);padding:4px;flex-shrink:0;width:36px;display:flex;justify-content:center">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
       </div>
@@ -7518,36 +7518,36 @@ function pageOrbit() {
       </div>
 
       <div style="padding:24px 16px 0">
-        <div class="orbit-section-row">
-          <div class="orbit-section-label">MY QUEUE</div>
+        <div class="grandure-section-row">
+          <div class="grandure-section-label">MY QUEUE</div>
           <button style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(255,255,255,0.25);padding:0">View all ›</button>
         </div>
         <div style="display:flex;gap:10px">
-          <div class="orbit-queue-card">
-            <div class="orbit-queue-card-hdr">NEEDS ATTENTION</div>
+          <div class="grandure-queue-card">
+            <div class="grandure-queue-card-hdr">NEEDS ATTENTION</div>
             ${queueItems(queue.attention)}
           </div>
-          <div class="orbit-queue-card">
-            <div class="orbit-queue-card-hdr">WAITING ON ME</div>
+          <div class="grandure-queue-card">
+            <div class="grandure-queue-card-hdr">WAITING ON ME</div>
             ${queueItems(queue.waiting)}
           </div>
         </div>
       </div>
 
       <div style="padding:24px 16px 0">
-        <div class="orbit-section-row">
-          <div class="orbit-section-label">SIGNALS</div>
+        <div class="grandure-section-row">
+          <div class="grandure-section-label">SIGNALS</div>
           <button style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(255,255,255,0.25);padding:0">View all ›</button>
         </div>
-        <div class="orbit-signal-row">${signalsHtml}</div>
+        <div class="grandure-signal-row">${signalsHtml}</div>
       </div>
 
       <div style="padding:24px 16px 0">
-        <div class="orbit-section-row">
-          <div class="orbit-section-label">PRODUCTIONS</div>
-          <button class="orbit-section-link" data-href="#/orbit-productions" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(255,255,255,0.25);padding:0">View all ›</button>
+        <div class="grandure-section-row">
+          <div class="grandure-section-label">PRODUCTIONS</div>
+          <button class="grandure-section-link" data-href="#/grandure-productions" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(255,255,255,0.25);padding:0">View all ›</button>
         </div>
-        <div class="orbit-prod-grid">
+        <div class="grandure-prod-grid">
           ${prodCards}
           ${newProdCard}
         </div>
@@ -7555,12 +7555,12 @@ function pageOrbit() {
     </div>`;
 }
 
-function pageOrbitProductions() {
-  const data = getOrbitData();
+function pageGrandureProductions() {
+  const data = getGrandureData();
   const prods = data.productions || [];
   const cards = prods.map(p => `
-    <div class="orbit-prod-list-card" data-href="#/orbit-production?id=${escHtml(p.id)}">
-      ${orbitSunSmall()}
+    <div class="grandure-prod-list-card" data-href="#/grandure-production?id=${escHtml(p.id)}">
+      ${grandureSunSmall()}
       <div style="flex:1;min-width:0">
         <div style="font-size:14px;font-weight:700;color:rgba(255,255,255,0.9);margin-bottom:6px">${escHtml(p.name)}</div>
         <div style="display:flex;gap:12px">
@@ -7569,24 +7569,24 @@ function pageOrbitProductions() {
           ${p.waiting ? `<div><span style="font-size:13px;font-weight:700;color:#f87171">${p.waiting}</span><span style="font-size:9px;color:rgba(255,255,255,0.3);margin-left:3px">Waiting</span></div>` : ''}
         </div>
       </div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.25);text-align:right;flex-shrink:0">${orbitRelTime(p.lastSignalMins)}</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.25);text-align:right;flex-shrink:0">${grandureRelTime(p.lastSignalMins)}</div>
     </div>`).join('');
 
   return `
-    <div class="orbit-page" style="background:#000;padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div class="grandure-page" style="background:#000;padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch">
       <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px;display:flex;align-items:center;gap:12px">
-        <button class="back-btn" data-href="#/orbit" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
+        <button class="back-btn" data-href="#/grandure" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
         <div style="flex:1;text-align:center">
-          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.35)">GRANDURE ORBIT</div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.35)">GRANDURE</div>
           <div style="font-size:17px;font-weight:700;color:#fff">Productions</div>
         </div>
-        <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);padding:4px;flex-shrink:0;width:36px;display:flex;justify-content:flex-end">
+        <button id="grandureMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);padding:4px;flex-shrink:0;width:36px;display:flex;justify-content:flex-end">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
       </div>
       <div style="padding:0 16px;display:flex;flex-direction:column;gap:10px">
         ${cards}
-        <div class="orbit-prod-list-card" data-href="#/orbit-new-production" style="border-style:dashed;border-color:rgba(255,255,255,0.1)">
+        <div class="grandure-prod-list-card" data-href="#/grandure-new-production" style="border-style:dashed;border-color:rgba(255,255,255,0.1)">
           <div style="width:52px;height:52px;border-radius:50%;border:1.5px dashed rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.25);font-size:22px;flex-shrink:0">+</div>
           <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.3)">New Production</div>
         </div>
@@ -7594,30 +7594,30 @@ function pageOrbitProductions() {
     </div>`;
 }
 
-function pageOrbitStub(tab, title, desc) {
+function pageGrandureStub(tab, title, desc) {
   return `
-    <div class="orbit-page" style="background:#000;padding-bottom:90px">
+    <div class="grandure-page" style="background:#000;padding-bottom:90px">
       <div style="padding:calc(20px + env(safe-area-inset-top,0px)) 16px 20px;display:flex;align-items:center;gap:12px">
-        <button class="back-btn" data-href="#/orbit" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
+        <button class="back-btn" data-href="#/grandure" style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);flex-shrink:0">‹</button>
         <div style="flex:1;text-align:center">
-          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.35)">GRANDURE ORBIT</div>
+          <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.35)">GRANDURE</div>
           <div style="font-size:17px;font-weight:700;color:#fff">${escHtml(title)}</div>
         </div>
-        <button id="orbitMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);padding:4px;flex-shrink:0;width:36px;display:flex;justify-content:flex-end">
+        <button id="grandureMenuBtn" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);padding:4px;flex-shrink:0;width:36px;display:flex;justify-content:flex-end">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;padding:0 32px;text-align:center">
         <div style="font-size:14px;color:rgba(255,255,255,0.2);margin-bottom:6px">${escHtml(desc || 'Coming soon')}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.2)">${escHtml(title)} · Grandure Orbit</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.2)">${escHtml(title)} · Grandure</div>
       </div>
     </div>`;
 }
 
-function injectOrbitNav(active) {
-  document.getElementById('orbitNav')?.remove();
+function injectGrandureNav(active) {
+  document.getElementById('grandureNav')?.remove();
   const nav = document.createElement('nav');
-  nav.id = 'orbitNav';
+  nav.id = 'grandureNav';
   nav.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-around;padding:10px 0;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))';
 
   const homeSVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
@@ -7628,23 +7628,23 @@ function injectOrbitNav(active) {
 
   function tabBtn(label, href, svg, key) {
     const on = active === key;
-    return `<button class="orbit-nav-btn${on ? ' active' : ''}" data-href="${href}">${svg}${label}</button>`;
+    return `<button class="grandure-nav-btn${on ? ' active' : ''}" data-href="${href}">${svg}${label}</button>`;
   }
 
   nav.innerHTML = `
-    ${tabBtn('HOME', '#/orbit', homeSVG, 'home')}
-    ${tabBtn('PRODUCTIONS', '#/orbit-productions', prodSVG, 'productions')}
-    <button id="orbitAgentsBtn" style="background:rgba(255,255,255,0.08);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 4px 24px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.8);cursor:pointer;margin-top:-18px;flex-shrink:0">${aishaSVG}</button>
-    ${tabBtn('ASSETS', '#/orbit-assets', assetSVG, 'assets')}
-    ${tabBtn('INBOX', '#/orbit-inbox', inboxSVG, 'inbox')}
+    ${tabBtn('HOME', '#/grandure', homeSVG, 'home')}
+    ${tabBtn('PRODUCTIONS', '#/grandure-productions', prodSVG, 'productions')}
+    <button id="grandureAgentsBtn" style="background:rgba(255,255,255,0.08);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 4px 24px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.8);cursor:pointer;margin-top:-18px;flex-shrink:0">${aishaSVG}</button>
+    ${tabBtn('ASSETS', '#/grandure-assets', assetSVG, 'assets')}
+    ${tabBtn('INBOX', '#/grandure-inbox', inboxSVG, 'inbox')}
   `;
   document.getElementById('app').appendChild(nav);
-  nav.querySelector('#orbitAgentsBtn')?.addEventListener('click', () => navigate('#/orbit-agents'));
-  document.getElementById('orbitMenuBtn')?.addEventListener('click', openMainMenu);
+  nav.querySelector('#grandureAgentsBtn')?.addEventListener('click', () => navigate('#/grandure-agents'));
+  document.getElementById('grandureMenuBtn')?.addEventListener('click', openMainMenu);
 }
 
-function pageOrbitPlaceholder() {
-  return pageOrbit();
+function pageGrandurePlaceholder() {
+  return pageGrandure();
 }
 
 /* ── Universal Capture FAB ── */
