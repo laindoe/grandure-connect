@@ -6897,7 +6897,7 @@ const ORBIT_AGENTS = [
   { id: 'aisha',    name: 'Aisha',    role: 'Creative Intelligence', color: '#a78bfa', img: './img/aisha.jpeg' },
   { id: 'braindon', name: 'Braindon', role: 'Strategy Lead',         color: '#34d399', img: null },
   { id: 'shaine',   name: 'Shaine',   role: 'Production Manager',    color: '#fb923c', img: null },
-  { id: 'shayna',   name: 'Shaina',   role: 'Brand Visionary',       color: '#f472b6', img: null },
+  { id: 'shaina',   name: 'Shaina',   role: 'Brand Visionary',       color: '#f472b6', img: null },
 ];
 
 function pageOrbitHome() {
@@ -7030,7 +7030,7 @@ function loadMeetingSetup(mid, agentsCsv) {
   /* Fallback: build a minimal setup from legacy URL agents param */
   if (agentsCsv) {
     const agentIds = agentsCsv.split(',').filter(Boolean);
-    const defaultLead = agentIds.includes('shayna') ? 'shayna' : agentIds[0] || null;
+    const defaultLead = agentIds.includes('shaina') ? 'shaina' : agentIds[0] || null;
     return { id: null, agentIds, projectId: null, topic: '', leadId: defaultLead, inviteMaia: false };
   }
   /* Nothing — empty scaffold */
@@ -7116,13 +7116,13 @@ function openOrbitMeetingModal() {
       return;
     }
     const currentLead = leadDiv.querySelector('input[name="brmLead"]:checked')?.value || null;
-    /* Default: Shaina (shayna) if present, else first checked */
-    const defaultLead = checked.includes('shayna') ? 'shayna' : checked[0];
+    /* Default: Shaina if present, else first checked */
+    const defaultLead = checked.includes('shaina') ? 'shaina' : checked[0];
     const selectedLead = (currentLead && checked.includes(currentLead)) ? currentLead : defaultLead;
     leadDiv.innerHTML = checked.map(id => {
       const a = ORBIT_AGENTS.find(x => x.id === id);
       if (!a) return '';
-      const isShayna = id === 'shayna';
+      const isShayna = id === 'shaina';
       return `
         <label style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px 14px;cursor:pointer">
           <input type="radio" name="brmLead" value="${a.id}" ${id === selectedLead ? 'checked' : ''} style="width:16px;height:16px;accent-color:${a.color};flex-shrink:0">
@@ -7362,7 +7362,7 @@ function pageOrbitChat(agentId) {
     aisha:    "Hey! I'm Aisha, your creative intelligence. I help you find, connect, and expand on your ideas. What's on your mind?",
     braindon: "What's up — I'm Braindon. I handle strategy and make sure we're moving in the right direction. What do you need?",
     shaine:   "Hey, I'm Shaine. I keep production on track and make sure things get done. What are we working on?",
-    shayna:   "Hi! I'm Shaina, your brand visionary. I bring brand stories to life. What are we creating today?",
+    shaina:   "Hi! I'm Shaina, your brand visionary. I bring brand stories to life. What are we creating today?",
   }[agentId] || "Hey! How can I help you today?";
 
   const avatarInner = agent.img
